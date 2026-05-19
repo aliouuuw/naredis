@@ -130,7 +130,7 @@
       "epic": "platform",
       "title": "Dev seed script (multi-declaration dossier)",
       "priority": "p1",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-004", "PLAT-005"],
       "docs": ["docs/06-data-model.md", "docs/00-glossary.md"],
       "acceptanceCriteria": [
@@ -144,7 +144,7 @@
       "epic": "platform",
       "title": "shadcn/ui + Tailwind app shell baseline",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": [],
       "docs": ["docs/12-ui-components.md", "docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -269,7 +269,7 @@
       "epic": "ui-shell",
       "title": "App sidebar: Déclarations, Clients, Réglages + CTA",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["UI-001"],
       "docs": ["docs/10-information-architecture.md", "docs/09-ux-principles.md"],
       "acceptanceCriteria": [

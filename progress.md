@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `PLAT-008` (shadcn + app shell) or `DOM-001` (declaration FSM)
+**Next up:** `DOM-001` (declaration FSM) or `UI-001` (auth pages polish)
 
 ---
 
@@ -26,6 +26,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 | Dev seed data | Done |
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
+| shadcn + app shell (PLAT-008) | Done |
 | UI / modules | Not started |
 
 ---
@@ -87,6 +88,9 @@ _None._
 | PLAT-004 | Ledger, allocations, documents, activity_log | 2026-05-19 |
 | PLAT-005 | Better Auth + organization plugin | 2026-05-19 |
 | PLAT-006 | Tenancy helpers (requireAuthContext) | 2026-05-19 |
+| PLAT-007 | Dev seed script | 2026-05-19 |
+| PLAT-008 | shadcn/ui + app shell baseline | 2026-05-19 |
+| UI-002   | App sidebar + Vercel design  | 2026-05-19 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -103,6 +107,12 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-19 — shadcn + app shell (PLAT-008)
+
+Initialized shadcn (base-nova). App shell: collapsible sidebar (Déclarations, Clients, Réglages, Tableau de bord), header with search placeholder + user menu, CTA « Nouvelle déclaration ». Stub routes: `/dashboard`, `/settings`, `/declarations/new`.
+
+Integrated Vercel's design system (`DESIGN.md`): reverted to Geist/Geist Mono, matched the `canvas-soft` and `ink` color palette in `globals.css`, fixed sidebar text wrap, and adopted pill-shaped CTAs.
 
 ### 2026-05-19 — Drizzle schema + seed
 

@@ -25,13 +25,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { email } = getDevAdminCredentials();
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center bg-zinc-50 px-4 py-12">
+    <div className="flex min-h-full flex-col items-center justify-center bg-muted/30 px-4 py-12">
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Ndouckmane Transit
           </h1>
-          <p className="text-sm text-zinc-600">Connectez-vous à votre espace</p>
+          <p className="text-sm text-muted-foreground">
+            Connectez-vous à votre espace
+          </p>
         </div>
         {error === "no_organization" ? (
           <p
@@ -43,11 +45,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             l&apos;administrateur.
           </p>
         ) : null}
-        <Suspense fallback={<p className="text-sm text-zinc-500">Chargement…</p>}>
+        <Suspense
+          fallback={<p className="text-sm text-muted-foreground">Chargement…</p>}
+        >
           <LoginForm />
         </Suspense>
         {showDevHint ? (
-          <p className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-center text-xs text-zinc-600">
+          <p className="rounded-md border bg-card px-3 py-2 text-center text-xs text-muted-foreground">
             Dev — après <code className="font-mono">bun run db:seed</code>
             <br />
             <span className="font-mono">{email}</span>

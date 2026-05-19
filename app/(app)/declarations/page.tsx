@@ -18,23 +18,25 @@ export default async function DeclarationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Déclarations</h1>
-        <p className="text-sm text-zinc-600">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Déclarations</h1>
+        <p className="text-sm text-muted-foreground">
           Liste des déclarations douanières de votre cabinet.
         </p>
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-600">Aucune déclaration pour cette organisation.</p>
+        <p className="text-sm text-muted-foreground">
+          Aucune déclaration pour cette organisation.
+        </p>
       ) : (
-        <ul className="divide-y rounded-md border border-zinc-200 bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {rows.map((row) => (
             <li
               key={row.declarationNumber}
               className="flex items-center justify-between px-4 py-3 text-sm"
             >
               <span className="font-medium">{row.declarationNumber}</span>
-              <span className="text-zinc-500">{row.status}</span>
+              <span className="text-muted-foreground">{row.status}</span>
             </li>
           ))}
         </ul>
