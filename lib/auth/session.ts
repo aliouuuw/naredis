@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import type { MemberRole } from "@/lib/db/enums";
 import { organizationMembers } from "@/lib/db/schema";
@@ -41,11 +41,23 @@ export async function getAuthContext(): Promise<AuthContext | null> {
 }
 
 export async function requireAuthContext(): Promise<AuthContext> {
-  const ctx = await getAuthContext();
-  if (!ctx) {
+  const session = await getSession();
+  if (!session) {
     redirect("/login");
   }
-  return ctx;
+
+  const organizationId = await getAppOrganizationIdForUser(session.user.id);
+  if (!organizationId) {
+    await auth.api.signOut({ headers: await headers() });
+    redirect("/login?error=no_organization");
+  }
+
+  return {
+    session,
+    userId: session.user.id,
+    organizationId,
+    activeOrganizationId: null,
+  };
 }
 
 /** @deprecated Use requireAuthContext — kept for backlog naming */
@@ -66,7 +78,7 @@ export async function requireRole(allowed: MemberRole[]): Promise<AuthContext> {
     .limit(1);
 
   if (!member || !allowed.includes(member.role)) {
-    throw new Error("Insufficient permissions");
+    forbidden();
   }
   return ctx;
 }

@@ -21,7 +21,7 @@ export default async function DeclarationsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Déclarations</h1>
         <p className="text-sm text-zinc-600">
-          Espace connecté — organisation {ctx.organizationId.slice(0, 8)}…
+          Liste des déclarations douanières de votre cabinet.
         </p>
       </div>
       {rows.length === 0 ? (

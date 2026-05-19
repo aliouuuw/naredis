@@ -1,8 +1,27 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { getDevAdminCredentials } from "@/lib/auth/seed-dev-admin";
+import { isDevelopment } from "@/lib/auth/seed-guard";
+import { getAppOrganizationIdForUser } from "@/lib/auth/org-context";
+import { getSession } from "@/lib/auth/session";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { error } = await searchParams;
+  const session = await getSession();
+
+  if (session) {
+    const organizationId = await getAppOrganizationIdForUser(session.user.id);
+    if (organizationId) {
+      redirect("/declarations");
+    }
+  }
+
+  const showDevHint = isDevelopment();
   const { email } = getDevAdminCredentials();
 
   return (
@@ -14,14 +33,26 @@ export default function LoginPage() {
           </h1>
           <p className="text-sm text-zinc-600">Connectez-vous à votre espace</p>
         </div>
+        {error === "no_organization" ? (
+          <p
+            className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            role="alert"
+          >
+            Ce compte n&apos;est rattaché à aucun cabinet. En local, exécutez{" "}
+            <code className="font-mono">bun run db:seed</code> ou contactez
+            l&apos;administrateur.
+          </p>
+        ) : null}
         <Suspense fallback={<p className="text-sm text-zinc-500">Chargement…</p>}>
           <LoginForm />
         </Suspense>
-        <p className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-center text-xs text-zinc-600">
-          Dev — après <code className="font-mono">bun run db:seed</code>
-          <br />
-          <span className="font-mono">{email}</span>
-        </p>
+        {showDevHint ? (
+          <p className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-center text-xs text-zinc-600">
+            Dev — après <code className="font-mono">bun run db:seed</code>
+            <br />
+            <span className="font-mono">{email}</span>
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -1,6 +1,10 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Cookie presence only — not a cryptographic session check.
+ * RSC routes must call requireAuthContext(). Full proxy validation: PLAT-010.
+ */
 const protectedPrefixes = [
   "/declarations",
   "/clients",

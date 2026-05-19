@@ -1,9 +1,10 @@
 import { generateId } from "@better-auth/core/utils/id";
 import { hashPassword } from "better-auth/crypto";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { organizationMembers } from "@/lib/db/schema";
 import { account, user } from "@/lib/db/schema/auth";
+import { assertDevSeedAllowed, isDevelopment } from "./seed-guard";
 
 const DEV_ADMIN_EMAIL = (
   process.env.SEED_ADMIN_EMAIL ?? "admin@demo-transit.sn"
@@ -24,6 +25,7 @@ export type DevAdminSeedResult = {
 export async function ensureDevAdmin(
   organizationId: string,
 ): Promise<DevAdminSeedResult> {
+  assertDevSeedAllowed();
   const db = getDb();
 
   const [existingUser] = await db
@@ -57,6 +59,20 @@ export async function ensureDevAdmin(
       createdAt: now,
       updatedAt: now,
     });
+  } else if (
+    isDevelopment() ||
+    process.env.SEED_ADMIN_RESET_PASSWORD === "true"
+  ) {
+    const passwordHash = await hashPassword(DEV_ADMIN_PASSWORD);
+    await db
+      .update(account)
+      .set({ password: passwordHash, updatedAt: new Date() })
+      .where(
+        and(
+          eq(account.userId, userId),
+          eq(account.providerId, "credential"),
+        ),
+      );
   }
 
   await db

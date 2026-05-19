@@ -496,6 +496,56 @@
         "Pilot can access preview URL"
       ],
       "notes": "Use local Postgres 17 until core flows work; Neon when ready for external pilot."
+    },
+    {
+      "id": "PLAT-009",
+      "epic": "platform",
+      "title": "Reconcile Better Auth org tables vs app organizations",
+      "priority": "p2",
+      "status": "deferred",
+      "dependsOn": ["PLAT-005"],
+      "docs": ["docs/07-auth.md"],
+      "acceptanceCriteria": [
+        "Single tenancy model documented and enforced",
+        "Unused organization/member/invitation tables dropped or synced"
+      ]
+    },
+    {
+      "id": "PLAT-010",
+      "epic": "platform",
+      "title": "Proxy full session validation (Next.js 16)",
+      "priority": "p2",
+      "status": "deferred",
+      "dependsOn": ["PLAT-005"],
+      "docs": ["docs/07-auth.md"],
+      "acceptanceCriteria": [
+        "proxy.ts validates session via auth.api.getSession, not cookie presence only"
+      ]
+    },
+    {
+      "id": "PLAT-011",
+      "epic": "platform",
+      "title": "Seed partial-failure recovery",
+      "priority": "p2",
+      "status": "deferred",
+      "dependsOn": ["PLAT-007"],
+      "docs": ["docs/06-data-model.md"],
+      "acceptanceCriteria": [
+        "If org exists but business tables empty, seed completes demo data",
+        "Documented db:reset or equivalent"
+      ]
+    },
+    {
+      "id": "PLAT-012",
+      "epic": "platform",
+      "title": "Auth and tenancy tests",
+      "priority": "p1",
+      "status": "deferred",
+      "dependsOn": ["PLAT-006"],
+      "docs": ["docs/07-auth.md", "docs/04-architecture.md"],
+      "acceptanceCriteria": [
+        "Tests for sanitizeRedirectPath, requireAuthContext org scoping, disableSignUp"
+      ]
     }
   ]
 }

@@ -4,6 +4,8 @@ import {
   ensureDevAdmin,
   getDevAdminCredentials,
 } from "../lib/auth/seed-dev-admin";
+import { assertDevSeedAllowed } from "../lib/auth/seed-guard";
+import { cleanupOrphanOrganizationMembers } from "../lib/db/cleanup-orphan-members";
 import { closeDb, getDb } from "../lib/db";
 import {
   activityLog,
@@ -22,7 +24,9 @@ config({ path: ".env.local" });
 config({ path: ".env" });
 
 async function main() {
+  assertDevSeedAllowed();
   const db = getDb();
+  await cleanupOrphanOrganizationMembers();
 
   const existing = await db
     .select({ id: organizations.id })
