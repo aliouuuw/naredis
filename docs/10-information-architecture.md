@@ -27,28 +27,68 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 
 ## App shell
 
+Three zones — **no create actions in the sidebar** (Notion-style: “New” lives on the database view).
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ [Logo]              [ 🔍 Rechercher...  ⌘K ]           [User ▾]  │
+│ [Logo NT]           [ 🔍 Rechercher...  ⌘K ]           [User ▾]  │  ← top chrome (64px)
 ├────────────┬─────────────────────────────────────────────────────┤
-│ Tableau de │                                                     │
-│ bord       │   Main content                                      │
-│            │                                                     │
-│ Déclarat. ●│                                                     │
-│            │                                                     │
-│ Clients    │                                                     │
-│            │                                                     │
-│ Réglages   │                                                     │
-│            │                                                     │
-│[+ Déclar.] │                                                     │
+│ Déclarat. ●│  Page title                    [ + action contexte ] │  ← page header
+│ Clients    │  ─────────────────────────────────────────────────  │
+│ Tableau de │  Main content (list, fiche, forms)                    │
+│ bord       │                                                       │
+│ Réglages   │                                                       │
+│            │                                                       │
+│  (nav only)│                                                       │
 └────────────┴─────────────────────────────────────────────────────┘
 ```
 
-| Zone | Behavior |
-|------|----------|
-| Primary nav label | **Déclarations** (not "Dossiers") |
-| Primary CTA | **+ Nouvelle déclaration** |
-| Secondary entry | Dossier reachable via link on fiche / column |
+### Zone responsibilities
+
+| Zone | Role | Contains |
+|------|------|----------|
+| **Sidebar** | Wayfinding only | Logo → `/declarations`, nav links (order below), collapse on tablet |
+| **Top bar** | Global utilities | Sidebar toggle, search (⌘K), user menu |
+| **Page header** | Context for current route | `title`, optional `description`, **contextual primary action** |
+| **Main** | Work surface | Tables, fiches, forms, empty states |
+
+### Sidebar nav order
+
+Matches **Déclarations-first** (default landing), not dashboard-first:
+
+1. **Déclarations** — primary DB (Notion “Declarations”)
+2. **Clients**
+3. **Tableau de bord** — secondary analytics (`POL-002`)
+4. **Réglages**
+
+Dossiers are **not** top-level nav — reach via déclaration fiche or list column (`/dossiers/[id]`).
+
+### Contextual primary actions (page header)
+
+| Route | Primary action | Notes |
+|-------|----------------|-------|
+| `/declarations` | **+ Nouvelle déclaration** | Also in empty state + ⌘K (`POL-001`) |
+| `/declarations/new` | — | Form submit is the action |
+| `/declarations/[id]` | **⋯** menu | Statut, rectificative, liens dossier/client |
+| `/clients` | **+ Nouveau client** | |
+| `/clients/[id]` | **Enregistrer un paiement** (accountant) | `CLI-002` |
+| `/dossiers/[id]` | **+ Ajouter une déclaration** (tab) / **Clôturer** (⋯) | Job hub |
+| `/dashboard`, `/settings` | — | Read/config surfaces |
+
+**Do not** duplicate these in the sidebar footer.
+
+### Global shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| ⌘K | Search + quick actions (`POL-001`), incl. « Nouvelle déclaration » |
+
+### Implementation
+
+- `components/shell/app-sidebar.tsx` — nav only
+- `components/shell/app-header.tsx` — top chrome
+- `components/shell/page-header.tsx` — per-page title + actions
+- `components/shell/page-actions.tsx` — shared CTA buttons
 
 ---
 

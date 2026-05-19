@@ -267,15 +267,31 @@
     {
       "id": "UI-002",
       "epic": "ui-shell",
-      "title": "App sidebar: Déclarations, Clients, Réglages + CTA",
+      "title": "App sidebar: Déclarations, Clients, Réglages (nav only)",
       "priority": "p0",
       "status": "done",
       "dependsOn": ["UI-001"],
       "docs": ["docs/10-information-architecture.md", "docs/09-ux-principles.md"],
       "acceptanceCriteria": [
         "Nav labels in French",
-        "Primary CTA: + Nouvelle déclaration",
-        "Collapsible on tablet"
+        "Déclarations-first nav order",
+        "Collapsible on tablet",
+        "No create CTA in sidebar (moved to PageHeader — UI-003)"
+      ]
+    },
+    {
+      "id": "UI-003",
+      "epic": "ui-shell",
+      "title": "Shell IA: PageHeader + contextual CTAs",
+      "priority": "p0",
+      "status": "done",
+      "dependsOn": ["UI-002"],
+      "docs": ["docs/10-information-architecture.md", "docs/09-ux-principles.md", "docs/12-ui-components.md"],
+      "acceptanceCriteria": [
+        "PageHeader component with title, description, actions slot",
+        "Nouvelle déclaration on /declarations (not sidebar)",
+        "Nouveau client on /clients",
+        "docs/10 shell diagram matches implementation"
       ]
     },
     {
@@ -284,12 +300,13 @@
       "title": "Declarations list page (/declarations)",
       "priority": "p0",
       "status": "todo",
-      "dependsOn": ["DOM-003", "UI-002"],
+      "dependsOn": ["DOM-003", "UI-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "Table: N° décl., Dossier, Client, Statut, N° douane, BL",
         "View presets: Tous, En cours, Clôturées (minimal)",
-        "Row navigates to fiche"
+        "Row navigates to fiche",
+        "PageHeader CTA retained (UI-003); filters below header"
       ]
     },
     {
@@ -395,11 +412,12 @@
       "title": "Clients list + fiche (/clients)",
       "priority": "p0",
       "status": "todo",
-      "dependsOn": ["DOM-004", "UI-002"],
+      "dependsOn": ["DOM-004", "UI-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "List with solde column",
-        "Fiche tabs: Déclarations, Comptabilité, Activité"
+        "Fiche tabs: Déclarations, Comptabilité, Activité",
+        "PageHeader CTA retained (UI-003)"
       ]
     },
     {

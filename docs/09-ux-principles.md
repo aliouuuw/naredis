@@ -40,11 +40,12 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 ## Design principles
 
 1. **Déclarations-first navigation** — matches their Notion main DB; not “Dossiers” as primary nav label.
-2. **Dossier appears when useful** — breadcrumb, column, or hub when multiple filings or money/docs context.
-3. **French UI** — Déclaration, Dossier, Statut, Solde, etc.
-4. **Status on the filing** — stepper on fiche déclaration, not ambiguous job-level status.
-5. **Money on the job** — charges/allocations at dossier; optional link to déclaration on charge.
-6. **Confirm money actions** — forms, not inline grid editing.
+2. **Contextual create actions** — “+ Nouvelle déclaration” on the déclarations list (like Notion’s “New” on a database), not in the global sidebar. Sidebar = wayfinding only.
+3. **Dossier appears when useful** — breadcrumb, column, or hub when multiple filings or money/docs context.
+4. **French UI** — Déclaration, Dossier, Statut, Solde, etc.
+5. **Status on the filing** — stepper on fiche déclaration, not ambiguous job-level status.
+6. **Money on the job** — charges/allocations at dossier; optional link to déclaration on charge.
+7. **Confirm money actions** — forms, not inline grid editing.
 
 ---
 

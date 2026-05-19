@@ -2,17 +2,17 @@ import { requireAuthContext } from "@/lib/auth/session";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/shell/page-header";
 
-export default async function NewDeclarationPage() {
+export default async function NewClientPage() {
   await requireAuthContext();
 
   return (
     <div className="mx-auto max-w-lg space-y-8">
       <PageHeader
-        title="Nouvelle déclaration"
-        description="Formulaire de création — à venir (DECL-002)."
+        title="Nouveau client"
+        description="Formulaire de création — à venir (CLI-001)."
       />
-      <ButtonLink href="/declarations" variant="outline">
-        Retour aux déclarations
+      <ButtonLink href="/clients" variant="outline">
+        Retour aux clients
       </ButtonLink>
     </div>
   );

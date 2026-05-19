@@ -8,8 +8,11 @@ See **[00-glossary.md](./00-glossary.md)** and [10-information-architecture.md](
 
 | Component | Notes |
 |-----------|-------|
-| `AppSidebar` | Nav: **Déclarations**, Clients; CTA **+ Nouvelle déclaration** |
-| `CommandMenu` | Search declarations, dossiers, clients |
+| `AppSidebar` | Nav only: Déclarations, Clients, Tableau de bord, Réglages (no footer CTA) |
+| `AppHeader` | Top chrome: search placeholder, user menu (64px, aligned with sidebar logo row) |
+| `PageHeader` | Per-route `title` + `description` + `actions` slot |
+| `NewDeclarationButton` / `NewClientButton` | Contextual CTAs in `page-actions.tsx` |
+| `CommandMenu` | Search declarations, dossiers, clients (`POL-001`) |
 
 ---
 

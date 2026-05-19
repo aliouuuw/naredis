@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `DOM-001` (declaration FSM) or `UI-001` (auth pages polish)
+**Next up:** `DOM-001` (declaration FSM) or `DECL-001` (declarations list)
 
 ---
 
@@ -91,6 +91,7 @@ _None._
 | PLAT-007 | Dev seed script | 2026-05-19 |
 | PLAT-008 | shadcn/ui + app shell baseline | 2026-05-19 |
 | UI-002   | App sidebar + Vercel design  | 2026-05-19 |
+| UI-003   | Shell IA: PageHeader + contextual CTAs | 2026-05-19 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -107,6 +108,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-19 — Shell IA rethink (UI-003)
+
+Sidebar = nav only (Déclarations-first order). Primary create actions moved to `PageHeader` per route. Updated `docs/10`, `docs/09`, `docs/12`, backlog.
 
 ### 2026-05-19 — shadcn + app shell (PLAT-008)
 

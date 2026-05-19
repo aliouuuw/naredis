@@ -5,15 +5,12 @@ import { usePathname } from "next/navigation";
 import {
   FileText,
   LayoutDashboard,
-  Plus,
   Settings,
   Users,
 } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -24,12 +21,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+/** Déclarations-first order — matches default landing and Notion main DB. */
 const navItems = [
-  {
-    title: "Tableau de bord",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
   {
     title: "Déclarations",
     href: "/declarations",
@@ -39,6 +32,11 @@ const navItems = [
     title: "Clients",
     href: "/clients",
     icon: Users,
+  },
+  {
+    title: "Tableau de bord",
+    href: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     title: "Réglages",
@@ -76,8 +74,7 @@ export function AppSidebar() {
               {navItems.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(`${item.href}/`));
+                  pathname.startsWith(`${item.href}/`);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
@@ -95,17 +92,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <ButtonLink
-          href="/declarations/new"
-          className="h-9 w-full justify-start gap-2 rounded-full px-4 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
-        >
-          <Plus className="size-4 shrink-0" />
-          <span className="group-data-[collapsible=icon]:hidden">
-            Nouvelle déclaration
-          </span>
-        </ButtonLink>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

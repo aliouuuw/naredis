@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { declarations } from "@/lib/db/schema";
 import { requireAuthContext } from "@/lib/auth/session";
+import { PageHeader } from "@/components/shell/page-header";
+import { NewDeclarationButton } from "@/components/shell/page-actions";
 
 export default async function DeclarationsPage() {
   const ctx = await requireAuthContext();
@@ -17,17 +19,21 @@ export default async function DeclarationsPage() {
     .limit(20);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Déclarations</h1>
-        <p className="text-sm text-muted-foreground">
-          Liste des déclarations douanières de votre cabinet.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Déclarations"
+        description="Liste des déclarations douanières de votre cabinet."
+        actions={<NewDeclarationButton />}
+      />
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Aucune déclaration pour cette organisation.
-        </p>
+        <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            Créez votre première déclaration pour commencer.
+          </p>
+          <div className="mt-4 flex justify-center">
+            <NewDeclarationButton />
+          </div>
+        </div>
       ) : (
         <ul className="divide-y rounded-lg border bg-card">
           {rows.map((row) => (
