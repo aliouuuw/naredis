@@ -1,0 +1,501 @@
+{
+  "version": 1,
+  "project": "ndouckmane-transit",
+  "updated": "2026-05-19",
+  "defaultStatus": "todo",
+  "statuses": ["todo", "in_progress", "done", "blocked", "deferred"],
+  "priorities": ["p0", "p1", "p2"],
+  "epics": [
+    {
+      "id": "platform",
+      "title": "Platform & developer experience",
+      "description": "DB, auth, tooling, local Postgres 17, deploy path to Neon"
+    },
+    {
+      "id": "domain-data",
+      "title": "Domain schema & services",
+      "description": "Dossiers, déclarations, ledger, activity — see docs/05, docs/06"
+    },
+    {
+      "id": "ui-shell",
+      "title": "App shell & navigation",
+      "description": "Layout, Déclarations-first nav, auth gates — docs/10"
+    },
+    {
+      "id": "declarations",
+      "title": "Déclarations (primary UI)",
+      "description": "List, fiche, FSM, rectificative — Notion Declarations replacement"
+    },
+    {
+      "id": "dossiers",
+      "title": "Dossiers (job hub)",
+      "description": "Multi-filing container, documents, finances, case close"
+    },
+    {
+      "id": "clients-ledger",
+      "title": "Clients & comptabilité",
+      "description": "Clients, ledger, allocations, relevé PDF"
+    },
+    {
+      "id": "polish",
+      "title": "Search, dashboard, pilot readiness",
+      "description": "Cmd+K, dashboard, seed, staging deploy"
+    }
+  ],
+  "items": [
+    {
+      "id": "PLAT-001",
+      "epic": "platform",
+      "title": "PostgreSQL 17 local dev + DATABASE_URL",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": [],
+      "docs": ["docs/02-stack.md"],
+      "acceptanceCriteria": [
+        "Local database ndouckmane_transit_dev exists",
+        ".env.local.example documents DATABASE_URL",
+        "README or progress.md notes connection verified"
+      ]
+    },
+    {
+      "id": "PLAT-002",
+      "epic": "platform",
+      "title": "Drizzle ORM setup + migration scripts",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-001"],
+      "docs": ["docs/02-stack.md", "docs/06-data-model.md"],
+      "acceptanceCriteria": [
+        "drizzle.config.ts points at lib/db/schema",
+        "bun run db:migrate applies cleanly on empty local DB",
+        "db:generate and db:seed scripts in package.json"
+      ]
+    },
+    {
+      "id": "PLAT-003",
+      "epic": "platform",
+      "title": "Core schema migration (orgs, customers, dossiers, declarations)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-002"],
+      "docs": ["docs/06-data-model.md", "docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "All MVP tables from 06-data-model exist with organization_id",
+        "Indexes and uniques on dossier_number, declaration_number per org"
+      ]
+    },
+    {
+      "id": "PLAT-004",
+      "epic": "platform",
+      "title": "Ledger, allocations, documents, activity_log schema",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-003"],
+      "docs": ["docs/06-data-model.md"],
+      "acceptanceCriteria": [
+        "ledger_entries, payment_allocations, documents, activity_log migrated",
+        "declaration_status_history table present"
+      ]
+    },
+    {
+      "id": "PLAT-005",
+      "epic": "platform",
+      "title": "Better Auth + organization plugin + Drizzle adapter",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-002"],
+      "docs": ["docs/07-auth.md"],
+      "acceptanceCriteria": [
+        "Sign up / login works locally",
+        "Organization created on first user",
+        "Session available in server components / actions"
+      ]
+    },
+    {
+      "id": "PLAT-006",
+      "epic": "platform",
+      "title": "Tenancy helpers (requireOrg, organizationId on queries)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-005", "PLAT-003"],
+      "docs": ["docs/04-architecture.md", "docs/07-auth.md"],
+      "acceptanceCriteria": [
+        "Every module service accepts organizationId",
+        "Unauthenticated requests rejected",
+        "Cross-org access impossible in service layer tests or manual check"
+      ]
+    },
+    {
+      "id": "PLAT-007",
+      "epic": "platform",
+      "title": "Dev seed script (multi-declaration dossier)",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["PLAT-004", "PLAT-005"],
+      "docs": ["docs/06-data-model.md", "docs/00-glossary.md"],
+      "acceptanceCriteria": [
+        "1 org, 2 users, 3 clients, 4+ declarations across dossiers",
+        "Sample ledger, one dossier with rectification",
+        "bun run db:seed is idempotent or documented reset"
+      ]
+    },
+    {
+      "id": "PLAT-008",
+      "epic": "platform",
+      "title": "shadcn/ui + Tailwind app shell baseline",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": [],
+      "docs": ["docs/12-ui-components.md", "docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "shadcn initialized",
+        "Authenticated layout with sidebar placeholder",
+        "French-friendly font and spacing baseline"
+      ]
+    },
+    {
+      "id": "DOM-001",
+      "epic": "domain-data",
+      "title": "Declaration status FSM (import) + guards",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-003"],
+      "docs": ["docs/05-domain-model.md", "docs/04-architecture.md"],
+      "acceptanceCriteria": [
+        "lib/domain/declaration-status.ts with allowed transitions",
+        "cleared requires customs_reference guard",
+        "Unit tests for invalid transitions"
+      ]
+    },
+    {
+      "id": "DOM-002",
+      "epic": "domain-data",
+      "title": "Dossiers module (CRUD, case_status, numbering)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-006", "PLAT-003"],
+      "docs": ["docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "Create dossier with dossier_number sequence",
+        "case_status open/on_hold/closed",
+        "getById scoped by org"
+      ]
+    },
+    {
+      "id": "DOM-003",
+      "epic": "domain-data",
+      "title": "Declarations module (CRUD, FSM transitions, history)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOM-001", "DOM-002"],
+      "docs": ["docs/05-domain-model.md", "docs/00-glossary.md"],
+      "acceptanceCriteria": [
+        "createDeclaration creates dossier when needed",
+        "addDeclaration (rectification) on existing dossier",
+        "transitionStatus writes history + activity_log"
+      ]
+    },
+    {
+      "id": "DOM-004",
+      "epic": "domain-data",
+      "title": "Customers module",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-006"],
+      "docs": ["docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "CRUD customers",
+        "List with computed solde query"
+      ]
+    },
+    {
+      "id": "DOM-005",
+      "epic": "domain-data",
+      "title": "Ledger module (entries, reversals, allocations)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-004", "DOM-002"],
+      "docs": ["docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "Immutable entries; reversal only",
+        "Payment allocations sum <= payment amount",
+        "Charges require dossier_id",
+        "Optional declaration_id on charge"
+      ]
+    },
+    {
+      "id": "DOM-006",
+      "epic": "domain-data",
+      "title": "Activity module",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["PLAT-004"],
+      "docs": ["docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "appendActivity called from declaration, ledger, dossier flows",
+        "Query by entity_type + entity_id"
+      ]
+    },
+    {
+      "id": "DOM-007",
+      "epic": "domain-data",
+      "title": "Documents module (R2 presign — or local stub)",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["PLAT-004", "DOM-002"],
+      "docs": ["docs/02-stack.md", "docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "Upload metadata row on dossier",
+        "Optional declaration_id",
+        "Dev stub acceptable before R2 wired"
+      ]
+    },
+    {
+      "id": "UI-001",
+      "epic": "ui-shell",
+      "title": "Auth pages (login) + route protection",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-005", "PLAT-008"],
+      "docs": ["docs/07-auth.md", "docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "/login public",
+        "App routes redirect unauthenticated users",
+        "Default landing /declarations after login"
+      ]
+    },
+    {
+      "id": "UI-002",
+      "epic": "ui-shell",
+      "title": "App sidebar: Déclarations, Clients, Réglages + CTA",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["UI-001"],
+      "docs": ["docs/10-information-architecture.md", "docs/09-ux-principles.md"],
+      "acceptanceCriteria": [
+        "Nav labels in French",
+        "Primary CTA: + Nouvelle déclaration",
+        "Collapsible on tablet"
+      ]
+    },
+    {
+      "id": "DECL-001",
+      "epic": "declarations",
+      "title": "Declarations list page (/declarations)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOM-003", "UI-002"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Table: N° décl., Dossier, Client, Statut, N° douane, BL",
+        "View presets: Tous, En cours, Clôturées (minimal)",
+        "Row navigates to fiche"
+      ]
+    },
+    {
+      "id": "DECL-002",
+      "epic": "declarations",
+      "title": "New declaration form (/declarations/new)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOM-003", "DOM-004"],
+      "docs": ["docs/11-user-flows.md", "docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Client select; new vs existing dossier",
+        "Creates dossier + initial declaration by default",
+        "Redirects to fiche with toast"
+      ]
+    },
+    {
+      "id": "DECL-003",
+      "epic": "declarations",
+      "title": "Declaration fiche (/declarations/[id])",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DECL-001"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Status stepper + property grid",
+        "Dossier context card with link to dossier hub",
+        "Résumé + Activité tabs"
+      ]
+    },
+    {
+      "id": "DECL-004",
+      "epic": "declarations",
+      "title": "Status change sheet (FSM UI)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DECL-003", "DOM-001"],
+      "docs": ["docs/11-user-flows.md"],
+      "acceptanceCriteria": [
+        "Only allowed next statuses enabled",
+        "Note field optional",
+        "Error message in French on invalid transition"
+      ]
+    },
+    {
+      "id": "DECL-005",
+      "epic": "declarations",
+      "title": "Add rectificative declaration flow",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["DECL-003", "DOM-003"],
+      "docs": ["docs/11-user-flows.md", "docs/00-glossary.md"],
+      "acceptanceCriteria": [
+        "From dossier or declaration fiche",
+        "kind=rectification; same dossier_id",
+        "List shows two rows same dossier number"
+      ]
+    },
+    {
+      "id": "DOS-001",
+      "epic": "dossiers",
+      "title": "Dossier hub page (/dossiers/[id])",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOM-002", "DOM-003"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Tabs: Déclarations, Documents, Finances, Activité",
+        "Declarations table on dossier",
+        "Close dossier action with warnings"
+      ]
+    },
+    {
+      "id": "DOS-002",
+      "epic": "dossiers",
+      "title": "Documents tab + upload UI",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["DOS-001", "DOM-007"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Typed upload; list with version",
+        "Documents on dossier fiche"
+      ]
+    },
+    {
+      "id": "DOS-003",
+      "epic": "dossiers",
+      "title": "Finances tab (dossier summary + charges list)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOS-001", "DOM-005"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Charges / Payé / Reste summary",
+        "Add charge modals (accountant role)",
+        "Operators read-only"
+      ]
+    },
+    {
+      "id": "CLI-001",
+      "epic": "clients-ledger",
+      "title": "Clients list + fiche (/clients)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["DOM-004", "UI-002"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "List with solde column",
+        "Fiche tabs: Déclarations, Comptabilité, Activité"
+      ]
+    },
+    {
+      "id": "CLI-002",
+      "epic": "clients-ledger",
+      "title": "Payment + allocation UI",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["CLI-001", "DOM-005"],
+      "docs": ["docs/11-user-flows.md", "docs/12-ui-components.md"],
+      "acceptanceCriteria": [
+        "Record payment on client",
+        "Allocate to one or more dossiers",
+        "Block save if allocation mismatch"
+      ]
+    },
+    {
+      "id": "CLI-003",
+      "epic": "clients-ledger",
+      "title": "Opening balance + reversal UI",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["CLI-002"],
+      "docs": ["docs/05-domain-model.md"],
+      "acceptanceCriteria": [
+        "Opening balance entry on client create or comptabilité",
+        "Reverse with reason (accountant)"
+      ]
+    },
+    {
+      "id": "CLI-004",
+      "epic": "clients-ledger",
+      "title": "Relevé de compte PDF export",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["CLI-001", "DOM-005"],
+      "docs": ["docs/03-mvp-scope.md"],
+      "acceptanceCriteria": [
+        "PDF download from client fiche",
+        "Chronological entries + final solde",
+        "fr-FR / Africa-Dakar dates"
+      ]
+    },
+    {
+      "id": "POL-001",
+      "epic": "polish",
+      "title": "Global search (Cmd+K)",
+      "priority": "p1",
+      "status": "todo",
+      "dependsOn": ["DECL-001", "CLI-001"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Search declaration #, dossier #, client name, BL, customs ref",
+        "Quick action: new declaration"
+      ]
+    },
+    {
+      "id": "POL-002",
+      "epic": "polish",
+      "title": "Dashboard (/dashboard)",
+      "priority": "p2",
+      "status": "todo",
+      "dependsOn": ["DECL-001", "CLI-001"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Counts: déclarations en cours, dossiers ouverts",
+        "Top client balances"
+      ]
+    },
+    {
+      "id": "POL-003",
+      "epic": "polish",
+      "title": "Settings page (org name, members)",
+      "priority": "p2",
+      "status": "todo",
+      "dependsOn": ["PLAT-005", "UI-002"],
+      "docs": ["docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "View org; invite member (minimal)",
+        "Role display"
+      ]
+    },
+    {
+      "id": "POL-004",
+      "epic": "polish",
+      "title": "Neon staging + Vercel preview deploy",
+      "priority": "p1",
+      "status": "deferred",
+      "dependsOn": ["POL-001"],
+      "docs": ["docs/02-stack.md", "docs/03-mvp-scope.md"],
+      "acceptanceCriteria": [
+        "Staging DATABASE_URL on Neon",
+        "Migrations run in CI or deploy hook",
+        "Pilot can access preview URL"
+      ],
+      "notes": "Use local Postgres 17 until core flows work; Neon when ready for external pilot."
+    }
+  ]
+}

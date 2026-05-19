@@ -18,7 +18,7 @@ Goals:
 | Server config | `lib/auth/auth.ts` — `betterAuth({ ... })` |
 | Route handler | `app/api/auth/[...all]/route.ts` |
 | Client | `lib/auth/auth-client.ts` for sign-in UI |
-| Database adapter | Drizzle adapter pointing at same Neon Postgres |
+| Database adapter | Drizzle adapter on same Postgres as app (local PG 17 in dev) |
 | Organizations | Better Auth **organization plugin** |
 | Session in RSC | `auth.api.getSession({ headers })` in server components / actions |
 

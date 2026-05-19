@@ -2,7 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Project docs
 
-MVP planning and architecture: **[`docs/`](./docs/README.md)** (domain model, stack, Better Auth, data model, roadmap).
+- **Planning:** [`docs/`](./docs/README.md) — domain model, stack, UX, auth
+- **Tracking:** [`backlog.json`](./backlog.json) — tasks · [`progress.md`](./progress.md) — status & decisions
+
+**Local dev database:** PostgreSQL **17** (see [docs/02-stack.md](./docs/02-stack.md)). Neon for staging/production later.
 
 ## Getting Started
 

@@ -20,6 +20,13 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | [User flows](./11-user-flows.md) | Step-by-step flows by persona |
 | [UI components](./12-ui-components.md) | shadcn patterns and component map |
 
+## Project tracking (root)
+
+| File | Purpose |
+|------|---------|
+| [`backlog.json`](../backlog.json) | Prioritized tasks with IDs, deps, acceptance criteria |
+| [`progress.md`](../progress.md) | Current phase, decisions, what's done |
+
 ## How to use these docs
 
 - Read **00-glossary** before **05-domain-model** (dossier = job, déclaration = customs filing).
@@ -32,7 +39,8 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | Area | Status |
 |------|--------|
 | Next.js app scaffold | Done |
-| Planning docs | In progress |
-| Database / Drizzle | Not started |
+| Planning docs | Done |
+| backlog.json + progress.md | Done |
+| Database / Drizzle (local PG 17) | Not started |
 | Better Auth | Not started |
 | Core modules | Not started |

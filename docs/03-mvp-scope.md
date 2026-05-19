@@ -14,7 +14,7 @@ See **[00-glossary.md](./00-glossary.md)**.
 
 - [ ] `organization_id` on all business rows
 - [ ] **Better Auth** + org membership + roles
-- [ ] **Drizzle** + Neon migrations
+- [ ] **Drizzle** + migrations (local **PostgreSQL 17** in dev; Neon in staging/prod)
 - [ ] App-layer tenancy on every query
 
 ### Customers (Notion: Customers)

@@ -2,6 +2,8 @@
 
 Draft schema for Drizzle + Postgres. See **[00-glossary.md](./00-glossary.md)**.
 
+**Dev:** apply migrations to local **PostgreSQL 17**. **Staging/prod:** Neon (same migrations).
+
 **Do not** weaken money or tenancy columns.
 
 ## Conventions
