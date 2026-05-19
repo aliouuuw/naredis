@@ -1,4 +1,4 @@
-const DEFAULT_PATH = "/declarations";
+const DEFAULT_PATH = "/dashboard";
 
 /** Only allow same-origin relative paths (blocks open redirects). */
 export function sanitizeRedirectPath(

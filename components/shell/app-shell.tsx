@@ -1,12 +1,4 @@
-"use client";
-
-import { AppSidebar } from "@/components/shell/app-sidebar";
-import { AppHeader } from "@/components/shell/app-header";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { AppTopNav } from "@/components/shell/app-top-nav";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -15,14 +7,11 @@ type AppShellProps = {
 
 export function AppShell({ children, userEmail }: AppShellProps) {
   return (
-    <SidebarProvider defaultOpen>
-      <AppSidebar />
-      <SidebarInset className="flex min-h-svh flex-col">
-        <AppHeader userEmail={userEmail} sidebarTrigger={<SidebarTrigger />} />
-        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
-          {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-svh flex-col bg-background">
+      <AppTopNav userEmail={userEmail} />
+      <main className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-6 px-4 py-6 md:px-6 md:py-8 lg:px-8">
+        {children}
+      </main>
+    </div>
   );
 }

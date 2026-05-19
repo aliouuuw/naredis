@@ -10,72 +10,71 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 /login
 
 /app
-├── /declarations              ← default landing (Notion "Declarations" DB)
+├── /dashboard                 ← default landing (actionable home)
+├── /declarations              ← primary operational database
 │   ├── /declarations/new
 │   └── /declarations/[id]     ← fiche déclaration (daily work)
 ├── /dossiers/[id]             ← job hub (multi-filing, docs, money)
 ├── /clients
 │   ├── /clients/new
 │   └── /clients/[id]
-├── /dashboard
 └── /settings
 ```
 
-**Default after login:** `/declarations`
+**Default after login:** `/dashboard`
 
 ---
 
 ## App shell
 
-Three zones — **no create actions in the sidebar** (Notion-style: “New” lives on the database view).
+**Horizontal tab navbar** (no sidebar). **Two-row header** (Vercel-style): chrome row, then nav tabs row.
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ [Logo NT]           [ 🔍 Rechercher...  ⌘K ]           [User ▾]  │  ← top chrome (64px)
-├────────────┬─────────────────────────────────────────────────────┤
-│ Déclarat. ●│  Page title                    [ + action contexte ] │  ← page header
-│ Clients    │  ─────────────────────────────────────────────────  │
-│ Tableau de │  Main content (list, fiche, forms)                    │
-│ bord       │                                                       │
-│ Réglages   │                                                       │
-│            │                                                       │
-│  (nav only)│                                                       │
-└────────────┴─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│ [NT] Ndouckmane Transit          [ 🔍 Rechercher… ⌘K ]        [User ▾] │  ← row 1 (64px)
+├──────────────────────────────────────────────────────────────────────────┤
+│  Tableau de bord │ Déclarations ● │ Clients │ Réglages                   │  ← row 2 (40px)
+├──────────────────────────────────────────────────────────────────────────┤
+│  Page title                                    [ + action contextuelle ] │  ← PageHeader
+│  ─────────────────────────────────────────────────────────────────────── │
+│  Main content (full width)                                               │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Zone responsibilities
 
 | Zone | Role | Contains |
 |------|------|----------|
-| **Sidebar** | Wayfinding only | Logo → `/declarations`, nav links (order below), collapse on tablet |
-| **Top bar** | Global utilities | Sidebar toggle, search (⌘K), user menu |
+| **Chrome row** | Brand + global utilities | Logo → `/dashboard`, search (⌘K), user menu: email, **Se déconnecter**, **Apparence** (Clair / Sombre / Système) |
+| **Nav row** | Primary wayfinding | Horizontal tabs only |
 | **Page header** | Context for current route | `title`, optional `description`, **contextual primary action** |
-| **Main** | Work surface | Tables, fiches, forms, empty states |
+| **Main** | Work surface (full width) | Tables, fiches, forms, dashboard sections |
 
-### Sidebar nav order
+### Tab order (left to right)
 
-Matches **Déclarations-first** (default landing), not dashboard-first:
+1. **Tableau de bord** — home, default after login
+2. **Déclarations** — primary operational database
+3. **Clients** — accounts + comptabilité
+4. **Réglages** — org + members
 
-1. **Déclarations** — primary DB (Notion “Declarations”)
-2. **Clients**
-3. **Tableau de bord** — secondary analytics (`POL-002`)
-4. **Réglages**
+Active tab: `pathname === href` or `pathname.startsWith(href + '/')` (e.g. `/declarations/new` keeps Déclarations active).
 
-Dossiers are **not** top-level nav — reach via déclaration fiche or list column (`/dossiers/[id]`).
+Dossiers are **not** top-level — reach via déclaration fiche, list column, or dashboard queue (`/dossiers/[id]`).
 
 ### Contextual primary actions (page header)
 
 | Route | Primary action | Notes |
 |-------|----------------|-------|
+| `/dashboard` | Quick actions: **+ Nouvelle déclaration**, **+ Nouveau client** | Inline row above sections |
 | `/declarations` | **+ Nouvelle déclaration** | Also in empty state + ⌘K (`POL-001`) |
 | `/declarations/new` | — | Form submit is the action |
 | `/declarations/[id]` | **⋯** menu | Statut, rectificative, liens dossier/client |
 | `/clients` | **+ Nouveau client** | |
 | `/clients/[id]` | **Enregistrer un paiement** (accountant) | `CLI-002` |
 | `/dossiers/[id]` | **+ Ajouter une déclaration** (tab) / **Clôturer** (⋯) | Job hub |
-| `/dashboard`, `/settings` | — | Read/config surfaces |
+| `/settings` | — | Config surface |
 
-**Do not** duplicate these in the sidebar footer.
+**Do not** put create CTAs in the tab bar.
 
 ### Global shortcuts
 
@@ -85,10 +84,15 @@ Dossiers are **not** top-level nav — reach via déclaration fiche or list colu
 
 ### Implementation
 
-- `components/shell/app-sidebar.tsx` — nav only
-- `components/shell/app-header.tsx` — top chrome
+- `components/shell/app-top-nav.tsx` — two rows: chrome (64px) + tab nav (40px)
+- `components/shell/nav-tab.tsx` — shared tab link with active styles
 - `components/shell/page-header.tsx` — per-page title + actions
 - `components/shell/page-actions.tsx` — shared CTA buttons
+- `components/shell/theme-menu-items.tsx` — theme radio group in user dropdown
+- `components/shell/theme-toggle.tsx` — login page light/dark toggle
+- `components/theme-provider.tsx` — `next-themes` wrapper in root layout
+
+**Login (`/login`):** no tab bar; `ThemeToggle` top-right. Same `ThemeProvider` as the app.
 
 ---
 
@@ -237,14 +241,35 @@ Unchanged pattern; client fiche tabs:
 
 ---
 
-## Page: Dashboard
+## Page: Tableau de bord (`/dashboard`)
+
+**Home for both personas.** Actionable — not just stats. Three sections.
+
+### Section 1 — Synthèse (summary cards)
 
 | Card | Metric |
 |------|--------|
 | Déclarations en cours | count |
-| Par statut | breakdown |
 | Dossiers ouverts | count |
-| Soldes clients | top balances |
+| Soldes à surveiller | clients with overdue/negative balance |
+| Par statut | small breakdown (optional) |
+
+### Section 2 — À faire (priority work queue)
+
+Cross-entity list of items needing attention. Rows link to the relevant fiche.
+
+| Type | Trigger |
+|------|---------|
+| Déclaration stagnante | Status unchanged > N days |
+| Déclaration sans n° douane | Past `Déposée` without `customs_reference` |
+| Solde client en souffrance | Negative or overdue balance |
+| Dossier prêt à clôturer | All déclarations `Clôturée` but `case_status = open` |
+
+### Section 3 — Activité récente
+
+Unified timeline of the last N events across déclarations, dossiers, ledger, documents — links to source entity.
+
+**Principle:** Dashboard answers “what needs my attention?” · Déclarations list answers “show me everything.”
 
 ---
 
@@ -304,4 +329,8 @@ Same routes; layout variant on `/declarations`. Not required for first MVP slice
 
 ## Responsive
 
-Mobile bottom nav: **Déclarations**, **Clients**, **Recherche**.
+| Breakpoint | Nav |
+|------------|-----|
+| Desktop | Full horizontal tabs in top bar |
+| Tablet | Scrollable tab row (`overflow-x-auto`, no wrap) |
+| Mobile | Bottom tab bar: **Tableau de bord**, **Déclarations**, **Clients**, **Recherche** (Réglages in user menu) |

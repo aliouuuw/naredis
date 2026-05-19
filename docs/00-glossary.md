@@ -40,7 +40,7 @@ Client
 
 | Context | Use |
 |---------|-----|
-| **Sidebar nav, main list, CTA** | **Déclarations** (what Notion users already say) |
+| **Tab nav (Déclarations tab), main list, CTA** | **Déclarations** (what Notion users already say) |
 | **Parent link on a fiche** | **Dossier 2025-0042** (when job has context) |
 | **Code, schema, modules** | `dossiers`, `declarations` |
 | **English planning docs** | dossier = job, declaration = filing |

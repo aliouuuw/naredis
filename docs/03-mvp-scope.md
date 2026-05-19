@@ -59,8 +59,10 @@ See **[00-glossary.md](./00-glossary.md)**.
 
 ### UI / exports
 
-- [ ] Shell: nav **Déclarations** (primary), **Clients**, Dashboard, Réglages
-- [ ] CTA **+ Nouvelle déclaration**
+- [x] Shell: **horizontal tab nav** — Tableau de bord (home), Déclarations, Clients, Réglages (`UI-004`)
+- [x] Default landing `/dashboard` — stub sections (synthèse, à faire, activité récente); live data in `POL-002`
+- [x] CTA **+ Nouvelle déclaration** on `/declarations` page header + dashboard quick action (`UI-003`)
+- [x] Theme switcher (Clair / Sombre / Système) — profile menu + login toggle (`UI-005`)
 - [ ] Global search: declaration #, dossier #, client, BL, customs ref
 - [ ] PDF relevé de compte
 
@@ -104,7 +106,7 @@ See **[00-glossary.md](./00-glossary.md)**.
 | `/clients/[id]` | Client fiche |
 | `/settings` | Org + members |
 
-**Default after login:** `/declarations`
+**Default after login:** `/dashboard`
 
 ---
 

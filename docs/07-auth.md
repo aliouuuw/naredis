@@ -69,9 +69,11 @@ If the user has a session but no `organization_members` row, they are signed out
 
 | Route | Access |
 |-------|--------|
-| `/login` | Public |
-| `/declarations`, `/clients`, `/dossiers`, … | Authenticated + org member |
+| `/login` | Public; theme toggle in corner |
+| `/dashboard`, `/declarations`, `/clients`, `/dossiers`, … | Authenticated + org member |
 | `/api/auth/*` | Better Auth |
+
+**After login:** redirect to `/dashboard` (actionable home). Logout: `signOut()` then full navigation to `/login` (avoids RSC refresh races on protected routes).
 
 ## Environment
 

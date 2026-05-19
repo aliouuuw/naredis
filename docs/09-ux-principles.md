@@ -12,8 +12,8 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 
 | Notion pattern | Our equivalent |
 |----------------|----------------|
-| Sidebar + databases | **Déclarations**, **Clients**, Réglages |
-| Main database = Declarations | **`/declarations` list** (primary) |
+| Sidebar + databases | **Horizontal tab nav** (Tableau de bord, Déclarations, Clients, Réglages) |
+| Main database = Declarations | **`/declarations` list** (primary operational DB) |
 | Row opens full page | **Fiche déclaration** |
 | Properties at top | Property strip (statut, n° douane, client, dossier, BL) |
 | Relation to client | Client link; client page shows related déclarations |
@@ -39,13 +39,14 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 
 ## Design principles
 
-1. **Déclarations-first navigation** — matches their Notion main DB; not “Dossiers” as primary nav label.
-2. **Contextual create actions** — “+ Nouvelle déclaration” on the déclarations list (like Notion’s “New” on a database), not in the global sidebar. Sidebar = wayfinding only.
-3. **Dossier appears when useful** — breadcrumb, column, or hub when multiple filings or money/docs context.
-4. **French UI** — Déclaration, Dossier, Statut, Solde, etc.
-5. **Status on the filing** — stepper on fiche déclaration, not ambiguous job-level status.
-6. **Money on the job** — charges/allocations at dossier; optional link to déclaration on charge.
-7. **Confirm money actions** — forms, not inline grid editing.
+1. **Dashboard-first navigation** — `/dashboard` is the default landing for all personas; **horizontal tab navbar** (Tableau de bord, Déclarations, Clients, Réglages) — no left sidebar.
+2. **Actionable home** — Tableau de bord is a workbench (synthèse, à faire, activité récente), not a stats wall.
+3. **Contextual create actions** — “+ Nouvelle déclaration” on the déclarations list (and as a dashboard quick action); never in the global tab bar.
+4. **Dossier appears when useful** — breadcrumb, column, or hub when multiple filings or money/docs context.
+5. **French UI** — Déclaration, Dossier, Statut, Solde, etc.
+6. **Status on the filing** — stepper on fiche déclaration, not ambiguous job-level status.
+7. **Money on the job** — charges/allocations at dossier; optional link to déclaration on charge.
+8. **Confirm money actions** — forms, not inline grid editing.
 
 ---
 
@@ -63,7 +64,7 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 
 ## Visual language
 
-Unchanged: Notion-like density, status pills, stepper on **déclaration** fiche, XOF formatting, shadcn.
+Notion-like density, status pills, stepper on **déclaration** fiche, XOF formatting, shadcn. **Vercel-inspired** shell (Geist, two-row header, design tokens in `globals.css`). **Theme:** Clair / Sombre / Système via profile menu; compact sun/moon toggle on `/login` (`next-themes`).
 
 ---
 

@@ -149,7 +149,7 @@
       "docs": ["docs/12-ui-components.md", "docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "shadcn initialized",
-        "Authenticated layout with sidebar placeholder",
+        "Authenticated layout with app shell (tab nav via UI-004)",
         "French-friendly font and spacing baseline"
       ]
     },
@@ -261,7 +261,7 @@
       "acceptanceCriteria": [
         "/login public",
         "App routes redirect unauthenticated users",
-        "Default landing /declarations after login"
+        "Default landing /dashboard after login"
       ]
     },
     {
@@ -292,6 +292,38 @@
         "Nouvelle déclaration on /declarations (not sidebar)",
         "Nouveau client on /clients",
         "docs/10 shell diagram matches implementation"
+      ]
+    },
+    {
+      "id": "UI-004",
+      "epic": "ui-shell",
+      "title": "IA v2: horizontal tab nav + dashboard landing",
+      "priority": "p0",
+      "status": "done",
+      "dependsOn": ["UI-003"],
+      "docs": ["docs/10-information-architecture.md", "docs/09-ux-principles.md", "docs/11-user-flows.md"],
+      "acceptanceCriteria": [
+        "Horizontal tab navbar replaces sidebar (AppTopNav)",
+        "Tab order: Tableau de bord, Déclarations, Clients, Réglages",
+        "Default landing /dashboard after login",
+        "Dashboard stub with synthèse / à faire / activité récente sections",
+        "Active tab via pathname match incl. nested routes"
+      ],
+      "notes": "Supersedes UI-002 sidebar pattern. Data wiring for dashboard sections in POL-002."
+    },
+    {
+      "id": "UI-005",
+      "epic": "ui-shell",
+      "title": "Theme switcher (Clair / Sombre / Système)",
+      "priority": "p1",
+      "status": "done",
+      "dependsOn": ["PLAT-008"],
+      "docs": ["docs/02-stack.md", "docs/09-ux-principles.md", "docs/10-information-architecture.md", "docs/12-ui-components.md"],
+      "acceptanceCriteria": [
+        "next-themes ThemeProvider on root layout (class attribute, default light, system allowed)",
+        "Profile menu Apparence: Clair, Sombre, Système",
+        "Login page ThemeToggle (light/dark)",
+        "No hydration mismatch (mount-gated theme UI)"
       ]
     },
     {
@@ -477,14 +509,16 @@
     {
       "id": "POL-002",
       "epic": "polish",
-      "title": "Dashboard (/dashboard)",
-      "priority": "p2",
+      "title": "Actionable dashboard (/dashboard data wiring)",
+      "priority": "p0",
       "status": "todo",
-      "dependsOn": ["DECL-001", "CLI-001"],
+      "dependsOn": ["UI-004", "DECL-001", "CLI-001"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
-        "Counts: déclarations en cours, dossiers ouverts",
-        "Top client balances"
+        "Synthèse cards: déclarations en cours, dossiers ouverts, soldes à surveiller",
+        "À faire queue: stale declarations, missing n° douane, overdue solde, dossiers ready to close",
+        "Activité récente: unified timeline (last N events) with links to source entities",
+        "Empty states for first-time orgs"
       ]
     },
     {

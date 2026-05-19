@@ -7,8 +7,11 @@ See **[00-glossary.md](./00-glossary.md)**. Flows use **déclaration** language;
 ## Flow 0 — First login
 
 ```
-Login → /declarations (empty)
-  → "Ajoutez un client" / "Créez votre première déclaration"
+Login → /dashboard (empty state)
+  → Optional: theme toggle (top-right) before sign-in
+  → Onboarding card: "Ajoutez un client" / "Créez votre première déclaration"
+  → Tabs: Tableau de bord (●), Déclarations, Clients, Réglages
+  → Profile menu: Apparence (Clair / Sombre / Système), Se déconnecter
 ```
 
 ---
@@ -130,12 +133,14 @@ Unchanged — client level.
 ## Flow 9 — Morning triage
 
 ```
-Login → /declarations
-→ preset "En cours"
-→ sort oldest updated
-→ open first row → work status / docs
-→ next row (split view later = no back navigation)
+Login → /dashboard
+→ Section "À faire" lists cross-entity priorities
+  (stale declarations, missing n° douane, overdue soldes, dossiers ready to close)
+→ click row → fiche concerned
+→ back to dashboard or move to Déclarations tab for full DB view
 ```
+
+**Improvement over Notion/filters:** triage is cross-entity (déclarations + clients + dossiers) and pre-filtered.
 
 ---
 

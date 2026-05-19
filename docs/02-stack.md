@@ -7,7 +7,8 @@
 | Runtime / package manager | **Bun** | Already used in repo |
 | Framework | **Next.js** (App Router) | UI + server boundaries |
 | Language | **TypeScript** (strict) | End-to-end |
-| Styling | **Tailwind CSS v4** + **shadcn/ui** | Add shadcn when building UI |
+| Styling | **Tailwind CSS v4** + **shadcn/ui** (Base UI) | Vercel tokens in `globals.css`; see `DESIGN.md` |
+| Theming | **next-themes** | Class on `<html>`; Clair / Sombre / Système in user menu; toggle on `/login` |
 | Database | **PostgreSQL 17** locally; **Neon** for staging/production | Same schema via Drizzle migrations |
 | ORM / migrations | **Drizzle** | Typed SQL, migrations in repo |
 | Validation | **Zod** | API boundaries, forms, shared schemas |
@@ -80,13 +81,15 @@ DATABASE_URL=postgresql://localhost:5432/ndouckmane_transit_dev
 
 Optional: `docker compose` with `postgres:17` — add `compose.yml` when implementing platform tasks.
 
-### Commands (planned)
+### Commands
 
 ```bash
 bun run db:generate   # drizzle-kit generate
 bun run db:migrate    # apply migrations
 bun run db:seed       # dev seed data
 bun run db:studio     # drizzle-kit studio (optional)
+bun run dev           # Next.js dev server
+bun run build         # production build
 ```
 
 ## Environment variables (planned)

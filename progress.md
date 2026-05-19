@@ -12,6 +12,8 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Next up:** `DOM-001` (declaration FSM) or `DECL-001` (declarations list)
 
+Shell is now tab-based (`UI-004`); dashboard is default landing.
+
 ---
 
 ## Snapshot
@@ -27,7 +29,9 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
 | shadcn + app shell (PLAT-008) | Done |
-| UI / modules | Not started |
+| Shell IA: tab nav + dashboard landing (UI-004) | Done |
+| Theme switcher (UI-005) | Done |
+| Domain modules + list/fiche UI | Not started |
 
 ---
 
@@ -92,6 +96,8 @@ _None._
 | PLAT-008 | shadcn/ui + app shell baseline | 2026-05-19 |
 | UI-002   | App sidebar + Vercel design  | 2026-05-19 |
 | UI-003   | Shell IA: PageHeader + contextual CTAs | 2026-05-19 |
+| UI-004   | IA v2: tab navbar + dashboard landing | 2026-05-19 |
+| UI-005   | Theme switcher (profile + login) | 2026-05-19 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -108,6 +114,14 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-19 — Theme switcher (UI-005)
+
+`next-themes` + `ThemeProvider` in root layout. Profile menu **Apparence**: Clair / Sombre / Système. Login page: compact sun/moon `ThemeToggle`. Documented in `docs/02`, `docs/09`, `docs/10`, `docs/12`.
+
+### 2026-05-19 — IA v2: tab nav + dashboard landing (UI-004)
+
+Replaced left sidebar with a **two-row** `AppTopNav` (Vercel-style): chrome row (logo, search, user) + tab row. Tabs: Tableau de bord, Déclarations, Clients, Réglages. Default landing `/dashboard` with stub sections — data in `POL-002` (p0). Logout: `signOut()` + `window.location.assign('/login')`. Updated `docs/07`, `docs/10`, `docs/09`, `docs/11`, `docs/03`, `docs/12`.
 
 ### 2026-05-19 — Shell IA rethink (UI-003)
 

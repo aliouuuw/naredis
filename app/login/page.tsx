@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { getDevAdminCredentials } from "@/lib/auth/seed-dev-admin";
 import { isDevelopment } from "@/lib/auth/seed-guard";
 import { getAppOrganizationIdForUser } from "@/lib/auth/org-context";
@@ -17,7 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   if (session) {
     const organizationId = await getAppOrganizationIdForUser(session.user.id);
     if (organizationId) {
-      redirect("/declarations");
+      redirect("/dashboard");
     }
   }
 
@@ -25,7 +26,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { email } = getDevAdminCredentials();
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center bg-muted/30 px-4 py-12">
+    <div className="relative flex min-h-full flex-col items-center justify-center bg-muted/30 px-4 py-12">
+      <ThemeToggle className="absolute top-4 right-4" />
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -37,7 +39,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         {error === "no_organization" ? (
           <p
-            className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-100"
             role="alert"
           >
             Ce compte n&apos;est rattaché à aucun cabinet. En local, exécutez{" "}

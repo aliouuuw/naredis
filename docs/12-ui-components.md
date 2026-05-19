@@ -8,11 +8,14 @@ See **[00-glossary.md](./00-glossary.md)** and [10-information-architecture.md](
 
 | Component | Notes |
 |-----------|-------|
-| `AppSidebar` | Nav only: Déclarations, Clients, Tableau de bord, Réglages (no footer CTA) |
-| `AppHeader` | Top chrome: search placeholder, user menu (64px, aligned with sidebar logo row) |
+| `AppTopNav` | Two rows: chrome (logo, search, user) + tab nav (Tableau de bord, Déclarations, Clients, Réglages) |
+| `NavTab` | Tab link with active styles (`pathname` match) |
 | `PageHeader` | Per-route `title` + `description` + `actions` slot |
 | `NewDeclarationButton` / `NewClientButton` | Contextual CTAs in `page-actions.tsx` |
 | `CommandMenu` | Search declarations, dossiers, clients (`POL-001`) |
+| `ThemeMenuItems` | Profile menu — Apparence: Clair / Sombre / Système (`next-themes`) |
+| `ThemeToggle` | Sun/moon toggle on login (unauthenticated surfaces) |
+| `ThemeProvider` | Root layout wrapper (`attribute="class"`, default light, system allowed) |
 
 ---
 

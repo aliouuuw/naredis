@@ -42,5 +42,7 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | Planning docs | Done |
 | backlog.json + progress.md | Done |
 | Database / Drizzle (local PG 17) | Done |
-| Better Auth | Done |
-| Core modules | Not started |
+| Better Auth + dev seed | Done |
+| App shell (tab nav, PageHeader, theme) | Done — see [10-information-architecture](./10-information-architecture.md) |
+| Stub routes (`/dashboard`, `/declarations`, …) | Done |
+| Domain modules + real UI data | Not started |
