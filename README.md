@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project docs
+
+MVP planning and architecture: **[`docs/`](./docs/README.md)** (domain model, stack, Better Auth, data model, roadmap).
+
 ## Getting Started
 
 First, run the development server:
