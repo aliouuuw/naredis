@@ -42,5 +42,5 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | Planning docs | Done |
 | backlog.json + progress.md | Done |
 | Database / Drizzle (local PG 17) | Done |
-| Better Auth | Not started |
+| Better Auth | Done |
 | Core modules | Not started |

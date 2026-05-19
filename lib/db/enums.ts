@@ -7,6 +7,8 @@ export const memberRoleEnum = pgEnum("member_role", [
   "accountant",
 ]);
 
+export type MemberRole = (typeof memberRoleEnum.enumValues)[number];
+
 export const dossierTypeEnum = pgEnum("dossier_type", [
   "import",
   "export",

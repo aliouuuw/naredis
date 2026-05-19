@@ -102,7 +102,7 @@
       "epic": "platform",
       "title": "Better Auth + organization plugin + Drizzle adapter",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-002"],
       "docs": ["docs/07-auth.md"],
       "acceptanceCriteria": [
@@ -116,7 +116,7 @@
       "epic": "platform",
       "title": "Tenancy helpers (requireOrg, organizationId on queries)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-005", "PLAT-003"],
       "docs": ["docs/04-architecture.md", "docs/07-auth.md"],
       "acceptanceCriteria": [

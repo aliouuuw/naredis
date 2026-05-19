@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `PLAT-005` (Better Auth) → `PLAT-006` (tenancy helpers) → `UI-001` (app shell)
+**Next up:** `PLAT-008` (shadcn + app shell) or `DOM-001` (declaration FSM)
 
 ---
 
@@ -24,7 +24,8 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema | Done |
 | Dev seed data | Done |
-| Better Auth | Not started |
+| Better Auth | Done |
+| Tenancy helpers (`requireAuthContext`) | Done |
 | UI / modules | Not started |
 
 ---
@@ -84,6 +85,8 @@ _None._
 | PLAT-002 | Drizzle ORM setup + migration scripts | 2026-05-19 |
 | PLAT-003 | Core schema (orgs, customers, dossiers, declarations) | 2026-05-19 |
 | PLAT-004 | Ledger, allocations, documents, activity_log | 2026-05-19 |
+| PLAT-005 | Better Auth + organization plugin | 2026-05-19 |
+| PLAT-006 | Tenancy helpers (requireAuthContext) | 2026-05-19 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
