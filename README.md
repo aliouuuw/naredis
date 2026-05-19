@@ -12,7 +12,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 1. Copy env: `cp .env.local.example .env.local`
 2. Create DB (Homebrew example): `createdb ndouckmane_transit_dev`
 3. Apply schema: `bun run db:migrate`
-4. Load demo data: `bun run db:seed`
+4. Load demo data + dev admin: `bun run db:seed`
+5. Log in at `/login` with `admin@demo-transit.sn` / `DemoAdmin2026!` (override via `SEED_ADMIN_*` in `.env.local`)
 
 Or use Docker: `docker compose up -d` (Postgres 17 on port 5432).
 

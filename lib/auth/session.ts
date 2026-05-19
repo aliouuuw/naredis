@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import type { MemberRole } from "@/lib/db/enums";
 import { organizationMembers } from "@/lib/db/schema";
 import { auth, type Session } from "./auth";
-import { getAppOrganizationIdForUser } from "./sync-org";
+import { getAppOrganizationIdForUser } from "./org-context";
 
 export type AuthContext = {
   session: Session;
@@ -26,10 +26,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     return null;
   }
 
-  const activeOrganizationId = session.session.activeOrganizationId ?? null;
-  let organizationId =
-    activeOrganizationId ??
-    (await getAppOrganizationIdForUser(session.user.id));
+  const organizationId = await getAppOrganizationIdForUser(session.user.id);
 
   if (!organizationId) {
     return null;
@@ -39,7 +36,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     session,
     userId: session.user.id,
     organizationId,
-    activeOrganizationId,
+    activeOrganizationId: null,
   };
 }
 

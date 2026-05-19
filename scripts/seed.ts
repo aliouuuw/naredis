@@ -1,5 +1,9 @@
 import { config } from "dotenv";
 import { eq } from "drizzle-orm";
+import {
+  ensureDevAdmin,
+  getDevAdminCredentials,
+} from "../lib/auth/seed-dev-admin";
 import { closeDb, getDb } from "../lib/db";
 import {
   activityLog,
@@ -10,7 +14,6 @@ import {
   dossierSequences,
   dossiers,
   ledgerEntries,
-  organizationMembers,
   organizations,
   paymentAllocations,
 } from "../lib/db/schema";
@@ -28,7 +31,11 @@ async function main() {
     .limit(1);
 
   if (existing.length > 0) {
-    console.log("Seed already applied (demo-transit org exists). Skipping.");
+    const admin = await ensureDevAdmin(existing[0].id);
+    const { email, password } = getDevAdminCredentials();
+    console.log("Seed already applied (demo-transit org exists).");
+    console.log(`  Dev admin: ${admin.email}${admin.created ? " (created)" : ""}`);
+    console.log(`  Login: ${email} / ${password}`);
     return;
   }
 
@@ -40,18 +47,7 @@ async function main() {
     })
     .returning();
 
-  await db.insert(organizationMembers).values([
-    {
-      organizationId: org.id,
-      userId: "seed-owner",
-      role: "owner",
-    },
-    {
-      organizationId: org.id,
-      userId: "seed-operator",
-      role: "operator",
-    },
-  ]);
+  const admin = await ensureDevAdmin(org.id);
 
   await db.insert(dossierSequences).values({
     organizationId: org.id,
@@ -222,7 +218,7 @@ async function main() {
       amount: BigInt(150_000),
       label: "Solde d'ouverture",
       effectiveDate: "2026-01-01",
-      createdBy: "seed-owner",
+      createdBy: admin.userId,
     })
     .returning();
 
@@ -238,7 +234,7 @@ async function main() {
       amount: BigInt(75_000),
       label: "Honoraires dédouanement",
       effectiveDate: "2026-04-15",
-      createdBy: "seed-owner",
+      createdBy: admin.userId,
     })
     .returning();
 
@@ -251,7 +247,7 @@ async function main() {
       amount: BigInt(100_000),
       label: "Virement client",
       effectiveDate: "2026-04-20",
-      createdBy: "seed-owner",
+      createdBy: admin.userId,
     })
     .returning();
 
@@ -269,7 +265,7 @@ async function main() {
       entityId: c1.id,
       action: "customer.created",
       payload: { name: c1.name },
-      actorId: "seed-owner",
+      actorId: admin.userId,
     },
     {
       organizationId: org.id,
@@ -277,7 +273,7 @@ async function main() {
       entityId: dec1.id,
       action: "declaration.status_changed",
       payload: { from: "submitted", to: "under_review" },
-      actorId: "seed-operator",
+      actorId: admin.userId,
     },
     {
       organizationId: org.id,
@@ -285,7 +281,7 @@ async function main() {
       entityId: charge.id,
       action: "ledger.charge_recorded",
       payload: { amount: 75_000, dossierId: d1.id },
-      actorId: "seed-owner",
+      actorId: admin.userId,
     },
     {
       organizationId: org.id,
@@ -293,15 +289,17 @@ async function main() {
       entityId: openingBalance.id,
       action: "ledger.opening_balance_recorded",
       payload: { amount: 150_000 },
-      actorId: "seed-owner",
+      actorId: admin.userId,
     },
   ]);
 
+  const { email, password } = getDevAdminCredentials();
   console.log("Seed complete:");
   console.log(`  Organization: ${org.name} (${org.slug})`);
   console.log(`  Customers: ${insertedCustomers.length}`);
   console.log(`  Dossiers: ${insertedDossiers.length}`);
   console.log(`  Declarations: ${insertedDeclarations.length}`);
+  console.log(`  Dev admin: ${email} / ${password}`);
 }
 
 main()

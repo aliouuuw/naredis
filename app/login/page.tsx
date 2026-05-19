@@ -1,8 +1,10 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
+import { getDevAdminCredentials } from "@/lib/auth/seed-dev-admin";
 
 export default function LoginPage() {
+  const { email } = getDevAdminCredentials();
+
   return (
     <div className="flex min-h-full flex-col items-center justify-center bg-zinc-50 px-4 py-12">
       <div className="w-full max-w-sm space-y-8">
@@ -15,11 +17,10 @@ export default function LoginPage() {
         <Suspense fallback={<p className="text-sm text-zinc-500">Chargement…</p>}>
           <LoginForm />
         </Suspense>
-        <p className="text-center text-sm text-zinc-600">
-          Pas encore de compte ?{" "}
-          <Link href="/signup" className="font-medium text-zinc-900 underline">
-            Créer un compte
-          </Link>
+        <p className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-center text-xs text-zinc-600">
+          Dev — après <code className="font-mono">bun run db:seed</code>
+          <br />
+          <span className="font-mono">{email}</span>
         </p>
       </div>
     </div>
