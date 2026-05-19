@@ -48,7 +48,7 @@
       "epic": "platform",
       "title": "PostgreSQL 17 local dev + DATABASE_URL",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": [],
       "docs": ["docs/02-stack.md"],
       "acceptanceCriteria": [
@@ -62,7 +62,7 @@
       "epic": "platform",
       "title": "Drizzle ORM setup + migration scripts",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-001"],
       "docs": ["docs/02-stack.md", "docs/06-data-model.md"],
       "acceptanceCriteria": [
@@ -76,7 +76,7 @@
       "epic": "platform",
       "title": "Core schema migration (orgs, customers, dossiers, declarations)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-002"],
       "docs": ["docs/06-data-model.md", "docs/05-domain-model.md"],
       "acceptanceCriteria": [
@@ -89,7 +89,7 @@
       "epic": "platform",
       "title": "Ledger, allocations, documents, activity_log schema",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-003"],
       "docs": ["docs/06-data-model.md"],
       "acceptanceCriteria": [

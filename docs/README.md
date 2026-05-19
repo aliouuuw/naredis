@@ -41,6 +41,6 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | Next.js app scaffold | Done |
 | Planning docs | Done |
 | backlog.json + progress.md | Done |
-| Database / Drizzle (local PG 17) | Not started |
+| Database / Drizzle (local PG 17) | Done |
 | Better Auth | Not started |
 | Core modules | Not started |

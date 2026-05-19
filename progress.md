@@ -8,9 +8,9 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 ## Current phase
 
-**Pre-development** — planning complete; implementation not started.
+**Platform foundation** — database and schema in place.
 
-**Next up:** `PLAT-001` → `PLAT-002` → `PLAT-003` (local Postgres 17 + Drizzle + core schema)
+**Next up:** `PLAT-005` (Better Auth) → `PLAT-006` (tenancy helpers) → `UI-001` (app shell)
 
 ---
 
@@ -21,8 +21,9 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 | Next.js 16 scaffold | Done |
 | Planning docs (`docs/`) | Done |
 | `backlog.json` / `progress.md` | Done |
-| Local PostgreSQL 17 | Not started |
-| Drizzle + schema | Not started |
+| Local PostgreSQL 17 | Done |
+| Drizzle + schema | Done |
+| Dev seed data | Done |
 | Better Auth | Not started |
 | UI / modules | Not started |
 
@@ -79,6 +80,10 @@ _None._
 
 | ID | Title | Date |
 |----|-------|------|
+| PLAT-001 | PostgreSQL 17 local dev + DATABASE_URL | 2026-05-19 |
+| PLAT-002 | Drizzle ORM setup + migration scripts | 2026-05-19 |
+| PLAT-003 | Core schema (orgs, customers, dossiers, declarations) | 2026-05-19 |
+| PLAT-004 | Ledger, allocations, documents, activity_log | 2026-05-19 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -95,6 +100,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-19 — Drizzle schema + seed
+
+Implemented `lib/db/schema/*` with all MVP tables from [docs/06-data-model.md](./docs/06-data-model.md). Migrations in `drizzle/`. Dev seed: org `demo-transit`, 3 clients, 4 dossiers (incl. rectificative), ledger sample. Commands: `bun run db:migrate`, `bun run db:seed`.
 
 ### 2026-05-19 — Local Postgres 17 for development
 

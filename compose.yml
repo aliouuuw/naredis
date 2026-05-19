@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: ndouckmane-transit-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ndouckmane_transit_dev
+    volumes:
+      - ndouckmane_transit_pgdata:/var/lib/postgresql/data
+
+volumes:
+  ndouckmane_transit_pgdata:
