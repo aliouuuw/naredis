@@ -7,28 +7,19 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { customerAccountStatusEnum } from "../enums";
 import { organizations } from "./organizations";
 
-export const customers = pgTable(
-  "customers",
+/** Configurable agency / maison-mère (GAINDE card holder) per organization. */
+export const organizationAgencies = pgTable(
+  "organization_agencies",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    /** Desk id — slug derived from name, unique per org */
-    slug: text("slug").notNull(),
-    code: text("code"),
-    email: text("email"),
-    phone: text("phone"),
-    taxId: text("tax_id"),
-    notes: text("notes"),
-    accountStatus: customerAccountStatusEnum("account_status")
-      .notNull()
-      .default("pas_a_jour"),
     isActive: boolean("is_active").notNull().default(true),
+    notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -38,14 +29,10 @@ export const customers = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    uniqueIndex("customers_organization_id_slug_idx").on(
-      table.organizationId,
-      table.slug,
-    ),
-    index("customers_organization_id_idx").on(table.organizationId),
-    index("customers_organization_id_name_idx").on(
+    uniqueIndex("organization_agencies_organization_id_name_idx").on(
       table.organizationId,
       table.name,
     ),
+    index("organization_agencies_organization_id_idx").on(table.organizationId),
   ],
 );

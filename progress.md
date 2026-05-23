@@ -2,7 +2,7 @@
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-05-19
+**Last updated:** 2026-05-23
 
 ---
 
@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `DOM-001` (declaration FSM) or `DECL-001` (declarations list)
+**Next up:** `DOM-003` (declarations module — pilot BL row) or `DOM-004` (clients + débit/crédit solde)
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -24,7 +24,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Planning docs (`docs/`) | Done |
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
-| Drizzle + schema | Done |
+| Drizzle + schema (incl. pilot 0003) | Done |
 | Dev seed data | Done |
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
@@ -45,7 +45,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | **Auth** | Better Auth + organization plugin |
 | **Package manager** | Bun |
 | **Domain model** | `dossiers` (jobs) + `declarations` (customs filings); UI **Déclarations** — [docs/00-glossary.md](./docs/00-glossary.md) |
-| **Money** | Immutable ledger; solde computed; allocations at dossier level |
+| **Money** | Ledger débit/crédit + `versement`; filing amounts on declaration; report computed at day open |
+| **Pilot ops** | [docs/13-pilot-operations.md](./docs/13-pilot-operations.md) |
 
 ---
 
@@ -54,7 +55,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 - [ ] Pilot completes happy path in **déclaration** language
-- [ ] Rectificative (second déclaration, same dossier) works
+- [ ] Rectificative: edit declaration row + audit log
 - [ ] Client solde matches ledger
 - [ ] Invalid customs status transitions blocked
 - [ ] Documents org-scoped
@@ -98,6 +99,7 @@ _None._
 | UI-003   | Shell IA: PageHeader + contextual CTAs | 2026-05-19 |
 | UI-004   | IA v2: tab navbar + dashboard landing | 2026-05-19 |
 | UI-005   | Theme switcher (profile + login) | 2026-05-19 |
+| PLAT-011 | Pilot operations schema (0003) | 2026-05-23 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -114,6 +116,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-23 — Pilot operations aligned (docs + schema 0003)
+
+Anchor client model captured in [docs/13-pilot-operations.md](./docs/13-pilot-operations.md): 1 declaration row = 1 BL; montant / GAINDE / prix de revient on row; bon à délivrer checkbox; configurable `organization_agencies`; rectificative = edit + `declaration_edit_log`; ledger uses `balance_side` débit/crédit and `versement`; **report** computed at day open (no ledger row). Migration `0003`, seed updated.
 
 ### 2026-05-19 — Theme switcher (UI-005)
 
@@ -174,3 +180,4 @@ Product replaces friend’s Notion setup: **Clients**, **Declarations**, **Trans
 | [06-data-model](./docs/06-data-model.md) | Tables |
 | [10-information-architecture](./docs/10-information-architecture.md) | Routes + layouts |
 | [11-user-flows](./docs/11-user-flows.md) | QA / demo script |
+| [13-pilot-operations](./docs/13-pilot-operations.md) | Anchor client fields |

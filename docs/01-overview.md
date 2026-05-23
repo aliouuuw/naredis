@@ -17,9 +17,10 @@ There is no single system of record for **jobs (dossiers)**, **customs filings (
 Build an **operational case management + client subledger** platform:
 
 - **Dossier** = shipment file / job (container for one client operation).
-- **Déclaration** = customs filing inside that job (status pipeline, customs refs) — **may be several per dossier** (e.g. rectification).
-- **UI speaks “Déclarations”** for the main list (Notion habit); **dossier** surfaces as the parent job when needed.
-- **Ledger entries** are immutable financial facts; **client balance is derived**, never edited directly.
+- **Déclaration** = **one BL shipment row** (zone, containers, filing money, bon à délivrer) inside a **dossier** job folder.
+- **UI speaks “Déclarations”** for the main list (Notion habit); **dossier** is the parent when needed.
+- **Transactions** = client account (`ledger_entries` with **débit/crédit**); filing amounts stay on the declaration row.
+- **Report** (morning solde) = **computed** at day open — not a stored transaction.
 - **Documents** attach primarily to the dossier; some types may link to a specific déclaration.
 - **Activity timeline** gives operational visibility and audit without full event sourcing.
 
@@ -41,8 +42,11 @@ See **[00-glossary.md](./00-glossary.md)** for dossier vs déclaration.
 | **Client** | `customer` — account with subledger |
 | **Déclaration** | `declaration` — customs filing (main Notion-like table) |
 | **Dossier** | `dossier` — job / shipment file (parent of déclarations) |
-| **Solde** | computed from ledger |
-| **Écriture / Transaction** | `ledger_entry` |
+| **Solde** | computed; shown as amount + **débit/crédit** (agency view) |
+| **Versement** | `ledger_entry` type `versement`, `balance_side: credit` |
+| **Report** | computed day-open balance (see [13-pilot-operations.md](./13-pilot-operations.md)) |
+| **Bon à délivrer** | checkbox on declaration (per BL) |
+| **Maison-mère** | `organization_agencies` — configurable agency / GAINDE card |
 | **Débours** | charge category |
 | **Honoraires** | charge category |
 | **Relevé de compte** | PDF export |
@@ -75,8 +79,8 @@ A forwarder can:
 1. Log in under their **organization**.
 2. Create a **client** with optional opening balance.
 3. Create a **déclaration** (with dossier), upload documents, advance customs status.
-4. Add a **second déclaration** on the same dossier (rectification scenario).
-5. Post **charges** and a **payment**, allocate to dossier.
+4. **Rectificative:** edit a declaration row with audit log (not a second row).
+5. Post **versements** and charges (débit/crédit), allocate to one or more dossiers.
 6. See **client solde** and **dossier financial summary**.
 7. Export a simple **relevé de compte** PDF.
 

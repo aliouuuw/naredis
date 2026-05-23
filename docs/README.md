@@ -6,7 +6,8 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 
 | Doc | Purpose |
 |-----|---------|
-| [Glossary — dossier vs déclaration](./00-glossary.md) | **Start here** — Notion mapping, UI vs code names |
+| [Glossary — dossier vs déclaration](./00-glossary.md) | Notion mapping, UI vs code names |
+| [Pilot operations](./13-pilot-operations.md) | **Anchor client** — BL row fields, débit/crédit, report, agencies |
 | [Overview](./01-overview.md) | Product vision, users, domain vocabulary |
 | [Stack](./02-stack.md) | Technology choices and hosting |
 | [MVP scope](./03-mvp-scope.md) | What ships in v0, what is explicitly deferred |
@@ -29,7 +30,7 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 
 ## How to use these docs
 
-- Read **00-glossary** before **05-domain-model** (dossier = job, déclaration = customs filing).
+- Read **13-pilot-operations** then **00-glossary** before **05-domain-model**.
 - Treat **03-mvp-scope** and **05-domain-model** as the product contract for the first demo.
 - Treat **06-data-model** as the schema contract — money and tenancy rules should not be “fixed later.”
 - Update docs when an anchor client (commissionnaire / freight forwarder in Dakar) invalidates assumptions.
@@ -45,4 +46,5 @@ Planning docs for the operational logistics platform (freight forwarding / custo
 | Better Auth + dev seed | Done |
 | App shell (tab nav, PageHeader, theme) | Done — see [10-information-architecture](./10-information-architecture.md) |
 | Stub routes (`/dashboard`, `/declarations`, …) | Done |
+| Pilot schema (0003) + docs/13 | Done |
 | Domain modules + real UI data | Not started |

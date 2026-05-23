@@ -9,6 +9,18 @@ export const memberRoleEnum = pgEnum("member_role", [
 
 export type MemberRole = (typeof memberRoleEnum.enumValues)[number];
 
+export const customerAccountStatusEnum = pgEnum("customer_account_status", [
+  "a_jour",
+  "pas_a_jour",
+]);
+
+export type CustomerAccountStatus =
+  (typeof customerAccountStatusEnum.enumValues)[number];
+
+export const balanceSideEnum = pgEnum("balance_side", ["debit", "credit"]);
+
+export type BalanceSide = (typeof balanceSideEnum.enumValues)[number];
+
 export const dossierTypeEnum = pgEnum("dossier_type", [
   "import",
   "export",
@@ -38,9 +50,10 @@ export const declarationStatusEnum = pgEnum("declaration_status", [
   "closed",
 ]);
 
+/** Client account transaction types (Notion Transactions). No `report` — computed at day open. */
 export const ledgerEntryTypeEnum = pgEnum("ledger_entry_type", [
+  "versement",
   "charge",
-  "payment",
   "opening_balance",
   "reversal",
 ]);

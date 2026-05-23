@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "ndouckmane-transit",
-  "updated": "2026-05-19",
+  "updated": "2026-05-23",
   "defaultStatus": "todo",
   "statuses": ["todo", "in_progress", "done", "blocked", "deferred"],
   "priorities": ["p0", "p1", "p2"],
@@ -128,15 +128,31 @@
     {
       "id": "PLAT-007",
       "epic": "platform",
-      "title": "Dev seed script (multi-declaration dossier)",
+      "title": "Dev seed script (pilot-shaped data)",
       "priority": "p1",
       "status": "done",
       "dependsOn": ["PLAT-004", "PLAT-005"],
-      "docs": ["docs/06-data-model.md", "docs/00-glossary.md"],
+      "docs": ["docs/06-data-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
-        "1 org, 2 users, 3 clients, 4+ declarations across dossiers",
-        "Sample ledger, one dossier with rectification",
-        "bun run db:seed is idempotent or documented reset"
+        "1 org, agencies, 3 clients with slugs, 4 declarations (1 BL each)",
+        "Pilot fields: zone, containers, montant, GAINDE, prix de revient, bon à délivrer",
+        "declaration_edit_log sample; ledger versement + balance_side",
+        "bun run db:seed idempotent when demo-transit exists"
+      ]
+    },
+    {
+      "id": "PLAT-011",
+      "epic": "platform",
+      "title": "Pilot operations schema (migration 0003)",
+      "priority": "p0",
+      "status": "done",
+      "dependsOn": ["PLAT-004"],
+      "docs": ["docs/06-data-model.md", "docs/13-pilot-operations.md"],
+      "acceptanceCriteria": [
+        "organization_agencies, declaration_containers, declaration_edit_log",
+        "declarations: zone, filing amounts, bon_a_delivrer, paying_agency_id",
+        "customers: slug, account_status; ledger: balance_side, versement, notes",
+        "bun run db:migrate applies 0003"
       ]
     },
     {
@@ -157,10 +173,10 @@
       "id": "DOM-001",
       "epic": "domain-data",
       "title": "Declaration status FSM (import) + guards",
-      "priority": "p0",
+      "priority": "p1",
       "status": "todo",
       "dependsOn": ["PLAT-003"],
-      "docs": ["docs/05-domain-model.md", "docs/04-architecture.md"],
+      "docs": ["docs/05-domain-model.md", "docs/04-architecture.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
         "lib/domain/declaration-status.ts with allowed transitions",
         "cleared requires customs_reference guard",
@@ -184,15 +200,17 @@
     {
       "id": "DOM-003",
       "epic": "domain-data",
-      "title": "Declarations module (CRUD, FSM transitions, history)",
+      "title": "Declarations module (BL row CRUD, containers, bon à délivrer, edit log)",
       "priority": "p0",
       "status": "todo",
-      "dependsOn": ["DOM-001", "DOM-002"],
-      "docs": ["docs/05-domain-model.md", "docs/00-glossary.md"],
+      "dependsOn": ["DOM-002", "PLAT-011"],
+      "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
-        "createDeclaration creates dossier when needed",
-        "addDeclaration (rectification) on existing dossier",
-        "transitionStatus writes history + activity_log"
+        "createDeclaration creates dossier + declaration (1 BL)",
+        "updateDeclaration writes declaration_edit_log on tracked field changes",
+        "setBonADelivrer validates required fields filled",
+        "Containers replace/sync on save",
+        "Optional FSM transitionStatus when DOM-001 done"
       ]
     },
     {
@@ -202,25 +220,42 @@
       "priority": "p0",
       "status": "todo",
       "dependsOn": ["PLAT-006"],
-      "docs": ["docs/05-domain-model.md"],
+      "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
-        "CRUD customers",
-        "List with computed solde query"
+        "CRUD customers with slug from name",
+        "account_status manual a_jour / pas_a_jour",
+        "List: solde as amount + debit/credit side (agency view)",
+        "Computed: day-open report, transactions today (Africa/Dakar), all-time cost_price sum"
       ]
     },
     {
       "id": "DOM-005",
       "epic": "domain-data",
-      "title": "Ledger module (entries, reversals, allocations)",
+      "title": "Ledger module (versements, débit/crédit, allocations)",
       "priority": "p0",
       "status": "todo",
       "dependsOn": ["PLAT-004", "DOM-002"],
-      "docs": ["docs/05-domain-model.md"],
+      "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
-        "Immutable entries; reversal only",
-        "Payment allocations sum <= payment amount",
-        "Charges require dossier_id",
-        "Optional declaration_id on charge"
+        "Immutable entries; reversal only; amount always positive",
+        "entry_type versement with balance_side credit",
+        "Allocations sum <= entry amount; multi-dossier",
+        "No report entry type — day-open balance is computed query",
+        "Charges: balance_side debit; optional declaration_id"
+      ]
+    },
+    {
+      "id": "DOM-008",
+      "epic": "domain-data",
+      "title": "Organization agencies CRUD (maison-mère)",
+      "priority": "p0",
+      "status": "todo",
+      "dependsOn": ["PLAT-011", "PLAT-006"],
+      "docs": ["docs/13-pilot-operations.md"],
+      "acceptanceCriteria": [
+        "List/create/update/deactivate agencies in settings",
+        "Scoped by organization_id",
+        "Referenced from declaration paying_agency_id"
       ]
     },
     {
@@ -386,15 +421,15 @@
     {
       "id": "DECL-005",
       "epic": "declarations",
-      "title": "Add rectificative declaration flow",
-      "priority": "p1",
+      "title": "Edit declaration + rectificative audit log UI",
+      "priority": "p0",
       "status": "todo",
       "dependsOn": ["DECL-003", "DOM-003"],
-      "docs": ["docs/11-user-flows.md", "docs/00-glossary.md"],
+      "docs": ["docs/11-user-flows.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
-        "From dossier or declaration fiche",
-        "kind=rectification; same dossier_id",
-        "List shows two rows same dossier number"
+        "Edit filing fields in place (montant, GAINDE, prix de revient, containers, …)",
+        "Timeline shows declaration_edit_log entries",
+        "No second row for rectificative"
       ]
     },
     {

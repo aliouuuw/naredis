@@ -1,28 +1,23 @@
 # Domain model
 
-See **[00-glossary.md](./00-glossary.md)** for dossier (job) vs déclaration (customs filing).
+See **[00-glossary.md](./00-glossary.md)** and **[13-pilot-operations.md](./13-pilot-operations.md)**.
 
 ## Entity relationship (conceptual)
 
 ```
 Organization
+  ├── organization_agencies (configurable maison-mère / GAINDE card holders)
   ├── Members (users + roles)
   ├── Customers
-  │     ├── LedgerEntries
-  │     └── Dossiers
-  ├── Dossiers (jobs)
-  │     ├── Declarations (1..n customs filings)
-  │     ├── Documents (primarily dossier-level)
-  │     ├── LedgerEntries (charges; allocations at dossier level)
-  │     ├── DossierStatusHistory (case open/close)
-  │     └── ActivityLog
-  ├── Declarations
-  │     ├── DeclarationStatusHistory
-  │     └── (optional) Documents
+  │     └── LedgerEntries (débit/crédit, versements, …)
+  ├── Dossiers (job folders)
+  │     ├── Declarations (1 BL row — operational)
+  │     │     ├── declaration_containers
+  │     │     └── declaration_edit_log (rectificative edits)
+  │     ├── Documents
+  │     └── payment_allocations (from ledger)
   └── Sequences (dossier_number, declaration_number)
 ```
-
-MVP: **one primary customer per dossier**. Phase 2: `dossier_parties` for groupage / multi-importer.
 
 ---
 
@@ -30,198 +25,177 @@ MVP: **one primary customer per dossier**. Phase 2: `dossier_parties` for groupa
 
 Tenant boundary. All business data carries `organization_id`.
 
+### Organization agencies
+
+Configurable entities (agency names) used when recording which **maison-mère** paid GAINDE on a declaration. Managed in settings; not a fixed list.
+
+| Field | Notes |
+|-------|-------|
+| `name` | Display name |
+| `is_active` | Soft disable |
+
+Does **not** affect client solde.
+
+---
+
 ## User / Member
 
 Maps to Better Auth user. Membership links user ↔ organization with **role**:
 
 | Role | Capabilities (MVP) |
 |------|---------------------|
-| `owner` | All + org settings |
+| `owner` | All + org settings + agencies |
 | `admin` | All operational + ledger |
-| `operator` | Déclarations, documents, status (no reversals) |
+| `operator` | Déclarations, documents, bon à délivrer |
 | `accountant` | Ledger, allocations, exports |
 
 ---
 
 ## Customer
 
-Commercial client of the forwarder (compte client).
-
 | Field | Notes |
 |-------|-------|
 | `name` | Required |
-| `code` | Optional short code |
-| `email`, `phone` | Optional |
-| `tax_id` | NINEA or equivalent |
-| `notes` | Free text |
+| `slug` | Unique per org; derived from name (desk “id”) |
+| `phone`, `email`, `tax_id`, `notes` | Optional |
+| `account_status` | Manual: `a_jour` \| `pas_a_jour` |
 | `is_active` | Soft disable |
 
-**Solde**: never stored as authoritative; computed from ledger.
+### Computed (never authoritative stored solde)
+
+| Metric | Rule |
+|--------|------|
+| **Solde** | Net from ledger using `balance_side` (débit/crédit), agency perspective |
+| **Solde side** | `debit` if client owes agency; `credit` if agency owes client |
+| **Report** (day open) | Computed at start of local calendar day (`Africa/Dakar` MVP) — **no ledger row** |
+| **Transactions today** | Sum of all ledger `amount` that local day |
+| **Total dossier fees (all time)** | Sum of declaration `cost_price` (prix de revient) for client’s dossiers |
 
 ---
 
-## Dossier (job / shipment file)
-
-Container for one client operation. **Not** the customs status pipeline — that lives on déclarations.
+## Dossier (job folder)
 
 | Field | Notes |
 |-------|-------|
-| `dossier_number` | Display ID, unique per org |
+| `dossier_number` | Unique per org |
 | `customer_id` | Primary client |
 | `dossier_type` | `import` \| `export` \| `transit` |
 | `case_status` | `open` \| `on_hold` \| `closed` |
-| `title` / `description` | Short label for the job |
-| `bl_reference` | Bill of lading / AWB |
-| `container_reference` | Optional |
-| `opened_at`, `closed_at` | Timestamps |
-
-### Case status (dossier-level)
-
-| Status | Label (FR) | Meaning |
-|--------|------------|---------|
-| `open` | Ouvert | Job in progress |
-| `on_hold` | En suspens | Paused (client, payment, etc.) |
-| `closed` | Clôturé | Job finished |
-
-Closing a dossier may require all déclarations terminal and no blocking balance (warnings in MVP).
+| `bl_reference` | BL for this job (MVP: 1 BL ↔ 1 déclaration row) |
+| `title`, `description` | Optional |
 
 ---
 
-## Declaration (customs filing)
+## Declaration (BL operational row)
 
-**Primary operational object** for desk work (matches Notion “Declarations” table).
+**Primary desk object** — one row per BL shipment.
 
 | Field | Notes |
 |-------|-------|
-| `declaration_number` | Display ID, unique per org |
-| `dossier_id` | Parent job (required) |
-| `kind` | `initial` \| `rectification` \| `complement` |
-| `status` | Customs FSM state |
-| `customs_reference` | Numéro déclaration douanière |
-| `regime` | Optional |
-| `bureau` | Customs office |
-| `title` | Optional label (e.g. “Rectificative mars”) |
-| `opened_at`, `closed_at` | Optional |
+| `declaration_number` | Unique per org |
+| `dossier_id` | Parent job |
+| `zone_or_terminal` | Zone or terminal |
+| `declaration_date` | Business date |
+| `container_count` | Count |
+| `client_amount_paid` | Montant — total **client → agency** for this BL |
+| `gainde_duty_amount` | GAINDE / droit de douane |
+| `cost_price` | Prix de revient — agency all-in cost; **may diverge** from GAINDE |
+| `paying_agency_id` | Optional FK → `organization_agencies` |
+| `bon_a_delivrer` | Checkbox; requires row completeness (enforced in app) |
+| `customs_reference`, `regime`, `bureau` | Optional customs metadata |
+| `status` | Optional FSM — **secondary** for pilot |
+| `kind` | Optional; rectificative handled via **edit + log** for pilot |
 
-### Status machine (import — MVP)
+### Containers
 
-Applies to **declaration**, not dossier.
+`declaration_containers`: `container_number` per row, linked to declaration.
 
-| Status | Label (FR) | Typical meaning |
-|--------|--------------|-----------------|
-| `draft` | Brouillon | Filing prepared |
-| `documents_pending` | Documents en attente | Collecting pieces |
-| `submitted` | Déposée | Filed with customs |
-| `under_review` | En vérification | Customs review |
-| `cleared` | Liquidée / dégagée | Duties assessed / released |
-| `delivered` | Marchandises retirées | Goods collected |
-| `invoiced` | Facturé | Agency invoice issued |
-| `closed` | Clôturée | Filing complete |
+### Bon à délivrer
 
-Guards (examples):
+- Not part of a large customs pipeline for pilot.
+- **Per declaration row (= per BL).**
+- Enabled only when required fields are filled (validation in service layer).
 
-- `cleared` requires `customs_reference`
-- `submitted` may require key dossier documents (config later)
+### Rectificative
 
-### Declaration status history
+- **Edit** declaration fields in place.
+- Append `declaration_edit_log` (field diffs) + `activity_log`.
+- Do **not** require `kind: rectification` or a second row for pilot MVP.
 
-Same pattern as before: `from_status`, `to_status`, `changed_by`, `note`.
+### Customs FSM (optional)
+
+Retained for future / other clients. Guards (e.g. `cleared` requires `customs_reference`) apply only when FSM UI is enabled.
 
 ---
 
-## LedgerEntry
+## LedgerEntry (Transactions)
 
-Immutable financial fact on a **customer** account.
+Immutable facts on a **customer** account. Filing money on declarations is **separate**.
 
 | Field | Notes |
 |-------|-------|
-| `entry_type` | `charge` \| `payment` \| `opening_balance` \| `reversal` |
-| `amount` | Positive integer; sign derived from type |
-| `currency` | Default `XOF` |
-| `category` | `honoraires` \| `debours` \| `other` (charges) |
-| `label` | Description |
-| `effective_date` | Business date |
-| `dossier_id` | Required for charges in MVP; target for allocations |
-| `declaration_id` | Optional — attribute charge to a specific filing |
-| `reverses_entry_id` | Set on reversal rows |
+| `entry_type` | `versement`, `charge`, `opening_balance`, `reversal`, … extensible |
+| `balance_side` | `debit` \| `credit` — agency perspective |
+| `amount` | Positive integer (XOF) |
+| `label` | Libellé |
+| `notes` | Optional |
+| `effective_date` | Date de transaction |
+| `dossier_id` | Optional on entry; use **allocations** for multi-dossier |
+| `reverses_entry_id` | Reversal only |
 
-### Sign convention
+### Débit / crédit rules
 
-| Type | Effect on client solde |
-|------|------------------------|
-| `charge`, `opening_balance` (debit) | Client owes more (+) |
-| `payment` | Client owes less (−) |
-| `reversal` | Offsets a prior entry |
+| Side | Typical types | Effect on client debt |
+|------|---------------|------------------------|
+| `debit` | `charge`, `opening_balance` (when client owes) | Client owes more |
+| `credit` | `versement` | Client owes less |
 
-(Confirm sign with pilot accountant.)
+**No signed amounts.** UI shows solde as **amount + débit/crédit label**.
 
 ---
 
 ## Allocation
 
-Links a **payment** entry to a **dossier** (amount portion).
+Links a **versement** (credit entry) to one or more **dossiers**:
 
-- One payment → many dossiers.
-- Unallocated amount stays on client account.
-- Allocations are at **dossier** level (job money), not split per déclaration in MVP.
-
----
-
-## Document
-
-| Field | Notes |
-|-------|-------|
-| `dossier_id` | Required |
-| `declaration_id` | Optional (DAU, quittance tied to one filing) |
-| `document_type` | Enum |
-| `storage_key` | R2 path |
-| `version` | Increment on replace |
-| `source` | `client` \| `agent` \| `customs` |
-| `status` | `pending` \| `active` \| `archived` |
-
-### Document types (seed list)
-
-- `bill_of_lading`
-- `commercial_invoice`
-- `packing_list`
-- `customs_declaration`
-- `customs_receipt` (quittance)
-- `delivery_order`
-- `agency_invoice`
-- `other`
+- `sum(allocations) ≤ entry.amount`
+- Unallocated portion stays on client account only
 
 ---
 
-## ActivityLog
+## Declaration edit log
 
 | Field | Notes |
 |-------|-------|
-| `entity_type` | `dossier` \| `declaration` \| `customer` \| `ledger_entry` |
-| `entity_id` | UUID |
-| `action` | e.g. `declaration.status_changed`, `ledger.payment_recorded` |
-| `payload` | JSONB |
-| `actor_id` | User id |
+| `declaration_id` | |
+| `changes` | JSONB field-level `{ field: { from, to } }` |
+| `changed_by`, `changed_at` | Audit |
+
+---
+
+## Document / ActivityLog
+
+Unchanged pattern — documents on dossier; activity on declaration edits, ledger, dossier, customer.
 
 ---
 
 ## Business rules (must enforce in code)
 
 1. Ledger rows are never updated or deleted — only reversal.
-2. Payments: sum(allocations) ≤ payment amount.
-3. Charges in MVP must reference a `dossier_id`.
-4. **Declaration** status transitions use the customs FSM — no arbitrary writes.
-5. Every déclaration belongs to exactly one dossier.
-6. Creating a déclaration without an existing dossier **creates a dossier** in the same transaction (MVP default).
-7. `dossier_number` and `declaration_number` generated in DB transactions (per-org sequences).
+2. `amount` > 0; direction from `balance_side` + `entry_type`.
+3. Versements: `balance_side = credit`; sum(allocations) ≤ amount.
+4. Declaration filing amounts (`client_amount_paid`, `gainde_duty_amount`, `cost_price`) are **not** auto-synced to ledger.
+5. `bon_a_delivrer` only if required declaration fields present.
+6. Declaration edits write `declaration_edit_log` when tracked fields change.
+7. Every query scoped by `organization_id`.
+8. **Report** at day open is **computed**, not inserted as `entry_type`.
 
 ---
 
-## Creating work (MVP behavior)
+## Creating work (MVP — pilot)
 
 | User action | System behavior |
 |-------------|-----------------|
-| **Nouvelle déclaration** | New `dossier` + first `declaration` (`kind: initial`) |
-| **Ajouter déclaration (rectificative)** | New `declaration` on existing `dossier` (`kind: rectification`) |
-| **Nouveau dossier** (advanced / optional UI) | New `dossier` only; user adds déclaration after |
-
-Default path matches Notion: **new row in Declarations** = new déclaration.
+| **Nouvelle déclaration** | New `dossier` + `declaration` + containers (1 BL) |
+| **Rectificative** | Update declaration + `declaration_edit_log` |
+| **Versement** | `ledger_entry` credit + optional multi `payment_allocations` |

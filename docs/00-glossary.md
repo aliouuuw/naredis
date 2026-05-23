@@ -1,6 +1,6 @@
 # Glossary — Dossier vs déclaration
 
-Canonical mental model for the product. Read this first if Notion used only a **Declarations** table.
+Canonical mental model for the product. Read **[13-pilot-operations.md](./13-pilot-operations.md)** for the anchor client’s desk fields.
 
 ---
 
@@ -8,18 +8,18 @@ Canonical mental model for the product. Read this first if Notion used only a **
 
 | Layer | French (desk) | English (docs/code) | What it is |
 |-------|---------------|---------------------|------------|
-| **Job / case** | **Dossier** (dossier client, dossier d’import) | `dossier` | One commercial shipment operation: one client job, BL, container, shared documents and money |
-| **Customs filing** | **Déclaration** (déclaration en douane) | `declaration` | One formal filing with customs for that job — initial, rectification, etc. |
+| **Job / case** | **Dossier** | `dossier` | Parent folder for a client operation (BL, shared context). Grows over time. |
+| **BL row (desk)** | **Déclaration** | `declaration` | **One Notion row = one BL shipment** — zone, containers, filing money, bon à délivrer |
 
 ```text
 Client
-  └── Dossier (job)          ← money & documents attach here
-        ├── Déclaration 1    ← status pipeline (douane) lives here
-        ├── Déclaration 2    ← e.g. rectification
-        └── …
+  └── Dossier (job folder)
+        └── Déclaration(s)   ← MVP: usually 1 per dossier (1 BL)
+              zone, containers[], montant, GAINDE, prix de revient,
+              paying agency, bon à délivrer ✓
 ```
 
-**Notion migration:** your friend’s **Declarations** database rows are, in most cases, **déclarations** (customs filings). When several filings belong to one shipment job, they share one **dossier**.
+**Pilot:** rectificative = **edit same row** + `declaration_edit_log`, not a second row.
 
 ---
 
@@ -27,12 +27,10 @@ Client
 
 | Situation | Dossiers | Déclarations |
 |-----------|----------|--------------|
-| Simple import, one DAU | 1 | 1 (MVP default) |
-| Rectification / amend | 1 | 2+ (initial + rectificative) |
-| Groupage (later) | 1 | 1+ |
+| Normal import, one BL | 1 | 1 |
+| Rectificative (pilot) | 1 | 1 (same row, edited + log) |
+| Future: second filing on same job | 1 | 2+ (if client asks) |
 | Unrelated shipments | 2 | 1 each |
-
-**Planning assumption:** structure for **many déclarations per dossier** from day one; UI still feels like today’s single “Declarations” list.
 
 ---
 
@@ -40,12 +38,9 @@ Client
 
 | Context | Use |
 |---------|-----|
-| **Tab nav (Déclarations tab), main list, CTA** | **Déclarations** (what Notion users already say) |
-| **Parent link on a fiche** | **Dossier 2025-0042** (when job has context) |
-| **Code, schema, modules** | `dossiers`, `declarations` |
-| **English planning docs** | dossier = job, declaration = filing |
-
-Do not force users to say “dossier” for daily work until they have multi-filing cases; the dossier appears as **grouping**, not a separate product vocabulary lesson.
+| **Tab nav, main list, CTA** | **Déclarations** |
+| **Parent link on fiche** | **Dossier** (when useful) |
+| **Code, schema** | `dossiers`, `declarations` |
 
 ---
 
@@ -53,15 +48,17 @@ Do not force users to say “dossier” for daily work until they have multi-fil
 
 | Concern | Dossier | Déclaration |
 |---------|---------|-------------|
-| Client (compte) | ✓ primary | — (via dossier) |
-| BL, container, job title, type import/export/transit | ✓ | — |
-| Customs ref, regime, bureau | — | ✓ |
-| Status pipeline (brouillon → déposée → …) | — | ✓ |
-| Case open / closed | ✓ (`open` / `closed`) | — |
-| Documents (BL, factures) | ✓ (default) | optional link (DAU, quittance) |
-| Ledger charges & payment allocation | ✓ | optional `declaration_id` on charge |
-| Solde client | client-level | — |
-| Dossier financial summary | ✓ sum across job | — |
+| Client (compte) | ✓ | via dossier |
+| BL reference | ✓ | — (1 BL per row) |
+| Zone / terminal, containers | — | ✓ |
+| Montant, GAINDE, prix de revient | — | ✓ (not in Transactions) |
+| Maison-mère (paying agency) | — | ✓ (informational) |
+| Bon à délivrer | — | ✓ checkbox |
+| Customs FSM (optional) | — | ✓ secondary for pilot |
+| Case open / closed | ✓ | — |
+| Documents | ✓ default | optional link |
+| Transactions (versements, …) | allocations | — |
+| Client solde | computed (débit/crédit) | — |
 
 ---
 
@@ -69,10 +66,11 @@ Do not force users to say “dossier” for daily work until they have multi-fil
 
 | Notion table | Product entity |
 |--------------|----------------|
-| Customers | `customers` |
-| Declarations | `declarations` (+ auto or linked `dossier`) |
-| Transactions | `ledger_entries` (+ `payment_allocations`) |
-| Customer page “total solde” | computed from ledger |
+| Customers | `customers` (+ computed solde, daily totals) |
+| Declarations | `declarations` + `dossiers` + `declaration_containers` |
+| Transactions | `ledger_entries` (`balance_side` débit/crédit) + `payment_allocations` |
+| Report (morning solde) | **Computed view** at day open — **not** a stored row |
+| “Report” in Notion | See [13-pilot-operations.md](./13-pilot-operations.md) |
 
 ---
 
@@ -80,9 +78,10 @@ Do not force users to say “dossier” for daily work until they have multi-fil
 
 | User-facing | Route | Entity |
 |-------------|-------|--------|
-| Liste Déclarations | `/declarations` | `declarations` (+ dossier/client columns) |
+| Liste Déclarations | `/declarations` | `declarations` (+ dossier/client) |
 | Fiche déclaration | `/declarations/[id]` | `declarations` |
-| Fiche dossier (job hub) | `/dossiers/[id]` | `dossiers` |
+| Fiche dossier | `/dossiers/[id]` | `dossiers` |
 | Clients | `/clients` | `customers` |
+| Réglages (agencies) | `/settings` | `organization_agencies` |
 
 See [10-information-architecture.md](./10-information-architecture.md).

@@ -1,4 +1,7 @@
 import {
+  bigint,
+  boolean,
+  date,
   index,
   integer,
   pgTable,
@@ -8,6 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { declarationKindEnum, declarationStatusEnum } from "../enums";
+import { organizationAgencies } from "./agencies";
 import { dossiers } from "./dossiers";
 import { organizations } from "./organizations";
 
@@ -22,6 +26,21 @@ export const declarations = pgTable(
       .notNull()
       .references(() => dossiers.id, { onDelete: "cascade" }),
     declarationNumber: text("declaration_number").notNull(),
+    zoneOrTerminal: text("zone_or_terminal"),
+    declarationDate: date("declaration_date"),
+    containerCount: integer("container_count"),
+    /** Montant — total client paid agency for this BL */
+    clientAmountPaid: bigint("client_amount_paid", { mode: "bigint" }),
+    /** Droit de douane paid via GAINDE */
+    gaindeDutyAmount: bigint("gainde_duty_amount", { mode: "bigint" }),
+    /** Prix de revient — agency all-in cost; may diverge from GAINDE */
+    costPrice: bigint("cost_price", { mode: "bigint" }),
+    payingAgencyId: uuid("paying_agency_id").references(
+      () => organizationAgencies.id,
+      { onDelete: "set null" },
+    ),
+    bonADelivrer: boolean("bon_a_delivrer").notNull().default(false),
+    bonADelivrerAt: timestamp("bon_a_delivrer_at", { withTimezone: true }),
     kind: declarationKindEnum("kind").notNull().default("initial"),
     status: declarationStatusEnum("status").notNull().default("draft"),
     title: text("title"),
@@ -56,6 +75,7 @@ export const declarations = pgTable(
       table.organizationId,
       table.customsReference,
     ),
+    index("declarations_paying_agency_id_idx").on(table.payingAgencyId),
   ],
 );
 

@@ -9,7 +9,11 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { ledgerCategoryEnum, ledgerEntryTypeEnum } from "../enums";
+import {
+  balanceSideEnum,
+  ledgerCategoryEnum,
+  ledgerEntryTypeEnum,
+} from "../enums";
 import { customers } from "./customers";
 import { declarations } from "./declarations";
 import { dossiers } from "./dossiers";
@@ -32,10 +36,12 @@ export const ledgerEntries = pgTable(
       onDelete: "restrict",
     }),
     entryType: ledgerEntryTypeEnum("entry_type").notNull(),
+    balanceSide: balanceSideEnum("balance_side").notNull(),
     category: ledgerCategoryEnum("category"),
     amount: bigint("amount", { mode: "bigint" }).notNull(),
     currency: char("currency", { length: 3 }).notNull().default("XOF"),
     label: text("label").notNull(),
+    notes: text("notes"),
     effectiveDate: date("effective_date").notNull(),
     reversesEntryId: uuid("reverses_entry_id"),
     createdBy: text("created_by"),

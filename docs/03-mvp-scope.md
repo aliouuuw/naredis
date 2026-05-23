@@ -2,9 +2,7 @@
 
 ## Goal
 
-Ship a **credible demo** for one pilot freight forwarder: replace Notion’s **Clients**, **Declarations**, and **Transactions** tables plus Excel solde — with **dossier + déclaration** structure under the hood and **Déclarations** language in the UI.
-
-See **[00-glossary.md](./00-glossary.md)**.
+Ship a **credible demo** for the pilot forwarder: replace Notion **Clients**, **Declarations**, and **Transactions** — aligned with [13-pilot-operations.md](./13-pilot-operations.md).
 
 ---
 
@@ -13,64 +11,60 @@ See **[00-glossary.md](./00-glossary.md)**.
 ### Platform
 
 - [ ] `organization_id` on all business rows
-- [ ] **Better Auth** + org membership + roles
-- [ ] **Drizzle** + migrations (local **PostgreSQL 17** in dev; Neon in staging/prod)
+- [ ] Better Auth + org membership + roles
+- [ ] Drizzle + migrations (PG 17 local; Neon later)
 - [ ] App-layer tenancy on every query
 
-### Customers (Notion: Customers)
+### Customers
 
-- [ ] CRUD clients, list with **solde** (computed)
-- [ ] Client fiche: déclarations/dossiers rollup, ledger, relevé PDF
-- [ ] Opening balance as `opening_balance` ledger entry
+- [ ] CRUD with **slug** from name
+- [ ] Manual **à jour / pas à jour** (`account_status`)
+- [ ] List: computed **solde** (débit/crédit), all-time dossier fees, **transactions today** (Dakar)
+- [ ] **Report** at day open: **computed view** (not a ledger row)
+- [ ] Opening balance as ledger `opening_balance` with `balance_side`
 
-### Dossiers (jobs — parent container)
+### Organization agencies (maison-mère)
 
-- [ ] `dossiers` table: client, type, BL, container, `case_status`, dossier number
-- [ ] Dossier fiche: list déclarations, documents, finances (job-level), activity
-- [ ] Close / reopen case (`case_status`)
+- [ ] CRUD `organization_agencies` in settings (configurable names)
 
-### Déclarations (Notion: Declarations — **primary UI**)
+### Dossiers
 
-- [ ] `declarations` table linked to `dossier_id`
-- [ ] `declaration_number`, `kind` (`initial` | `rectification` | …)
-- [ ] Customs **status FSM** on declaration — [05-domain-model.md](./05-domain-model.md)
-- [ ] Status history + activity log
-- [ ] **Nouvelle déclaration** → creates dossier + first declaration (default)
-- [ ] **Ajouter déclaration** on existing dossier (rectification path)
-- [ ] Main list `/declarations` with filters (statut, client, dossier #)
-- [ ] Fiche `/declarations/[id]` — status stepper, customs fields
+- [ ] Job folder: client, BL, `case_status`, dossier number
+- [ ] MVP: 1 dossier created with each new déclaration (1 BL)
 
-### Ledger (Notion: Transactions)
+### Déclarations (primary UI — one row per BL)
 
-- [ ] Immutable entries; categories honoraires / débours / other
-- [ ] Charges on `dossier_id`; optional `declaration_id`
-- [ ] Payments + **allocations** to dossier(s)
-- [ ] No editable solde field
+- [ ] Zone/terminal, declaration date, container count + **container numbers**
+- [ ] **Montant** (`client_amount_paid`), **GAINDE** (`gainde_duty_amount`), **prix de revient** (`cost_price`)
+- [ ] **Paying agency** (optional FK)
+- [ ] **Bon à délivrer** checkbox (all required fields filled first)
+- [ ] **Rectificative:** edit row + `declaration_edit_log` (not second row)
+- [ ] List `/declarations` with client, BL, zone, bon à délivrer
+- [ ] Fiche `/declarations/[id]`
+- [ ] Customs FSM — **optional / secondary** for pilot (can defer UI)
 
-### Documents
+### Ledger (Transactions)
 
-- [ ] R2 upload; `dossier_id` required; optional `declaration_id`
-- [ ] Typed documents + simple versioning
+- [ ] Immutable entries; **`balance_side`** débit/crédit; positive `amount`
+- [ ] Types: **`versement`** (credit), `charge` (debit), `opening_balance`, `reversal`
+- [ ] **Multi-dossier** `payment_allocations`
+- [ ] `notes` on entries
+- [ ] No stored signed solde; no `report` entry type
 
-### Activity
+### Documents / Activity
 
-- [ ] `activity_log` on declaration, dossier, customer, ledger events
-- [ ] Timeline on declaration fiche + dossier fiche
+- [ ] Documents on dossier; activity on edits, ledger, declarations
 
 ### UI / exports
 
-- [x] Shell: **horizontal tab nav** — Tableau de bord (home), Déclarations, Clients, Réglages (`UI-004`)
-- [x] Default landing `/dashboard` — stub sections (synthèse, à faire, activité récente); live data in `POL-002`
-- [x] CTA **+ Nouvelle déclaration** on `/declarations` page header + dashboard quick action (`UI-003`)
-- [x] Theme switcher (Clair / Sombre / Système) — profile menu + login toggle (`UI-005`)
-- [ ] Global search: declaration #, dossier #, client, BL, customs ref
+- [x] Tab nav shell, dashboard landing, theme (`UI-004`, `UI-005`)
 - [ ] PDF relevé de compte
+- [ ] Global search (BL, client, declaration #)
 
 ### Developer experience
 
-- [ ] Seed: multi-declaration dossier example
+- [ ] Seed aligned with pilot fields
 - [ ] Zod on server boundaries
-- [ ] README → `docs/`
 
 ---
 
@@ -78,42 +72,20 @@ See **[00-glossary.md](./00-glossary.md)**.
 
 | Feature | Defer to |
 |---------|----------|
-| Configurable workflow stages per company | Phase 2 |
-| `dossier_parties` (groupage / multi-importer) | Phase 2 |
-| Full double-entry GL | When accountant requires |
-| OCR / AI | Phase 3 |
-| WhatsApp / email ingest | Phase 3 |
-| ASYCUDA / customs API | Phase 4+ |
-| Advanced analytics | Phase 3 |
-| Client portal | Post-PMF |
-| Invoicing / VAT lines | Phase 2 |
-
-**Removed from defer:** multiple déclarations per dossier — **in MVP**.
-
----
-
-## MVP screens
-
-| Route | Purpose |
-|-------|---------|
-| `/login` | Auth |
-| `/dashboard` | Summary (managers) |
-| `/declarations` | **Main list** (Notion Declarations DB) |
-| `/declarations/new` | New déclaration (+ dossier) |
-| `/declarations/[id]` | Fiche déclaration (status, customs) |
-| `/dossiers/[id]` | Job hub: all déclarations, docs, $ |
-| `/clients` | Client list |
-| `/clients/[id]` | Client fiche |
-| `/settings` | Org + members |
-
-**Default after login:** `/dashboard`
+| ASYCUDA / GAINDE API integration | Phase 4+ |
+| Full customs FSM as primary workflow | Until pilot asks |
+| Second declaration row for rectificative | Replaced by edit+log |
+| Stored “report” transaction rows | Never — computed only |
+| Fixed enum for agency names | Use `organization_agencies` |
+| OCR, WhatsApp, client portal | Later phases |
 
 ---
 
 ## Definition of done
 
-- [ ] Pilot completes happy path using **déclaration** language
-- [ ] Rectification: second déclaration on same dossier works
-- [ ] Solde matches ledger in SQL
-- [ ] Invalid status transitions blocked
-- [ ] Documents org-scoped; deployed staging
+- [ ] Pilot completes happy path in **déclaration** language (BL row + bon à délivrer)
+- [ ] Rectificative via **edit + audit log**
+- [ ] Solde matches ledger using **débit/crédit** rules
+- [ ] Day-open **report** matches computed balance
+- [ ] Versement with multi-dossier allocation works
+- [ ] Agencies configurable in settings
