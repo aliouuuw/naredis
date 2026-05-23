@@ -43,3 +43,6 @@ export async function closeDb() {
 }
 
 export type Db = ReturnType<typeof getDb>;
+
+/** Database or transaction — use in module services. */
+export type DbLike = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];

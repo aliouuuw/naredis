@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `DOM-003` (declarations module — pilot BL row) or `DOM-004` (clients + débit/crédit solde)
+**Next up:** `DECL-002` / forms (nouvelle déclaration) or `DOM-005` (ledger versements UI)
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -31,7 +31,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | shadcn + app shell (PLAT-008) | Done |
 | Shell IA: tab nav + dashboard landing (UI-004) | Done |
 | Theme switcher (UI-005) | Done |
-| Domain modules + list/fiche UI | Not started |
+| Domain modules (DOM-002–004, 008) | Done — list/fiche read UI wired |
+| Create/edit forms + ledger UI | Not started |
 
 ---
 
@@ -100,6 +101,7 @@ _None._
 | UI-004   | IA v2: tab navbar + dashboard landing | 2026-05-19 |
 | UI-005   | Theme switcher (profile + login) | 2026-05-19 |
 | PLAT-011 | Pilot operations schema (0003) | 2026-05-23 |
+| DOM-002–004, 008 | Module services + list/fiche pages | 2026-05-23 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -116,6 +118,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-23 — Domain modules + read UI
+
+`lib/modules/*` (dossiers, declarations, customers, agencies, activity), `lib/domain/balance`, declaration completion rules. Pages: `/declarations` table, `/declarations/[id]`, `/clients` table, `/clients/[id]` (solde, report, frais, transactions jour), `/dossiers/[id]`, settings agencies list.
 
 ### 2026-05-23 — Pilot operations aligned (docs + schema 0003)
 

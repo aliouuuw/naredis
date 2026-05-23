@@ -1,28 +1,20 @@
-import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { declarations } from "@/lib/db/schema";
+import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
+import { listDeclarations } from "@/lib/modules/declarations/service";
 import { PageHeader } from "@/components/shell/page-header";
 import { NewDeclarationButton } from "@/components/shell/page-actions";
+import { DeclarationsTable } from "@/components/declarations/declarations-table";
 
 export default async function DeclarationsPage() {
-  const ctx = await requireAuthContext();
-  const db = getDb();
-
-  const rows = await db
-    .select({
-      declarationNumber: declarations.declarationNumber,
-      status: declarations.status,
-    })
-    .from(declarations)
-    .where(eq(declarations.organizationId, ctx.organizationId))
-    .limit(20);
+  const auth = await requireAuthContext();
+  const rows = await listDeclarations(getDb(), toModuleContext(auth));
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Déclarations"
-        description="Liste des déclarations douanières de votre cabinet."
+        description="Une ligne par connaissement (BL) — zone, conteneurs, montants et bon à délivrer."
         actions={<NewDeclarationButton />}
       />
       {rows.length === 0 ? (
@@ -35,17 +27,7 @@ export default async function DeclarationsPage() {
           </div>
         </div>
       ) : (
-        <ul className="divide-y rounded-lg border bg-card">
-          {rows.map((row) => (
-            <li
-              key={row.declarationNumber}
-              className="flex items-center justify-between px-4 py-3 text-sm"
-            >
-              <span className="font-medium">{row.declarationNumber}</span>
-              <span className="text-muted-foreground">{row.status}</span>
-            </li>
-          ))}
-        </ul>
+        <DeclarationsTable rows={rows} />
       )}
     </div>
   );

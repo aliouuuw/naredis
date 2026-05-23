@@ -188,7 +188,7 @@
       "epic": "domain-data",
       "title": "Dossiers module (CRUD, case_status, numbering)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-006", "PLAT-003"],
       "docs": ["docs/05-domain-model.md"],
       "acceptanceCriteria": [
@@ -202,7 +202,7 @@
       "epic": "domain-data",
       "title": "Declarations module (BL row CRUD, containers, bon à délivrer, edit log)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["DOM-002", "PLAT-011"],
       "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
@@ -218,7 +218,7 @@
       "epic": "domain-data",
       "title": "Customers module",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-006"],
       "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
@@ -249,7 +249,7 @@
       "epic": "domain-data",
       "title": "Organization agencies CRUD (maison-mère)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-011", "PLAT-006"],
       "docs": ["docs/13-pilot-operations.md"],
       "acceptanceCriteria": [

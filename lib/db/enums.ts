@@ -27,11 +27,15 @@ export const dossierTypeEnum = pgEnum("dossier_type", [
   "transit",
 ]);
 
+export type DossierType = (typeof dossierTypeEnum.enumValues)[number];
+
 export const caseStatusEnum = pgEnum("case_status", [
   "open",
   "on_hold",
   "closed",
 ]);
+
+export type CaseStatus = (typeof caseStatusEnum.enumValues)[number];
 
 export const declarationKindEnum = pgEnum("declaration_kind", [
   "initial",
