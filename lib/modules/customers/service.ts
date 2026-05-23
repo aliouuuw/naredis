@@ -1,8 +1,14 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
-import { customers } from "@/lib/db/schema";
+import {
+  customers,
+  declarations,
+  dossiers,
+  ledgerEntries,
+} from "@/lib/db/schema";
 import type { CustomerAccountStatus } from "@/lib/db/enums";
-import { formatBalanceLabel } from "@/lib/domain/balance";
+import { balanceFromTotals, formatBalanceLabel } from "@/lib/domain/balance";
+import { agencyCalendarDate } from "@/lib/domain/timezone";
 import { slugFromName } from "@/lib/utils/slug";
 import { appendActivity } from "@/lib/modules/activity/append-activity";
 import type { ModuleContext } from "@/lib/modules/shared/types";
@@ -12,6 +18,8 @@ import {
   getCustomerDeclarationFeesAllTime,
   getCustomerTransactionsTodayTotal,
 } from "./balance";
+// `getCustomerBalance` is kept for the fiche page; list uses inline aggregates.
+void getCustomerBalance;
 import type { CreateCustomerInput, UpdateCustomerInput } from "./schemas";
 
 async function uniqueSlug(
@@ -20,10 +28,10 @@ async function uniqueSlug(
   baseName: string,
   excludeId?: string,
 ): Promise<string> {
-  let slug = slugFromName(baseName);
-  let suffix = 0;
+  const slug = slugFromName(baseName);
+  const MAX_ATTEMPTS = 1000;
 
-  while (true) {
+  for (let suffix = 0; suffix < MAX_ATTEMPTS; suffix += 1) {
     const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
     const [existing] = await db
       .select({ id: customers.id })
@@ -39,8 +47,11 @@ async function uniqueSlug(
     if (!existing || existing.id === excludeId) {
       return candidate;
     }
-    suffix += 1;
   }
+
+  throw new Error(
+    `Impossible de générer un slug unique pour "${baseName}" après ${MAX_ATTEMPTS} tentatives`,
+  );
 }
 
 export type CustomerListItem = {
@@ -60,38 +71,76 @@ export async function listCustomers(
   db: DbLike,
   ctx: ModuleContext,
 ): Promise<CustomerListItem[]> {
+  const today = agencyCalendarDate();
+
+  // One round-trip: customers ⨝ ledger aggregates ⨝ declaration fees ⨝ today's tx.
+  const ledgerAgg = db
+    .select({
+      customerId: ledgerEntries.customerId,
+      totalDebit: sql<string>`coalesce(sum(case when ${ledgerEntries.balanceSide} = 'debit' then ${ledgerEntries.amount} else 0 end), 0)`.as(
+        "total_debit",
+      ),
+      totalCredit: sql<string>`coalesce(sum(case when ${ledgerEntries.balanceSide} = 'credit' then ${ledgerEntries.amount} else 0 end), 0)`.as(
+        "total_credit",
+      ),
+      transactionsToday: sql<string>`coalesce(sum(case when ${ledgerEntries.effectiveDate} = ${today} then ${ledgerEntries.amount} else 0 end), 0)`.as(
+        "transactions_today",
+      ),
+    })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.organizationId, ctx.organizationId))
+    .groupBy(ledgerEntries.customerId)
+    .as("ledger_agg");
+
+  const feesAgg = db
+    .select({
+      customerId: dossiers.customerId,
+      feesAllTime: sql<string>`coalesce(sum(${declarations.costPrice}), 0)`.as(
+        "fees_all_time",
+      ),
+    })
+    .from(declarations)
+    .innerJoin(dossiers, eq(declarations.dossierId, dossiers.id))
+    .where(eq(declarations.organizationId, ctx.organizationId))
+    .groupBy(dossiers.customerId)
+    .as("fees_agg");
+
   const rows = await db
-    .select()
+    .select({
+      id: customers.id,
+      name: customers.name,
+      slug: customers.slug,
+      phone: customers.phone,
+      accountStatus: customers.accountStatus,
+      totalDebit: ledgerAgg.totalDebit,
+      totalCredit: ledgerAgg.totalCredit,
+      transactionsToday: ledgerAgg.transactionsToday,
+      feesAllTime: feesAgg.feesAllTime,
+    })
     .from(customers)
+    .leftJoin(ledgerAgg, eq(ledgerAgg.customerId, customers.id))
+    .leftJoin(feesAgg, eq(feesAgg.customerId, customers.id))
     .where(eq(customers.organizationId, ctx.organizationId))
     .orderBy(customers.name);
 
-  return Promise.all(
-    rows.map(async (row) => {
-      const balance = await getCustomerBalance(
-        db,
-        ctx.organizationId,
-        row.id,
-      );
-      const [feesAllTime, transactionsToday] = await Promise.all([
-        getCustomerDeclarationFeesAllTime(db, ctx.organizationId, row.id),
-        getCustomerTransactionsTodayTotal(db, ctx.organizationId, row.id),
-      ]);
-
-      return {
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        phone: row.phone,
-        accountStatus: row.accountStatus,
-        balanceAmount: balance.amount,
-        balanceSide: balance.side,
-        balanceLabel: formatBalanceLabel(balance.side),
-        feesAllTime,
-        transactionsToday,
-      };
-    }),
-  );
+  return rows.map((row) => {
+    const balance = balanceFromTotals({
+      totalDebit: BigInt(row.totalDebit ?? "0"),
+      totalCredit: BigInt(row.totalCredit ?? "0"),
+    });
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      phone: row.phone,
+      accountStatus: row.accountStatus,
+      balanceAmount: balance.amount,
+      balanceSide: balance.side,
+      balanceLabel: formatBalanceLabel(balance.side),
+      feesAllTime: BigInt(row.feesAllTime ?? "0"),
+      transactionsToday: BigInt(row.transactionsToday ?? "0"),
+    };
+  });
 }
 
 export async function getCustomerById(

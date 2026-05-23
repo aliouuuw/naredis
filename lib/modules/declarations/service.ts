@@ -10,10 +10,17 @@ import {
   organizationAgencies,
 } from "@/lib/db/schema";
 import { appendActivity } from "@/lib/modules/activity/append-activity";
-import { createDossier, getDossierById, updateDossierBlReference } from "@/lib/modules/dossiers/service";
+import {
+  createDossier,
+  getDossierById,
+  updateDossierBlReference,
+} from "@/lib/modules/dossiers/service";
 import { nextDeclarationNumber } from "@/lib/modules/dossiers/sequences";
 import type { ModuleContext } from "@/lib/modules/shared/types";
-import type { CreateDeclarationInput, UpdateDeclarationInput } from "./schemas";
+import type {
+  CreateDeclarationInput,
+  UpdateDeclarationInput,
+} from "./schemas";
 
 export type DeclarationListItem = {
   id: string;
@@ -35,6 +42,7 @@ export type DeclarationListItem = {
 function serializeValue(value: unknown): string | null {
   if (value == null) return null;
   if (typeof value === "bigint") return value.toString();
+  if (Array.isArray(value)) return JSON.stringify(value);
   if (value instanceof Date) return value.toISOString();
   return String(value);
 }
@@ -65,7 +73,7 @@ async function syncContainers(
     .where(eq(declarationContainers.declarationId, declarationId));
 
   const trimmed = containers.map((c) => c.trim()).filter(Boolean);
-  if (trimmed.length === 0) return;
+  if (trimmed.length === 0) return [];
 
   await db.insert(declarationContainers).values(
     trimmed.map((containerNumber, index) => ({
@@ -75,15 +83,52 @@ async function syncContainers(
       sortOrder: index,
     })),
   );
+  return trimmed;
 }
 
-async function loadContainers(db: DbLike, declarationId: string): Promise<string[]> {
+async function loadContainers(
+  db: DbLike,
+  declarationId: string,
+): Promise<string[]> {
   const rows = await db
     .select({ containerNumber: declarationContainers.containerNumber })
     .from(declarationContainers)
     .where(eq(declarationContainers.declarationId, declarationId))
     .orderBy(declarationContainers.sortOrder);
   return rows.map((r) => r.containerNumber);
+}
+
+/** Error subclasses so server actions can map to French messages. */
+export class DuplicateBlError extends Error {
+  constructor(public readonly blReference: string) {
+    super(`Un dossier existe déjà avec le BL ${blReference}.`);
+    this.name = "DuplicateBlError";
+  }
+}
+
+export class BonADelivrerIncompleteError extends Error {
+  constructor(public readonly missing: string[]) {
+    super(`Champs manquants pour bon à délivrer: ${missing.join(", ")}`);
+    this.name = "BonADelivrerIncompleteError";
+  }
+}
+
+async function findDossierByBl(
+  db: DbLike,
+  ctx: ModuleContext,
+  blReference: string,
+) {
+  const [row] = await db
+    .select({ id: dossiers.id })
+    .from(dossiers)
+    .where(
+      and(
+        eq(dossiers.organizationId, ctx.organizationId),
+        eq(dossiers.blReference, blReference),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
 }
 
 export async function listDeclarations(
@@ -163,11 +208,23 @@ export async function createDeclaration(
   ctx: ModuleContext,
   input: CreateDeclarationInput,
 ) {
+  // Idempotency: 1 BL per org → reuse existing dossier if any.
+  const existing = await findDossierByBl(db, ctx, input.blReference.trim());
+  if (existing) {
+    throw new DuplicateBlError(input.blReference.trim());
+  }
+
+  const containers = (input.containers ?? [])
+    .map((c) => c.trim())
+    .filter(Boolean);
+  const containerCount =
+    input.containerCount != null ? input.containerCount : containers.length;
+
   return db.transaction(async (tx) => {
     const dossier = await createDossier(tx, ctx, {
       customerId: input.customerId,
       dossierType: input.dossierType,
-      blReference: input.blReference,
+      blReference: input.blReference.trim(),
       title: input.title,
     });
 
@@ -175,9 +232,6 @@ export async function createDeclaration(
       tx,
       ctx.organizationId,
     );
-
-    const containers = input.containers ?? [];
-    const containerCount = input.containerCount ?? containers.length;
 
     const [declaration] = await tx
       .insert(declarations)
@@ -205,7 +259,9 @@ export async function createDeclaration(
       payload: {
         declarationNumber,
         dossierId: dossier.id,
-        blReference: input.blReference,
+        blReference: input.blReference.trim(),
+        containerCount,
+        containers,
       },
       actorId: ctx.userId,
     });
@@ -220,148 +276,169 @@ export async function updateDeclaration(
   declarationId: string,
   input: UpdateDeclarationInput,
 ) {
-  const current = await getDeclarationById(db, ctx, declarationId);
-  if (!current) return null;
-
-  const { declaration, dossier, containers: existingContainers } = current;
-
-  if (input.bonADelivrer === true) {
-    const nextContainers =
-      input.containers !== undefined ? input.containers : existingContainers;
-    const nextCount =
-      input.containerCount !== undefined && input.containerCount !== null
-        ? input.containerCount
-        : (declaration.containerCount ?? 0);
-    const missing = getBonADelivrerMissingFields({
-      zoneOrTerminal:
-        input.zoneOrTerminal !== undefined
-          ? input.zoneOrTerminal
-          : declaration.zoneOrTerminal,
-      declarationDate:
-        input.declarationDate !== undefined
-          ? input.declarationDate
-          : declaration.declarationDate,
-      blReference:
-        input.blReference !== undefined ? input.blReference : dossier.blReference,
-      containerCount: nextCount,
-      containers: nextContainers,
-      clientAmountPaid:
-        input.clientAmountPaid !== undefined
-          ? input.clientAmountPaid
-          : declaration.clientAmountPaid,
-      gaindeDutyAmount:
-        input.gaindeDutyAmount !== undefined
-          ? input.gaindeDutyAmount
-          : declaration.gaindeDutyAmount,
-      costPrice:
-        input.costPrice !== undefined ? input.costPrice : declaration.costPrice,
-    });
-    if (missing.length > 0) {
-      throw new Error(
-        `Champs manquants pour bon à délivrer: ${missing.join(", ")}`,
-      );
-    }
-  }
-
-  const beforeSnapshot: Record<string, unknown> = {
-    zone_or_terminal: declaration.zoneOrTerminal,
-    declaration_date: declaration.declarationDate,
-    container_count: declaration.containerCount,
-    client_amount_paid: declaration.clientAmountPaid,
-    gainde_duty_amount: declaration.gaindeDutyAmount,
-    cost_price: declaration.costPrice,
-    paying_agency_id: declaration.payingAgencyId,
-    bl_reference: dossier.blReference,
-    customs_reference: declaration.customsReference,
-    bureau: declaration.bureau,
-    bon_a_delivrer: declaration.bonADelivrer,
-  };
-
   return db.transaction(async (tx) => {
-    if (input.blReference !== undefined) {
-      await updateDossierBlReference(
-        tx,
-        ctx,
-        dossier.id,
-        input.blReference?.trim() || null,
-      );
-    }
-
-    const bonADelivrer =
-      input.bonADelivrer !== undefined
-        ? input.bonADelivrer
-        : declaration.bonADelivrer;
-
-    const [updated] = await tx
-      .update(declarations)
-      .set({
-        zoneOrTerminal:
-          input.zoneOrTerminal !== undefined
-            ? input.zoneOrTerminal?.trim() || null
-            : declaration.zoneOrTerminal,
-        declarationDate:
-          input.declarationDate !== undefined
-            ? input.declarationDate
-            : declaration.declarationDate,
-        containerCount:
-          input.containerCount !== undefined
-            ? input.containerCount
-            : declaration.containerCount,
-        clientAmountPaid:
-          input.clientAmountPaid !== undefined
-            ? input.clientAmountPaid
-            : declaration.clientAmountPaid,
-        gaindeDutyAmount:
-          input.gaindeDutyAmount !== undefined
-            ? input.gaindeDutyAmount
-            : declaration.gaindeDutyAmount,
-        costPrice:
-          input.costPrice !== undefined ? input.costPrice : declaration.costPrice,
-        payingAgencyId:
-          input.payingAgencyId !== undefined
-            ? input.payingAgencyId
-            : declaration.payingAgencyId,
-        customsReference:
-          input.customsReference !== undefined
-            ? input.customsReference
-            : declaration.customsReference,
-        bureau: input.bureau !== undefined ? input.bureau : declaration.bureau,
-        bonADelivrer,
-        bonADelivrerAt:
-          bonADelivrer && !declaration.bonADelivrer
-            ? new Date()
-            : bonADelivrer
-              ? declaration.bonADelivrerAt
-              : null,
-        version: declaration.version + 1,
-      })
+    // Lock & re-read inside transaction so BAD validation matches what we write.
+    const [locked] = await tx
+      .select()
+      .from(declarations)
       .where(
         and(
           eq(declarations.id, declarationId),
           eq(declarations.organizationId, ctx.organizationId),
         ),
       )
+      .for("update")
+      .limit(1);
+
+    if (!locked) return null;
+
+    const lockedDossier = await getDossierById(tx, ctx, locked.dossierId);
+    if (!lockedDossier) return null;
+
+    const existingContainers = await loadContainers(tx, declarationId);
+
+    // Derive next values respecting "undefined = no change", "null = clear".
+    const nextZone =
+      input.zoneOrTerminal !== undefined
+        ? (input.zoneOrTerminal?.trim() || null)
+        : locked.zoneOrTerminal;
+    const nextDate =
+      input.declarationDate !== undefined
+        ? input.declarationDate || null
+        : locked.declarationDate;
+    const nextBl =
+      input.blReference !== undefined
+        ? (input.blReference?.trim() || null)
+        : lockedDossier.blReference;
+    const nextContainers =
+      input.containers !== undefined
+        ? input.containers.map((c) => c.trim()).filter(Boolean)
+        : existingContainers;
+    // If containers change but count not provided, derive from list.
+    const nextContainerCount =
+      input.containerCount !== undefined && input.containerCount !== null
+        ? input.containerCount
+        : input.containers !== undefined
+          ? nextContainers.length
+          : locked.containerCount;
+    const nextClientAmount =
+      input.clientAmountPaid !== undefined
+        ? input.clientAmountPaid
+        : locked.clientAmountPaid;
+    const nextGainde =
+      input.gaindeDutyAmount !== undefined
+        ? input.gaindeDutyAmount
+        : locked.gaindeDutyAmount;
+    const nextCostPrice =
+      input.costPrice !== undefined ? input.costPrice : locked.costPrice;
+    const nextAgencyId =
+      input.payingAgencyId !== undefined
+        ? input.payingAgencyId
+        : locked.payingAgencyId;
+    const nextCustomsRef =
+      input.customsReference !== undefined
+        ? input.customsReference
+        : locked.customsReference;
+    const nextBureau =
+      input.bureau !== undefined ? input.bureau : locked.bureau;
+    const nextBad =
+      input.bonADelivrer !== undefined
+        ? input.bonADelivrer
+        : locked.bonADelivrer;
+
+    if (nextBad) {
+      const missing = getBonADelivrerMissingFields({
+        zoneOrTerminal: nextZone,
+        declarationDate: nextDate,
+        blReference: nextBl,
+        containerCount: nextContainerCount,
+        containers: nextContainers,
+        clientAmountPaid: nextClientAmount,
+        gaindeDutyAmount: nextGainde,
+        costPrice: nextCostPrice,
+      });
+      if (missing.length > 0) {
+        throw new BonADelivrerIncompleteError(missing);
+      }
+    }
+
+    // BL uniqueness inside the transaction (only if changing).
+    if (
+      input.blReference !== undefined &&
+      nextBl &&
+      nextBl !== lockedDossier.blReference
+    ) {
+      const [conflict] = await tx
+        .select({ id: dossiers.id })
+        .from(dossiers)
+        .where(
+          and(
+            eq(dossiers.organizationId, ctx.organizationId),
+            eq(dossiers.blReference, nextBl),
+          ),
+        )
+        .limit(1);
+      if (conflict && conflict.id !== lockedDossier.id) {
+        throw new DuplicateBlError(nextBl);
+      }
+    }
+
+    if (input.blReference !== undefined) {
+      await updateDossierBlReference(tx, ctx, lockedDossier.id, nextBl);
+    }
+
+    const [updated] = await tx
+      .update(declarations)
+      .set({
+        zoneOrTerminal: nextZone,
+        declarationDate: nextDate,
+        containerCount: nextContainerCount,
+        clientAmountPaid: nextClientAmount,
+        gaindeDutyAmount: nextGainde,
+        costPrice: nextCostPrice,
+        payingAgencyId: nextAgencyId,
+        customsReference: nextCustomsRef,
+        bureau: nextBureau,
+        bonADelivrer: nextBad,
+        bonADelivrerAt: nextBad
+          ? locked.bonADelivrer
+            ? locked.bonADelivrerAt
+            : new Date()
+          : null,
+        version: locked.version + 1,
+      })
+      .where(eq(declarations.id, declarationId))
       .returning();
 
     if (input.containers !== undefined) {
-      await syncContainers(tx, ctx, declarationId, input.containers);
+      await syncContainers(tx, ctx, declarationId, nextContainers);
     }
 
-    const refreshedDossier = await getDossierById(tx, ctx, dossier.id);
-    const refreshedContainers =
-      input.containers !== undefined
-        ? input.containers
-        : await loadContainers(tx, declarationId);
+    const beforeSnapshot: Record<string, unknown> = {
+      zone_or_terminal: locked.zoneOrTerminal,
+      declaration_date: locked.declarationDate,
+      container_count: locked.containerCount,
+      containers: existingContainers,
+      client_amount_paid: locked.clientAmountPaid,
+      gainde_duty_amount: locked.gaindeDutyAmount,
+      cost_price: locked.costPrice,
+      paying_agency_id: locked.payingAgencyId,
+      bl_reference: lockedDossier.blReference,
+      customs_reference: locked.customsReference,
+      bureau: locked.bureau,
+      bon_a_delivrer: locked.bonADelivrer,
+    };
 
     const afterSnapshot: Record<string, unknown> = {
       zone_or_terminal: updated.zoneOrTerminal,
       declaration_date: updated.declarationDate,
       container_count: updated.containerCount,
+      containers: nextContainers,
       client_amount_paid: updated.clientAmountPaid,
       gainde_duty_amount: updated.gaindeDutyAmount,
       cost_price: updated.costPrice,
       paying_agency_id: updated.payingAgencyId,
-      bl_reference: refreshedDossier?.blReference ?? null,
+      bl_reference: nextBl,
       customs_reference: updated.customsReference,
       bureau: updated.bureau,
       bon_a_delivrer: updated.bonADelivrer,

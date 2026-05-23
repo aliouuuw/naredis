@@ -75,12 +75,15 @@ async function main() {
 
   const [agencyDakar] = insertedAgencies;
 
+  const seedYear = 2026;
   await db.insert(dossierSequences).values({
     organizationId: org.id,
+    year: seedYear,
     lastValue: 4,
   });
   await db.insert(declarationSequences).values({
     organizationId: org.id,
+    year: seedYear,
     lastValue: 4,
   });
 

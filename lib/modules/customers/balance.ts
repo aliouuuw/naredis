@@ -1,11 +1,6 @@
 import { and, eq, lt, sql } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
-import {
-  customers,
-  declarations,
-  dossiers,
-  ledgerEntries,
-} from "@/lib/db/schema";
+import { declarations, dossiers, ledgerEntries } from "@/lib/db/schema";
 import {
   balanceFromTotals,
   type BalanceTotals,

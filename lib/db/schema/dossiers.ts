@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   pgTable,
@@ -52,9 +53,8 @@ export const dossiers = pgTable(
       table.organizationId,
       table.customerId,
     ),
-    index("dossiers_organization_id_bl_reference_idx").on(
-      table.organizationId,
-      table.blReference,
-    ),
+    uniqueIndex("dossiers_organization_id_bl_reference_unique_idx")
+      .on(table.organizationId, table.blReference)
+      .where(sql`${table.blReference} IS NOT NULL`),
   ],
 );

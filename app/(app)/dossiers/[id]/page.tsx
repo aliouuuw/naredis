@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { declarations } from "@/lib/db/schema";
 import { toModuleContext } from "@/lib/auth/module-context";
@@ -30,7 +30,12 @@ export default async function DossierFichePage({
       bonADelivrer: declarations.bonADelivrer,
     })
     .from(declarations)
-    .where(eq(declarations.dossierId, id));
+    .where(
+      and(
+        eq(declarations.dossierId, id),
+        eq(declarations.organizationId, ctx.organizationId),
+      ),
+    );
 
   return (
     <div className="space-y-8">

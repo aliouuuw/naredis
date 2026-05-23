@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
-import { requireAuthContext } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/session";
 import {
   createCustomerSchema,
   type CreateCustomerInput,
@@ -14,7 +14,7 @@ import { actionError, type ActionResult } from "./form-result";
 export async function createCustomerAction(
   input: CreateCustomerInput,
 ): Promise<ActionResult<{ id: string }>> {
-  const auth = await requireAuthContext();
+  const auth = await requireRole(["owner", "admin", "operator"]);
   const parsed = createCustomerSchema.safeParse(input);
 
   if (!parsed.success) {

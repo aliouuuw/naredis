@@ -16,9 +16,9 @@ async function nextSequenceValue(
 
   const [row] = await db
     .insert(table)
-    .values({ organizationId, lastValue: 1 })
+    .values({ organizationId, year, lastValue: 1 })
     .onConflictDoUpdate({
-      target: table.organizationId,
+      target: [table.organizationId, table.year],
       set: { lastValue: sql`${table.lastValue} + 1` },
     })
     .returning({ lastValue: table.lastValue });
@@ -38,16 +38,4 @@ export function nextDeclarationNumber(db: DbLike, organizationId: string) {
     declarationSequences,
     "DEC",
   );
-}
-
-/** Ensure sequence row exists (e.g. after manual seed). */
-export async function ensureSequenceRows(db: DbLike, organizationId: string) {
-  await db
-    .insert(dossierSequences)
-    .values({ organizationId, lastValue: 0 })
-    .onConflictDoNothing();
-  await db
-    .insert(declarationSequences)
-    .values({ organizationId, lastValue: 0 })
-    .onConflictDoNothing();
 }
