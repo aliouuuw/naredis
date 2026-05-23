@@ -381,7 +381,7 @@
       "epic": "declarations",
       "title": "New declaration form (/declarations/new)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["DOM-003", "DOM-004"],
       "docs": ["docs/11-user-flows.md", "docs/10-information-architecture.md"],
       "acceptanceCriteria": [

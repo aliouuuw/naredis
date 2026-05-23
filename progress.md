@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Platform foundation** — database and schema in place.
 
-**Next up:** `DECL-002` / forms (nouvelle déclaration) or `DOM-005` (ledger versements UI)
+**Next up:** `DOM-005` / `CLI-002` (versements + allocations) or declaration edit UI (`DECL-005`)
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -32,7 +32,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Shell IA: tab nav + dashboard landing (UI-004) | Done |
 | Theme switcher (UI-005) | Done |
 | Domain modules (DOM-002–004, 008) | Done — list/fiche read UI wired |
-| Create/edit forms + ledger UI | Not started |
+| Create forms (client + déclaration) | Done |
+| Edit fiche + ledger UI | Not started |
 
 ---
 
@@ -118,6 +119,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-05-23 — Create forms (DECL-002, client new)
+
+Server actions + `NewCustomerForm` and `NewDeclarationForm` (BL, containers, montants, agency). Redirect to fiche on success.
 
 ### 2026-05-23 — Domain modules + read UI
 

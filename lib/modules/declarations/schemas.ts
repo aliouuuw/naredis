@@ -20,7 +20,10 @@ export const createDeclarationSchema = z.object({
   clientAmountPaid: moneyField,
   gaindeDutyAmount: moneyField,
   costPrice: moneyField,
-  payingAgencyId: z.string().uuid().optional().nullable(),
+  payingAgencyId: z
+    .union([z.string().uuid(), z.literal("")])
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null)),
   dossierType: z.enum(["import", "export", "transit"]).optional(),
   title: z.string().optional(),
 });
@@ -43,4 +46,6 @@ const updateDeclarationBase = z.object({
 export const updateDeclarationSchema = updateDeclarationBase.partial();
 
 export type CreateDeclarationInput = z.infer<typeof createDeclarationSchema>;
+/** Raw form / action payload before Zod transforms (money as string). */
+export type CreateDeclarationFormValues = z.input<typeof createDeclarationSchema>;
 export type UpdateDeclarationInput = z.infer<typeof updateDeclarationSchema>;

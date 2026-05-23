@@ -1,19 +1,17 @@
 import { requireAuthContext } from "@/lib/auth/session";
-import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/shell/page-header";
+import { NewCustomerForm } from "@/components/customers/new-customer-form";
 
 export default async function NewClientPage() {
   await requireAuthContext();
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className="space-y-8">
       <PageHeader
         title="Nouveau client"
-        description="Formulaire de création — à venir (CLI-001)."
+        description="Ajoutez un compte client. Le solde sera géré via les transactions."
       />
-      <ButtonLink href="/clients" variant="outline">
-        Retour aux clients
-      </ButtonLink>
+      <NewCustomerForm />
     </div>
   );
 }
