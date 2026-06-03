@@ -64,7 +64,7 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 
 ## Visual language
 
-Notion-like density, status pills, stepper on **déclaration** fiche, XOF formatting, shadcn. **Vercel-inspired** shell (Geist, two-row header, design tokens in `globals.css`). **Theme:** Clair / Sombre / Système via profile menu; compact sun/moon toggle on `/login` (`next-themes`).
+Notion-like density, status pills, stepper on **déclaration** fiche, XOF formatting, shadcn. **Vercel-inspired** shell (Google Sans Flex, two-row header, design tokens in `globals.css`). **Theme:** Clair / Sombre / Système via profile menu; compact sun/moon toggle on `/login` (`next-themes`).
 
 ---
 

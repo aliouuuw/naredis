@@ -8,9 +8,9 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 ## Current phase
 
-**Domain + read/create UI** — pilot schema (0003–0004), module services, list/fiche pages, create forms. Code review fixes committed (`82968d3`).
+**Pilot desk UI** — déclarations, ledger/transactions, client fiches. Global `/transactions` with URL filters, grouping, and extensible types (`524fcd6`–`b22eaae`).
 
-**Next up:** `DECL-003` (Activité tab), `DECL-004` (FSM statut), `DOS-001`, `CLI-003` (solde ouverture / contre-passation).
+**Next up:** `CLI-001` (Activité tab + fiche UX polish), `CLI-003` (solde ouverture / contre-passation), `DECL-003` Activité, `DOS-001` hub tabs, `POL-002` dashboard.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -37,7 +37,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Create forms (client + déclaration) | Done |
 | Declaration edit + BAD toggle UI (`DECL-005`) | Done |
 | Ledger module + payment UI (`DOM-005`, `CLI-002`) | Done |
-| Client fiche tabs (`CLI-001` partial) | Résumé + Transactions + Déclarations |
+| Client fiche (`CLI-001` partial) | Résumé + Transactions + Déclarations; global `/transactions`; Google Sans Flex |
+| Transactions module | Types extensibles, filtres URL, regroupement imbriqué |
 
 ---
 

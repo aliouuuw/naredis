@@ -230,14 +230,16 @@ Titre            optional
 
 ## Page: Clients
 
-Unchanged pattern; client fiche tabs:
+**List (`/clients`):** sortable table — solde, frais dossiers (all time), transactions du jour, statut compte (`a_jour` / `pas_a_jour`).
+
+**Fiche (`/clients/[id]`):** URL-driven tabs (`?tab=resume|transactions|declarations`). Header shows solde hero + KPIs (report jour, frais dossiers, transactions aujourd’hui). Primary CTA **Nouvelle transaction** → `?tab=transactions&record=1` (scroll to form).
 
 | Tab | Content |
 |-----|---------|
-| **Déclarations** | All declarations for client (Notion rollup) |
-| **Dossiers** | Optional grouped view by job |
-| **Transactions** | Ledger, payments, relevé PDF |
-| **Activité** | Client-level log |
+| **Résumé** | Solde, report, frais, contact, statut compte (manual reconcile) |
+| **Transactions** | Record form + ledger history; link to global `/transactions` with client filter |
+| **Déclarations** | BL rows for client → déclaration fiche |
+| **Activité** | (planned) Client-level `activity_log` timeline |
 
 ---
 

@@ -491,7 +491,7 @@
         "Fiche tabs: Déclarations, Transactions, Activité",
         "PageHeader CTA retained (UI-003)"
       ],
-      "notes": "Shipped: list + fiche tabs Résumé, Transactions, Déclarations; global /transactions page. Missing: Activité tab."
+      "notes": "Shipped: list + URL tabs Résumé/Transactions/Déclarations, global /transactions, statut compte, extensible types. In progress: fiche UX rework, Activité tab, record=1 deep link for Nouvelle transaction."
     },
     {
       "id": "CLI-002",
