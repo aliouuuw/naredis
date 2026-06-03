@@ -17,7 +17,9 @@ import {
 import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
 import { customerHasOpeningBalance } from "@/lib/modules/ledger/corrections";
 import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
+import { listActivityForCustomer } from "@/lib/modules/activity/service";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
+import { serializeActivityLog } from "@/lib/modules/dossiers/serialize-hub";
 import { CustomerFicheView } from "@/components/clients/customer-fiche-view";
 
 export default async function ClientFichePage({
@@ -32,6 +34,8 @@ export default async function ClientFichePage({
   const auth = await requireAuthContext();
   const ctx = toModuleContext(auth);
 
+  const db = getDb();
+
   const [
     fiche,
     ledgerRows,
@@ -40,14 +44,16 @@ export default async function ClientFichePage({
     transactionTypes,
     canRecordLedger,
     hasOpeningBalance,
+    activityLog,
   ] = await Promise.all([
-    getCustomerFiche(getDb(), ctx, id),
-    listLedgerEntriesForCustomer(getDb(), ctx, id),
-    listDossiersForCustomer(getDb(), ctx, id),
-    listDeclarationsForCustomer(getDb(), ctx, id),
-    listTransactionTypes(getDb(), ctx),
+    getCustomerFiche(db, ctx, id),
+    listLedgerEntriesForCustomer(db, ctx, id),
+    listDossiersForCustomer(db, ctx, id),
+    listDeclarationsForCustomer(db, ctx, id),
+    listTransactionTypes(db, ctx),
     memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
-    customerHasOpeningBalance(getDb(), ctx.organizationId, id),
+    customerHasOpeningBalance(db, ctx.organizationId, id),
+    listActivityForCustomer(db, ctx, id),
   ]);
 
   if (!fiche) {
@@ -62,7 +68,9 @@ export default async function ClientFichePage({
       ? ("transactions" as const)
       : tabParam === "declarations"
         ? ("declarations" as const)
-        : undefined;
+        : tabParam === "activite"
+          ? ("activite" as const)
+          : undefined;
 
   return (
     <div className="space-y-6">
@@ -97,6 +105,7 @@ export default async function ClientFichePage({
           transactionTypes={transactionTypes}
           canRecordLedger={canRecordLedger}
           hasOpeningBalance={hasOpeningBalance}
+          activityLog={serializeActivityLog(activityLog)}
           initialTab={initialTab}
         />
       </Suspense>

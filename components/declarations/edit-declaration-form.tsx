@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useOrgFormSuggestions } from "@/components/hooks/use-form-suggestions";
 import {
   setBonADelivrerAction,
   updateDeclarationAction,
@@ -9,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
 import { FormSelect } from "@/components/ui/form-select";
+import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
 import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
 import { DeclarationResteField } from "@/components/declarations/declaration-reste-field";
-import { pilotZoneOptions } from "@/lib/domain/pilot-zones";
+import { mergeZoneSuggestions } from "@/lib/domain/pilot-zones";
 import type { AgencyOption } from "./new-declaration-form";
 
 export type EditDeclarationInitial = {
@@ -53,6 +55,9 @@ export function EditDeclarationForm({
   compactFooter?: boolean;
 }) {
   const router = useRouter();
+  const { suggestions } = useOrgFormSuggestions();
+  const [blReference, setBlReference] = useState(initial.blReference);
+  const [zoneOrTerminal, setZoneOrTerminal] = useState(initial.zoneOrTerminal);
   const [pending, setPending] = useState(false);
   const [badPending, setBadPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +73,8 @@ export function EditDeclarationForm({
   const [costPrice, setCostPrice] = useState(initial.costPrice);
 
   useEffect(() => {
+    setBlReference(initial.blReference);
+    setZoneOrTerminal(initial.zoneOrTerminal);
     setBonADelivrer(initial.bonADelivrer);
     setContainerPayload({
       containers: initial.containers,
@@ -77,12 +84,19 @@ export function EditDeclarationForm({
     setCostPrice(initial.costPrice);
   }, [
     formKey,
+    initial.blReference,
+    initial.zoneOrTerminal,
     initial.bonADelivrer,
     initial.containers,
     initial.containerCount,
     initial.clientAmountPaid,
     initial.costPrice,
   ]);
+
+  const zoneSuggestions = useMemo(
+    () => mergeZoneSuggestions(suggestions?.zoneOrTerminals ?? []),
+    [suggestions?.zoneOrTerminals],
+  );
 
   const containerCountShortfall =
     containerPayload.containerCount > 0 &&
@@ -192,10 +206,16 @@ export function EditDeclarationForm({
             <Input
               id="blReference"
               name="blReference"
-              defaultValue={initial.blReference}
+              value={blReference}
+              onChange={(e) => setBlReference(e.target.value)}
               className="font-mono"
               required
+              autoComplete="off"
+              spellCheck={false}
             />
+            <p className="text-xs text-muted-foreground">
+              Saisie manuelle uniquement.
+            </p>
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="declarationDate" className="text-sm font-medium">
@@ -212,13 +232,15 @@ export function EditDeclarationForm({
             <label htmlFor="zoneOrTerminal" className="text-sm font-medium">
               Zone / terminal
             </label>
-            <FormSelect
+            <FormSuggestInput
               key={`${formKey}-zone`}
               id="zoneOrTerminal"
               name="zoneOrTerminal"
-              defaultValue={initial.zoneOrTerminal}
-              options={pilotZoneOptions()}
-              emptyOption="—"
+              value={zoneOrTerminal}
+              onValueChange={(v) => setZoneOrTerminal(v.toUpperCase())}
+              className="font-mono uppercase"
+              suggestions={zoneSuggestions}
+              helperText="Saisie libre ou choix parmi les zones connues."
             />
           </div>
         </div>
@@ -243,6 +265,7 @@ export function EditDeclarationForm({
           initialContainers={initial.containers}
           initialCount={initial.containerCount}
           disabled={!canEdit}
+          knownContainers={suggestions?.containerNumbers}
           onChange={setContainerPayload}
         />
       </section>

@@ -43,6 +43,7 @@ const declarationRow = (
   bonADelivrer: false,
   payingAgencyName: null,
   dossierId: "dos1",
+  dossierNumber: "D-2026-0001",
   createdAt: "2026-06-02T08:00:00.000Z",
   ...overrides,
 });

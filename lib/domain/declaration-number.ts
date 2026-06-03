@@ -35,3 +35,16 @@ export function buildDeclarationNumber(
 export function isValidDeclarationNumber(value: string): boolean {
   return /^\d+[A-Za-z0-9]+-[A-Za-z0-9]+-D\d{3,6}$/.test(value.trim());
 }
+
+/** Parse pilot format for suggestion reuse (prefix / zone / suffix). */
+export function parseDeclarationNumberParts(
+  declarationNumber: string,
+): { prefix: string; zone: string; suffix: string } | null {
+  const m = declarationNumber.trim().match(/^(\d+)-([A-Za-z0-9]+)-D(\d{1,6})$/i);
+  if (!m) return null;
+  return {
+    prefix: m[1]!,
+    zone: m[2]!,
+    suffix: m[3]!.replace(/^0+/, "") || "0",
+  };
+}

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
-import { FormSelect } from "@/components/ui/form-select";
+import { FormEntityPicker } from "@/components/ui/form-entity-picker";
 import { RecordTransactionForm } from "./record-transaction-form";
 
 type CustomerOption = { id: string; name: string };
@@ -59,11 +59,11 @@ export function RecordTransactionDialog({
               <label htmlFor="pick-customer" className="text-sm font-medium">
                 Client <span className="text-destructive">*</span>
               </label>
-              <FormSelect
+              <FormEntityPicker
                 id="pick-customer"
                 value={pickCustomerId}
                 onValueChange={(id) => onPickCustomerChange?.(id)}
-                placeholder="Choisir un client"
+                placeholder="Rechercher un client…"
                 options={customers.map((c) => ({
                   value: c.id,
                   label: c.name,

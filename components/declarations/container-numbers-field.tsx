@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Minus, Plus, ClipboardPaste } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export type ContainerNumbersFieldProps = {
   initialCount?: number;
   disabled?: boolean;
   idPrefix?: string;
+  knownContainers?: string[];
   onChange?: (payload: { containers: string[]; containerCount: number }) => void;
 };
 
@@ -35,6 +37,7 @@ export function ContainerNumbersField({
   initialCount = 0,
   disabled = false,
   idPrefix = "container",
+  knownContainers = [],
   onChange,
 }: ContainerNumbersFieldProps) {
   const groupId = useId();
@@ -203,16 +206,19 @@ export function ContainerNumbersField({
               >
                 {index + 1}
               </span>
-              <Input
+              <FormSuggestInput
                 id={`${idPrefix}-${index}`}
                 name={`container_${index}`}
                 value={value}
-                onChange={(e) => updateRow(index, e.target.value)}
+                onValueChange={(v) => updateRow(index, v)}
                 disabled={disabled}
                 placeholder="MSCU1234567"
                 className="font-mono uppercase tracking-wide"
-                autoComplete="off"
-                spellCheck={false}
+                suggestions={knownContainers.map((n) => ({
+                  value: n,
+                  group: "Numéros enregistrés",
+                }))}
+                helperText=""
               />
               {!disabled && rows.length > 1 ? (
                 <Button

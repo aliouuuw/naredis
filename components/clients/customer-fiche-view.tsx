@@ -15,7 +15,9 @@ import type {
   TransactionTypeSerialized,
 } from "@/lib/modules/ledger/serialize";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
+import type { ActivityLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
+import { DashboardActivityFeed } from "@/components/dashboard/dashboard-activity-feed";
 import { AccountStatusControl } from "./account-status-control";
 import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
@@ -25,7 +27,7 @@ import { ReverseEntryDialog } from "@/components/transactions/reverse-entry-dial
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const TAB_IDS = ["resume", "transactions", "declarations"] as const;
+const TAB_IDS = ["resume", "transactions", "declarations", "activite"] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 function isTabId(value: string | null): value is TabId {
@@ -41,6 +43,7 @@ export function CustomerFicheView({
   ledgerEntries,
   dossiers,
   declarations,
+  activityLog,
   transactionTypes,
   canRecordLedger,
   hasOpeningBalance,
@@ -60,6 +63,7 @@ export function CustomerFicheView({
   ledgerEntries: LedgerEntrySerialized[];
   dossiers: DossierAllocationOption[];
   declarations: DeclarationListItemSerialized[];
+  activityLog: ActivityLogEntrySerialized[];
   transactionTypes: TransactionTypeSerialized[];
   canRecordLedger: boolean;
   hasOpeningBalance: boolean;
@@ -123,6 +127,7 @@ export function CustomerFicheView({
       label: "Déclarations",
       count: declarations.length,
     },
+    { id: "activite", label: "Activité", count: activityLog.length },
   ];
 
   const balanceBig = {
@@ -479,6 +484,16 @@ export function CustomerFicheView({
               </table>
             </div>
           )}
+        </section>
+      ) : null}
+
+      {tab === "activite" ? (
+        <section className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Événements enregistrés pour ce client, ses dossiers, déclarations et
+            écritures comptables.
+          </p>
+          <DashboardActivityFeed entries={activityLog} />
         </section>
       ) : null}
     </div>

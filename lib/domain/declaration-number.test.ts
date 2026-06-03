@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { buildDeclarationNumber } from "./declaration-number";
+import {
+  buildDeclarationNumber,
+  parseDeclarationNumberParts,
+} from "./declaration-number";
 
 describe("buildDeclarationNumber", () => {
   it("formats pilot example 1-18N-D001", () => {
@@ -12,5 +15,15 @@ describe("buildDeclarationNumber", () => {
 
   it("strips leading D from suffix input", () => {
     expect(buildDeclarationNumber("1", "18N", "D001")).toBe("1-18N-D001");
+  });
+});
+
+describe("parseDeclarationNumberParts", () => {
+  it("parses pilot example", () => {
+    expect(parseDeclarationNumberParts("1-18N-D001")).toEqual({
+      prefix: "1",
+      zone: "18N",
+      suffix: "1",
+    });
   });
 });

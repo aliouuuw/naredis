@@ -1,16 +1,12 @@
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
-import {
-  customers,
-  declarations,
-  documents,
-  dossiers,
-  ledgerEntries,
-  paymentAllocations,
-} from "@/lib/db/schema";
+import { customers, declarations, documents, dossiers } from "@/lib/db/schema";
 import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
 import { listActivityForDossier } from "@/lib/modules/activity/service";
+import { listLedgerEntriesForOrganization } from "@/lib/modules/ledger/service";
+import type { LedgerEntryListItem } from "@/lib/modules/ledger/service";
 import type { ModuleContext } from "@/lib/modules/shared/types";
+import { computeDossierLedgerSummary } from "./finances";
 import { getDossierById } from "./service";
 
 export type DossierDeclarationRow = {
@@ -31,15 +27,6 @@ export type DossierDocumentRow = {
   createdAt: Date;
 };
 
-export type DossierLedgerRow = {
-  id: string;
-  label: string;
-  effectiveDate: string;
-  amount: bigint;
-  balanceSide: "debit" | "credit";
-  entryType: string;
-};
-
 export type DossierHubData = {
   dossier: {
     id: string;
@@ -52,10 +39,13 @@ export type DossierHubData = {
   declarations: DossierDeclarationRow[];
   documents: DossierDocumentRow[];
   finances: {
-    totalClientAmount: bigint;
-    totalCostPrice: bigint;
-    reste: bigint;
-    ledgerRows: DossierLedgerRow[];
+    filing: {
+      totalClientAmount: bigint;
+      totalCostPrice: bigint;
+      reste: bigint;
+    };
+    ledger: ReturnType<typeof computeDossierLedgerSummary>;
+    ledgerEntries: LedgerEntryListItem[];
   };
   activity: Awaited<ReturnType<typeof listActivityForDossier>>;
   closeWarnings: string[];
@@ -77,7 +67,7 @@ export async function getDossierHub(
 
   if (!customer) return null;
 
-  const [filingRows, docRows, ledgerOnDossier, activity] = await Promise.all([
+  const [filingRows, docRows, ledgerEntries, activity] = await Promise.all([
     db
       .select({
         id: declarations.id,
@@ -112,64 +102,11 @@ export async function getDossierHub(
         ),
       )
       .orderBy(desc(documents.createdAt)),
-    db
-      .select({
-        id: ledgerEntries.id,
-        label: ledgerEntries.label,
-        effectiveDate: ledgerEntries.effectiveDate,
-        amount: ledgerEntries.amount,
-        balanceSide: ledgerEntries.balanceSide,
-        entryType: ledgerEntries.entryType,
-      })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.dossierId, dossierId),
-          eq(ledgerEntries.organizationId, ctx.organizationId),
-        ),
-      )
-      .orderBy(desc(ledgerEntries.effectiveDate)),
+    listLedgerEntriesForOrganization(db, ctx, { dossierId }),
     listActivityForDossier(db, ctx, dossierId),
   ]);
 
-  const allocationRows = await db
-    .select({
-      id: ledgerEntries.id,
-      label: ledgerEntries.label,
-      effectiveDate: ledgerEntries.effectiveDate,
-      amount: paymentAllocations.amount,
-      balanceSide: ledgerEntries.balanceSide,
-      entryType: ledgerEntries.entryType,
-    })
-    .from(paymentAllocations)
-    .innerJoin(
-      ledgerEntries,
-      eq(paymentAllocations.ledgerEntryId, ledgerEntries.id),
-    )
-    .where(
-      and(
-        eq(paymentAllocations.dossierId, dossierId),
-        eq(paymentAllocations.organizationId, ctx.organizationId),
-      ),
-    )
-    .orderBy(desc(ledgerEntries.effectiveDate));
-
-  const ledgerById = new Map<string, DossierLedgerRow>();
-  for (const row of ledgerOnDossier) {
-    ledgerById.set(row.id, row);
-  }
-  for (const row of allocationRows) {
-    if (!ledgerById.has(row.id)) {
-      ledgerById.set(row.id, {
-        id: row.id,
-        label: row.label,
-        effectiveDate: row.effectiveDate,
-        amount: row.amount,
-        balanceSide: row.balanceSide,
-        entryType: row.entryType,
-      });
-    }
-  }
+  const ledgerSummary = computeDossierLedgerSummary(ledgerEntries, dossierId);
 
   let totalClientAmount = BigInt(0);
   let totalCostPrice = BigInt(0);
@@ -213,12 +150,13 @@ export async function getDossierHub(
     })),
     documents: docRows,
     finances: {
-      totalClientAmount,
-      totalCostPrice,
-      reste,
-      ledgerRows: [...ledgerById.values()].sort((a, b) =>
-        b.effectiveDate.localeCompare(a.effectiveDate),
-      ),
+      filing: {
+        totalClientAmount,
+        totalCostPrice,
+        reste,
+      },
+      ledger: ledgerSummary,
+      ledgerEntries,
     },
     activity,
     closeWarnings,

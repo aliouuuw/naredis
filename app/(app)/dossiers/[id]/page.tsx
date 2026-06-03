@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
-import { canMutateOperationalData } from "@/lib/auth/permissions";
+import {
+  canMutateOperationalData,
+  LEDGER_MUTATION_ROLES,
+  memberHasRole,
+} from "@/lib/auth/permissions";
 import { requireAuthContext } from "@/lib/auth/session";
+import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { getDossierHub } from "@/lib/modules/dossiers/hub";
 import { serializeDossierHub } from "@/lib/modules/dossiers/serialize-hub";
 import { DossierHubView } from "@/components/dossiers/dossier-hub-view";
@@ -29,10 +34,11 @@ export default async function DossierFichePage({
     notFound();
   }
 
-  const canClose = await canMutateOperationalData(
-    auth.userId,
-    auth.organizationId,
-  );
+  const [canClose, canRecordLedger, transactionTypes] = await Promise.all([
+    canMutateOperationalData(auth.userId, auth.organizationId),
+    memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
+    listTransactionTypes(db, ctx),
+  ]);
 
   const serialized = serializeDossierHub(hub);
   const statusLabel =
@@ -45,7 +51,12 @@ export default async function DossierFichePage({
         description={`BL ${hub.dossier.blReference ?? "—"} · ${statusLabel} · ${hub.dossier.customer.name}`}
       />
 
-      <DossierHubView hub={serialized} canClose={canClose} />
+      <DossierHubView
+        hub={serialized}
+        canClose={canClose}
+        canRecordLedger={canRecordLedger}
+        transactionTypes={transactionTypes}
+      />
     </div>
   );
 }

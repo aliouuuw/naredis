@@ -33,11 +33,12 @@ export function CustomerAccountLedger({
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
+        <table className="w-full min-w-[880px] border-collapse text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
               <th className={thClass}>Date</th>
               <th className={cn(thClass, "min-w-[12rem]")}>Libellé</th>
+              <th className={cn(thClass, "min-w-[10rem]")}>Liens</th>
               <th className={cn(thClass, amountClass)}>Débit</th>
               <th className={cn(thClass, amountClass)}>Crédit</th>
               <th className={cn(thClass, amountClass)}>Solde</th>
@@ -50,7 +51,7 @@ export function CustomerAccountLedger({
                   className="border-b bg-muted/30"
                 >
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-3 py-2 text-xs font-semibold tracking-wide text-foreground capitalize"
                   >
                     {day.dayLabel}
@@ -87,6 +88,24 @@ export function CustomerAccountLedger({
                           </p>
                         ) : null}
                       </div>
+                    </td>
+                    <td className={tdClass}>
+                      {row.links.length > 0 ? (
+                        <ul className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
+                          {row.links.map((link) => (
+                            <li key={`${row.id}-${link.href}`}>
+                              <Link
+                                href={link.href}
+                                className="font-medium text-primary hover:underline"
+                              >
+                                {link.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                      )}
                     </td>
                     <td className={cn(tdClass, amountClass, "text-foreground")}>
                       {row.debitDisplay ?? (

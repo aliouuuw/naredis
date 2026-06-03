@@ -16,6 +16,8 @@ See **[00-glossary.md](./00-glossary.md)** and [10-information-architecture.md](
 | `ThemeMenuItems` | Profile menu — Apparence: Clair / Sombre / Système (`next-themes`) |
 | `ThemeToggle` | Sun/moon toggle on login (unauthenticated surfaces) |
 | `ThemeProvider` | Root layout wrapper (`attribute="class"`, default light, system allowed) |
+| `FormSuggestInput` | Text field with Notion-style dropdown of existing values (BL, libellés, conteneurs, …) |
+| `FormEntityPicker` | Searchable picker for entities (client, etc.) with hidden `name` for forms |
 
 ---
 

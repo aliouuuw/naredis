@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check, FileText, FolderOpen, Wallet } from "lucide-react";
+import { Check, FileText, FolderOpen } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
 import type { DossierHubSerialized } from "@/lib/modules/dossiers/serialize-hub";
+import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import { DeclarationActivityFeed } from "@/components/declarations/declaration-activity-feed";
 import { DossierCloseDialog } from "./dossier-close-dialog";
+import { DossierFinancesTab } from "./dossier-finances-tab";
 
 type TabId = "declarations" | "documents" | "finances" | "activite";
 
@@ -33,9 +35,13 @@ function formatBytes(size: string | null) {
 export function DossierHubView({
   hub,
   canClose,
+  canRecordLedger,
+  transactionTypes,
 }: {
   hub: DossierHubSerialized;
   canClose: boolean;
+  canRecordLedger: boolean;
+  transactionTypes: TransactionTypeSerialized[];
 }) {
   const [tab, setTab] = useState<TabId>("declarations");
   const [closeOpen, setCloseOpen] = useState(false);
@@ -219,62 +225,11 @@ export function DossierHubView({
       ) : null}
 
       {tab === "finances" ? (
-        <section className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <article className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Total client</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums">
-                {formatMoney(hub.finances.totalClientAmount)}
-              </p>
-            </article>
-            <article className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Prix de revient</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums">
-                {formatMoney(hub.finances.totalCostPrice)}
-              </p>
-            </article>
-            <article className="rounded-lg border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Reste (marge)</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums">
-                {formatMoney(hub.finances.reste)}
-              </p>
-            </article>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Wallet className="size-4 text-muted-foreground" />
-              Écritures liées au dossier
-            </h3>
-            {hub.finances.ledgerRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucune écriture comptable directement rattachée à ce dossier.
-              </p>
-            ) : (
-              <ul className="divide-y rounded-lg border bg-card text-sm">
-                {hub.finances.ledgerRows.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
-                  >
-                    <div>
-                      <p className="font-medium">{row.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {row.effectiveDate} · {row.entryType}
-                      </p>
-                    </div>
-                    <span className="tabular-nums font-medium">
-                      {formatMoney(row.amount)}{" "}
-                      <span className="text-xs font-normal text-muted-foreground">
-                        ({row.balanceSide === "debit" ? "débit" : "crédit"})
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
+        <DossierFinancesTab
+          hub={hub}
+          canRecordLedger={canRecordLedger}
+          transactionTypes={transactionTypes}
+        />
       ) : null}
 
       {tab === "activite" ? (

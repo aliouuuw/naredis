@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `DOS-003` finances tab (charges), `CLI-001` Activité tab polish, `POL-001` search.
+**Next up:** `DOS-002` document upload, `POL-001` search, `CLI-004` relevé PDF.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -31,7 +31,9 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | DECL-001 list filters + column order | Done |
 | DECL-003 fiche Activité tab | Done |
 | DOS-001 dossier hub tabs + close | Done |
+| DOS-003 dossier finances (charges / payé / reste) | Done |
 | POL-002 actionable dashboard | Done |
+| CLI-001 client fiche (Activité tab) | Done |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done — pilot-shaped; `bun run db:reseed` |
 | Better Auth | Done |
@@ -43,7 +45,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Create forms (client + déclaration) | Done |
 | Declaration edit + BAD toggle UI (`DECL-005`) | Done |
 | Ledger module + payment UI (`DOM-005`, `CLI-002`) | Done |
-| Client fiche (`CLI-001` partial) | Résumé = journal du compte (ledger + déclarations, solde courant); Transactions + Déclarations tabs |
+| Client fiche (`CLI-001`) | Résumé, Transactions, Déclarations, Activité |
 | Pilot declaration # + reste | Operator format `1-18N-D001`; reste computed; zones from pilot list |
 | Transaction UX fixes | Type label in selects; `/transactions` Nouvelle transaction with client picker; types rename |
 | Transactions module | Types extensibles, filtres URL, regroupement imbriqué |
@@ -82,9 +84,9 @@ From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 After the 2026-06-03 alignment pass:
 
-1. **DOS-003** — dossier finances (charges, accountant modals)  
-2. **CLI-001** — optional Activité tab on client fiche  
-3. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, POL-001 search, list pagination  
+1. **DOS-002** — document upload on dossier  
+2. **POL-001** — Cmd+K search  
+3. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
 
 ---
 
@@ -105,14 +107,6 @@ After the 2026-06-03 alignment pass:
 | Configurable zones in Settings | Backlog (hardcoded pilot list) |
 
 ---
-
-## In progress
-
-| ID | Title |
-|----|-------|
-| DECL-003 | Declaration fiche (FSM stepper deferred — DECL-004) |
-| CLI-001 | Clients list + fiche (tabs pending) |
-| DOS-001 | Dossier hub (minimal page; full tabs pending) |
 
 ---
 

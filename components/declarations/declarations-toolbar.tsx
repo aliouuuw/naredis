@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import {
@@ -14,9 +14,11 @@ import {
   serializeDeclarationsSearchParams,
   viewHasCustomizations,
 } from "@/lib/modules/declarations/declarations-query";
-import { pilotZoneOptions } from "@/lib/domain/pilot-zones";
+import { mergeZoneSuggestions } from "@/lib/domain/pilot-zones";
+import { useOrgFormSuggestions } from "@/components/hooks/use-form-suggestions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/form-select";
+import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -86,7 +88,11 @@ export function DeclarationsToolbar({
     patch({ search: searchDraft.trim() });
   }
 
-  const zoneOptions = pilotZoneOptions();
+  const { suggestions } = useOrgFormSuggestions();
+  const zoneSuggestions = useMemo(
+    () => mergeZoneSuggestions(suggestions?.zoneOrTerminals ?? []),
+    [suggestions?.zoneOrTerminals],
+  );
   const customized = viewHasCustomizations(state);
 
   return (
@@ -154,12 +160,14 @@ export function DeclarationsToolbar({
           </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Zone</span>
-            <FormSelect
-              emptyOption="Toutes"
+            <FormSuggestInput
               value={state.zone}
-              onValueChange={(zone) => patch({ zone })}
-              options={zoneOptions}
-              triggerClassName="h-9"
+              onValueChange={(zone) => patch({ zone: zone.toUpperCase() })}
+              suggestions={zoneSuggestions}
+              placeholder="Toutes"
+              className="h-9 font-mono uppercase"
+              helperText=""
+              emptyHint="Effacez le champ pour toutes les zones."
             />
           </div>
           <div className="flex flex-col gap-1.5">

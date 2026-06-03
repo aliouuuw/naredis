@@ -1,12 +1,12 @@
 import type { ActivityLogItem } from "@/lib/modules/activity/service";
 import type { ActivityLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
+import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
+import type { LedgerEntrySerialized } from "@/lib/modules/ledger/serialize";
 import type { DossierHubData } from "./hub";
 
 export type DossierHubSerialized = {
   dossier: DossierHubData["dossier"];
-  declarations: Array<
-    Omit<DossierHubData["declarations"][number], never>
-  >;
+  declarations: DossierHubData["declarations"];
   documents: Array<{
     id: string;
     fileName: string;
@@ -16,17 +16,18 @@ export type DossierHubSerialized = {
     createdAt: string;
   }>;
   finances: {
-    totalClientAmount: string;
-    totalCostPrice: string;
-    reste: string;
-    ledgerRows: Array<{
-      id: string;
-      label: string;
-      effectiveDate: string;
-      amount: string;
-      balanceSide: "debit" | "credit";
-      entryType: string;
-    }>;
+    filing: {
+      totalClientAmount: string;
+      totalCostPrice: string;
+      reste: string;
+    };
+    ledger: {
+      charges: string;
+      paye: string;
+      reste: string;
+      surplus: string;
+    };
+    ledgerEntries: LedgerEntrySerialized[];
   };
   activity: ActivityLogEntrySerialized[];
   closeWarnings: string[];
@@ -61,13 +62,18 @@ export function serializeDossierHub(
       createdAt: d.createdAt.toISOString(),
     })),
     finances: {
-      totalClientAmount: hub.finances.totalClientAmount.toString(),
-      totalCostPrice: hub.finances.totalCostPrice.toString(),
-      reste: hub.finances.reste.toString(),
-      ledgerRows: hub.finances.ledgerRows.map((r) => ({
-        ...r,
-        amount: r.amount.toString(),
-      })),
+      filing: {
+        totalClientAmount: hub.finances.filing.totalClientAmount.toString(),
+        totalCostPrice: hub.finances.filing.totalCostPrice.toString(),
+        reste: hub.finances.filing.reste.toString(),
+      },
+      ledger: {
+        charges: hub.finances.ledger.charges.toString(),
+        paye: hub.finances.ledger.paye.toString(),
+        reste: hub.finances.ledger.reste.toString(),
+        surplus: hub.finances.ledger.surplus.toString(),
+      },
+      ledgerEntries: hub.finances.ledgerEntries.map(serializeLedgerEntry),
     },
     activity: serializeActivityLog(hub.activity),
     closeWarnings: hub.closeWarnings,

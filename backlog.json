@@ -469,7 +469,7 @@
       "epic": "dossiers",
       "title": "Finances tab (dossier summary + charges list)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["DOS-001", "DOM-005"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -483,7 +483,7 @@
       "epic": "clients-ledger",
       "title": "Clients list + fiche (/clients)",
       "priority": "p0",
-      "status": "in_progress",
+      "status": "done",
       "dependsOn": ["DOM-004", "UI-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -491,7 +491,7 @@
         "Fiche tabs: Déclarations, Transactions, Activité",
         "PageHeader CTA retained (UI-003)"
       ],
-      "notes": "Résumé tab = journal du compte (transactions + déclarations, solde après chaque écriture, par jour). Remaining: optional dedicated Activité tab from activity_log, list polish."
+      "notes": "Résumé = journal du compte; Transactions, Déclarations, Activité tabs; list with solde. Activité tab uses listActivityForCustomer + dashboard-style links."
     },
     {
       "id": "CLI-002",

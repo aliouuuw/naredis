@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import {
+  useCustomerFormSuggestions,
+  useOrgFormSuggestions,
+} from "@/components/hooks/use-form-suggestions";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { recordTransactionAction } from "@/lib/actions/ledger";
@@ -16,6 +20,7 @@ import { sumAllocations } from "@/lib/modules/ledger/allocations";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
 import { FormSelect } from "@/components/ui/form-select";
+import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +46,9 @@ export function RecordTransactionForm({
 }) {
   const router = useRouter();
   const submitLock = useRef(false);
+  const { suggestions: orgSuggestions } = useOrgFormSuggestions();
+  const customerSuggestions = useCustomerFormSuggestions(customerId);
+  const [label, setLabel] = useState("");
   const [types, setTypes] = useState(initialTypes);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -388,7 +396,23 @@ export function RecordTransactionForm({
           <label htmlFor="tx-label" className="text-sm font-medium">
             Libellé <span className="text-destructive">*</span>
           </label>
-          <Input id="tx-label" name="label" required placeholder="Libellé" />
+          <FormSuggestInput
+            id="tx-label"
+            name="label"
+            required
+            placeholder="Libellé"
+            value={label}
+            onValueChange={setLabel}
+            suggestions={[
+              ...(customerSuggestions?.ledgerLabels.map((l) => ({
+                value: l,
+                group: "Ce client",
+              })) ?? []),
+              ...(orgSuggestions?.ledgerLabels
+                .filter((l) => !customerSuggestions?.ledgerLabels.includes(l))
+                .map((l) => ({ value: l, group: "Cabinet" })) ?? []),
+            ]}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="tx-amount" className="text-sm font-medium">

@@ -9,6 +9,11 @@ import type { BalanceSide } from "@/lib/db/enums";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import type { LedgerEntrySerialized } from "@/lib/modules/ledger/serialize";
 
+export type AccountLedgerLink = {
+  label: string;
+  href: string;
+};
+
 export type AccountLedgerRow = {
   id: string;
   kind: "ledger" | "declaration";
@@ -18,6 +23,8 @@ export type AccountLedgerRow = {
   dateDisplay: string;
   label: string;
   detail: string | null;
+  /** Dossiers, déclarations, affectations liées à la ligne. */
+  links: AccountLedgerLink[];
   debitDisplay: string | null;
   creditDisplay: string | null;
   href: string;
@@ -38,6 +45,7 @@ type TimelineEvent = {
   dayKey: string;
   label: string;
   detail: string | null;
+  links: AccountLedgerLink[];
   href: string;
   affectsBalance: boolean;
   debit: bigint;
@@ -47,6 +55,15 @@ type TimelineEvent = {
 function formatStatementDate(dayKey: string): string {
   const [y, m, d] = dayKey.split("-");
   return `${d}/${m}/${y}`;
+}
+
+function uniqueLinks(links: AccountLedgerLink[]): AccountLedgerLink[] {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    if (seen.has(link.href)) return false;
+    seen.add(link.href);
+    return true;
+  });
 }
 
 function formatDayLabel(dayKey: string): string {
@@ -74,6 +91,21 @@ function ledgerEvents(rows: LedgerEntrySerialized[]): TimelineEvent[] {
     const credit =
       row.balanceSide === "credit" ? BigInt(row.amount) : BigInt(0);
     const at = new Date(`${row.effectiveDate}T12:00:00.000Z`);
+
+    const links: AccountLedgerLink[] = [];
+    if (row.dossierId && row.dossierNumber) {
+      links.push({
+        label: `Dossier ${row.dossierNumber}`,
+        href: `/dossiers/${row.dossierId}`,
+      });
+    }
+    for (const alloc of row.allocations) {
+      links.push({
+        label: alloc.dossierNumber,
+        href: `/dossiers/${alloc.dossierId}`,
+      });
+    }
+
     return {
       id: `ledger-${row.id}`,
       kind: "ledger",
@@ -81,6 +113,7 @@ function ledgerEvents(rows: LedgerEntrySerialized[]): TimelineEvent[] {
       dayKey: row.effectiveDate,
       label: row.label,
       detail: row.transactionTypeName,
+      links: uniqueLinks(links),
       href: `/clients/${row.customerId}?tab=transactions`,
       affectsBalance: true,
       debit,
@@ -116,6 +149,17 @@ function declarationEvents(
       row.bonADelivrer ? "BAD" : null,
     ].filter(Boolean);
 
+    const links: AccountLedgerLink[] = [
+      {
+        label: row.dossierNumber,
+        href: `/dossiers/${row.dossierId}`,
+      },
+      {
+        label: "Fiche déclaration",
+        href: `/declarations?open=${row.id}`,
+      },
+    ];
+
     return {
       id: `declaration-${row.id}`,
       kind: "declaration",
@@ -123,6 +167,7 @@ function declarationEvents(
       dayKey: date,
       label: row.declarationNumber,
       detail: parts.join(" · ") || "Déclaration",
+      links,
       href: `/declarations?open=${row.id}`,
       affectsBalance: false,
       debit: BigInt(0),
@@ -161,6 +206,7 @@ export function buildAccountLedger(
       dateDisplay: formatStatementDate(ev.dayKey),
       label: ev.label,
       detail: ev.detail,
+      links: ev.links,
       debitDisplay,
       creditDisplay,
       href: ev.href,

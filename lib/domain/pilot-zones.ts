@@ -20,3 +20,40 @@ export function pilotZoneOptions(): Array<{ value: string; label: string }> {
     label: z.label,
   }));
 }
+
+/** Pilot list + zones already used on déclarations (free-text allowed). */
+export function mergeZoneSuggestions(
+  usedZones: string[],
+): Array<{ value: string; label?: string; hint?: string; group?: string }> {
+  const seen = new Set<string>();
+  const out: Array<{
+    value: string;
+    label?: string;
+    hint?: string;
+    group?: string;
+  }> = [];
+
+  for (const z of PILOT_ZONE_TERMINALS) {
+    const v = z.slug.trim();
+    if (!v || seen.has(v)) continue;
+    seen.add(v);
+    out.push({
+      value: v,
+      label: z.label,
+      group: "Zones pilote",
+    });
+  }
+
+  for (const raw of usedZones) {
+    const v = raw.trim();
+    if (!v || seen.has(v)) continue;
+    seen.add(v);
+    out.push({
+      value: v,
+      label: v,
+      group: "Déjà utilisées",
+    });
+  }
+
+  return out;
+}

@@ -1,15 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createDeclarationAction } from "@/lib/actions/declarations";
 import { buildDeclarationNumber } from "@/lib/domain/declaration-number";
-import { pilotZoneOptions } from "@/lib/domain/pilot-zones";
+import { agencyCalendarDate } from "@/lib/domain/timezone";
+import { mergeZoneSuggestions } from "@/lib/domain/pilot-zones";
+import { useOrgFormSuggestions } from "@/components/hooks/use-form-suggestions";
 import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
 import { DeclarationResteField } from "@/components/declarations/declaration-reste-field";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
+import { FormEntityPicker } from "@/components/ui/form-entity-picker";
 import { FormSelect } from "@/components/ui/form-select";
+import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
+
+const LS_PREFIX = "naredis.declaration.prefix";
+const LS_ZONE = "naredis.declaration.zone";
 
 export type CustomerOption = { id: string; name: string; slug: string };
 export type AgencyOption = { id: string; name: string };
@@ -44,11 +51,39 @@ export function NewDeclarationForm({
     containers: [] as string[],
     containerCount: 1,
   });
+  const { suggestions } = useOrgFormSuggestions();
+  const today = agencyCalendarDate();
+
+  const [customerId, setCustomerId] = useState(defaultCustomerId ?? "");
   const [numberPrefix, setNumberPrefix] = useState("1");
   const [numberZone, setNumberZone] = useState("18N");
   const [numberSuffix, setNumberSuffix] = useState("001");
+  const [title, setTitle] = useState("");
   const [clientAmountPaid, setClientAmountPaid] = useState("");
   const [costPrice, setCostPrice] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedPrefix = window.localStorage.getItem(LS_PREFIX);
+    const savedZone = window.localStorage.getItem(LS_ZONE);
+    if (savedPrefix) setNumberPrefix(savedPrefix);
+    if (savedZone) setNumberZone(savedZone);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(LS_PREFIX, numberPrefix);
+    window.localStorage.setItem(LS_ZONE, numberZone);
+  }, [numberPrefix, numberZone]);
+
+  useEffect(() => {
+    if (defaultCustomerId) setCustomerId(defaultCustomerId);
+  }, [defaultCustomerId]);
+
+  const zoneSuggestions = useMemo(
+    () => mergeZoneSuggestions(suggestions?.zoneOrTerminals ?? []),
+    [suggestions?.zoneOrTerminals],
+  );
 
   const previewNumber = useMemo(() => {
     try {
@@ -130,26 +165,34 @@ export function NewDeclarationForm({
             <label htmlFor="declarationNumberPrefix" className="text-sm font-medium">
               Préfixe <span className="text-destructive">*</span>
             </label>
-            <Input
+            <FormSuggestInput
               id="declarationNumberPrefix"
               name="declarationNumberPrefix"
               required
               className="font-mono"
               value={numberPrefix}
-              onChange={(e) => setNumberPrefix(e.target.value)}
+              onValueChange={setNumberPrefix}
+              suggestions={
+                suggestions?.declarationPrefixes.map((p) => ({
+                  value: p,
+                  group: "Préfixes utilisés",
+                })) ?? []
+              }
             />
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="declarationZoneSlug" className="text-sm font-medium">
               Zone / terminal <span className="text-destructive">*</span>
             </label>
-            <FormSelect
+            <FormSuggestInput
               id="declarationZoneSlug"
               name="declarationZoneSlug"
               required
+              className="font-mono uppercase"
               value={numberZone}
-              onValueChange={setNumberZone}
-              options={pilotZoneOptions()}
+              onValueChange={(v) => setNumberZone(v.toUpperCase())}
+              suggestions={zoneSuggestions}
+              helperText="Saisie libre ou choix parmi les zones connues."
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -159,14 +202,20 @@ export function NewDeclarationForm({
             >
               Suffixe <span className="text-destructive">*</span>
             </label>
-            <Input
+            <FormSuggestInput
               id="declarationNumberSuffix"
               name="declarationNumberSuffix"
               required
               className="font-mono"
               placeholder="001"
               value={numberSuffix}
-              onChange={(e) => setNumberSuffix(e.target.value)}
+              onValueChange={setNumberSuffix}
+              suggestions={
+                suggestions?.declarationSuffixes.map((s) => ({
+                  value: s,
+                  group: "Suffixes utilisés",
+                })) ?? []
+              }
             />
           </div>
         </div>
@@ -189,15 +238,17 @@ export function NewDeclarationForm({
             <label htmlFor="customerId" className="text-sm font-medium">
               Client <span className="text-destructive">*</span>
             </label>
-            <FormSelect
+            <FormEntityPicker
               id="customerId"
               name="customerId"
               required
-              placeholder="Choisir un client"
-              defaultValue={defaultCustomerId ?? ""}
+              value={customerId}
+              onValueChange={setCustomerId}
+              placeholder="Rechercher un client…"
               options={customers.map((c) => ({
                 value: c.id,
-                label: `${c.name} (${c.slug})`,
+                label: c.name,
+                hint: c.slug,
               }))}
             />
           </div>
@@ -211,19 +262,40 @@ export function NewDeclarationForm({
               required
               className="font-mono"
               autoFocus={embedded}
+              autoComplete="off"
+              spellCheck={false}
             />
+            <p className="text-xs text-muted-foreground">
+              Saisie manuelle uniquement — chaque BL est unique.
+            </p>
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="declarationDate" className="text-sm font-medium">
               Date de déclaration
             </label>
-            <Input id="declarationDate" name="declarationDate" type="date" />
+            <Input
+              id="declarationDate"
+              name="declarationDate"
+              type="date"
+              defaultValue={today}
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="title" className="text-sm font-medium">
               Titre (optionnel)
             </label>
-            <Input id="title" name="title" />
+            <FormSuggestInput
+              id="title"
+              name="title"
+              value={title}
+              onValueChange={setTitle}
+              suggestions={
+                suggestions?.dossierTitles.map((t) => ({
+                  value: t,
+                  group: "Titres dossier",
+                })) ?? []
+              }
+            />
           </div>
         </div>
       </section>
@@ -233,6 +305,7 @@ export function NewDeclarationForm({
         <ContainerNumbersField
           initialContainers={[]}
           initialCount={1}
+          knownContainers={suggestions?.containerNumbers}
           onChange={setContainerPayload}
         />
       </section>

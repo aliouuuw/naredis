@@ -1,7 +1,12 @@
 import { and, desc, eq, inArray, or } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import type { activityEntityTypeEnum } from "@/lib/db/enums";
-import { activityLog, declarations, ledgerEntries } from "@/lib/db/schema";
+import {
+  activityLog,
+  declarations,
+  dossiers,
+  ledgerEntries,
+} from "@/lib/db/schema";
 import type { ModuleContext } from "@/lib/modules/shared/types";
 
 type EntityType = (typeof activityEntityTypeEnum.enumValues)[number];
@@ -149,6 +154,104 @@ export async function listActivityForDossier(
   }
 
   if (entityConditions.length === 0) return [];
+
+  const rows = await db
+    .select()
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.organizationId, ctx.organizationId),
+        or(...entityConditions),
+      ),
+    )
+    .orderBy(desc(activityLog.createdAt))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    action: row.action,
+    payload: row.payload ?? null,
+    actorId: row.actorId,
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function listActivityForCustomer(
+  db: DbLike,
+  ctx: ModuleContext,
+  customerId: string,
+  limit = 80,
+): Promise<ActivityLogItem[]> {
+  const [dossierRows, declRows, ledgerRows] = await Promise.all([
+    db
+      .select({ id: dossiers.id })
+      .from(dossiers)
+      .where(
+        and(
+          eq(dossiers.customerId, customerId),
+          eq(dossiers.organizationId, ctx.organizationId),
+        ),
+      ),
+    db
+      .select({ id: declarations.id })
+      .from(declarations)
+      .innerJoin(dossiers, eq(declarations.dossierId, dossiers.id))
+      .where(
+        and(
+          eq(dossiers.customerId, customerId),
+          eq(declarations.organizationId, ctx.organizationId),
+        ),
+      ),
+    db
+      .select({ id: ledgerEntries.id })
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.customerId, customerId),
+          eq(ledgerEntries.organizationId, ctx.organizationId),
+        ),
+      ),
+  ]);
+
+  const dossierIds = dossierRows.map((r) => r.id);
+  const declIds = declRows.map((r) => r.id);
+  const ledgerIds = ledgerRows.map((r) => r.id);
+
+  const entityConditions = [
+    and(
+      eq(activityLog.entityType, "customer"),
+      eq(activityLog.entityId, customerId),
+    ),
+  ];
+
+  if (dossierIds.length > 0) {
+    entityConditions.push(
+      and(
+        eq(activityLog.entityType, "dossier"),
+        inArray(activityLog.entityId, dossierIds),
+      ),
+    );
+  }
+
+  if (declIds.length > 0) {
+    entityConditions.push(
+      and(
+        eq(activityLog.entityType, "declaration"),
+        inArray(activityLog.entityId, declIds),
+      ),
+    );
+  }
+
+  if (ledgerIds.length > 0) {
+    entityConditions.push(
+      and(
+        eq(activityLog.entityType, "ledger_entry"),
+        inArray(activityLog.entityId, ledgerIds),
+      ),
+    );
+  }
 
   const rows = await db
     .select()
