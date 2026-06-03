@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import { getBonADelivrerMissingFields } from "@/lib/domain/declaration-completion";
 import {
@@ -42,7 +42,17 @@ export type DeclarationListItem = {
   bonADelivrer: boolean;
   payingAgencyName: string | null;
   dossierId: string;
+  dossierNumber: string;
   createdAt: Date;
+};
+
+export type DeclarationListFilters = {
+  customerId?: string;
+  zoneOrTerminal?: string;
+  bonADelivrer?: boolean;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 function serializeValue(value: unknown): string | null {
@@ -147,8 +157,39 @@ async function findDossierByBl(
 export async function listDeclarations(
   db: DbLike,
   ctx: ModuleContext,
-  limit = 50,
+  filters: DeclarationListFilters = {},
+  limit = 500,
 ): Promise<DeclarationListItem[]> {
+  const conditions = [eq(declarations.organizationId, ctx.organizationId)];
+
+  if (filters.customerId) {
+    conditions.push(eq(dossiers.customerId, filters.customerId));
+  }
+  if (filters.zoneOrTerminal) {
+    conditions.push(eq(declarations.zoneOrTerminal, filters.zoneOrTerminal));
+  }
+  if (filters.bonADelivrer !== undefined) {
+    conditions.push(eq(declarations.bonADelivrer, filters.bonADelivrer));
+  }
+  if (filters.dateFrom) {
+    conditions.push(gte(declarations.declarationDate, filters.dateFrom));
+  }
+  if (filters.dateTo) {
+    conditions.push(lte(declarations.declarationDate, filters.dateTo));
+  }
+  if (filters.search) {
+    const pattern = `%${filters.search}%`;
+    conditions.push(
+      or(
+        ilike(declarations.declarationNumber, pattern),
+        ilike(dossiers.blReference, pattern),
+        ilike(dossiers.dossierNumber, pattern),
+        ilike(customers.name, pattern),
+        ilike(customers.slug, pattern),
+      )!,
+    );
+  }
+
   const rows = await db
     .select({
       id: declarations.id,
@@ -161,6 +202,7 @@ export async function listDeclarations(
       costPrice: declarations.costPrice,
       bonADelivrer: declarations.bonADelivrer,
       dossierId: declarations.dossierId,
+      dossierNumber: dossiers.dossierNumber,
       createdAt: declarations.createdAt,
       blReference: dossiers.blReference,
       customerName: customers.name,
@@ -174,7 +216,7 @@ export async function listDeclarations(
       organizationAgencies,
       eq(declarations.payingAgencyId, organizationAgencies.id),
     )
-    .where(eq(declarations.organizationId, ctx.organizationId))
+    .where(and(...conditions))
     .orderBy(desc(declarations.updatedAt))
     .limit(limit);
 
@@ -202,6 +244,7 @@ export async function listDeclarationsForCustomer(
       costPrice: declarations.costPrice,
       bonADelivrer: declarations.bonADelivrer,
       dossierId: declarations.dossierId,
+      dossierNumber: dossiers.dossierNumber,
       createdAt: declarations.createdAt,
       blReference: dossiers.blReference,
       customerName: customers.name,

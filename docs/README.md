@@ -1,6 +1,6 @@
-# Ndouckmane Transit — MVP documentation
+# Naredis — MVP documentation
 
-Planning docs for the operational logistics platform (freight forwarding / customs transit) targeting West Africa, initially Senegal.
+Planning docs for the operational logistics platform (freight forwarding / customs transit). Product shell: **Naredis**; tenant org names are configured per cabinet.
 
 ## Documents
 

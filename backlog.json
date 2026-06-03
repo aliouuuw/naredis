@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "ndouckmane-transit",
-  "updated": "2026-06-03",
+  "updated": "2026-06-04",
   "defaultStatus": "todo",
   "statuses": ["todo", "in_progress", "done", "blocked", "deferred"],
   "priorities": ["p0", "p1", "p2"],
@@ -376,7 +376,7 @@
         "Row navigates to fiche",
         "PageHeader CTA retained (UI-003); filters below header"
       ],
-      "notes": "Shipped: table (N°, client, BL, zone, date, montant, BAD), row → fiche, PageHeader CTA. Follow-up: customs status + N° douane columns, view presets."
+      "notes": "Table + toolbar: presets Tous/En cours/BAD coché, client/zone/search/period, URL sync, sort, Reste column. Deferred: customs status + N° douane columns."
     },
     {
       "id": "DECL-002",
@@ -513,13 +513,14 @@
       "epic": "clients-ledger",
       "title": "Opening balance + reversal UI",
       "priority": "p1",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["CLI-002"],
       "docs": ["docs/05-domain-model.md"],
       "acceptanceCriteria": [
         "Opening balance entry on client create or comptabilité",
         "Reverse with reason (accountant)"
-      ]
+      ],
+      "notes": "New client optional opening balance; fiche dialog; contre-passation on transactions tab; system types hidden from normal record form."
     },
     {
       "id": "CLI-004",

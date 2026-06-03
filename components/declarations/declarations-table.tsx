@@ -2,6 +2,7 @@
 
 import { Check, ChevronRight } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
+import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
@@ -16,6 +17,18 @@ function formatMoney(value: string | null) {
   return `${formatXof(BigInt(value))} XOF`;
 }
 
+function formatReste(
+  clientAmountPaid: string | null,
+  costPrice: string | null,
+) {
+  const reste = computeDeclarationReste(
+    clientAmountPaid != null ? BigInt(clientAmountPaid) : null,
+    costPrice != null ? BigInt(costPrice) : null,
+  );
+  if (reste == null) return "—";
+  return `${formatXof(reste)} XOF`;
+}
+
 export function DeclarationsTable({
   rows,
   onOpenRow,
@@ -25,15 +38,16 @@ export function DeclarationsTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border bg-card">
-      <table className="w-full min-w-[800px] text-sm">
+      <table className="w-full min-w-[960px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">
-            <th className="px-4 py-3 font-medium">N°</th>
+            <th className="px-4 py-3 font-medium">N° décl.</th>
             <th className="px-4 py-3 font-medium">Client</th>
             <th className="px-4 py-3 font-medium">BL</th>
             <th className="px-4 py-3 font-medium">Zone</th>
             <th className="px-4 py-3 font-medium">Date</th>
             <th className="px-4 py-3 font-medium text-right">Montant</th>
+            <th className="px-4 py-3 font-medium text-right">Reste</th>
             <th className="px-4 py-3 font-medium text-center">BAD</th>
             <th className="px-4 py-3 font-medium text-right">
               <span className="sr-only">Actions</span>
@@ -56,7 +70,7 @@ export function DeclarationsTable({
                 }
               }}
             >
-              <td className="px-4 py-3 font-medium text-foreground">
+              <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">
                 {row.declarationNumber}
               </td>
               <td className="px-4 py-3">
@@ -67,10 +81,15 @@ export function DeclarationsTable({
               <td className="px-4 py-3 font-mono text-xs">
                 {row.blReference ?? "—"}
               </td>
-              <td className="px-4 py-3">{row.zoneOrTerminal ?? "—"}</td>
-              <td className="px-4 py-3">{formatDate(row.declarationDate)}</td>
+              <td className="px-4 py-3 tabular-nums">{row.zoneOrTerminal ?? "—"}</td>
+              <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                {formatDate(row.declarationDate)}
+              </td>
               <td className="px-4 py-3 text-right tabular-nums">
                 {formatMoney(row.clientAmountPaid)}
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                {formatReste(row.clientAmountPaid, row.costPrice)}
               </td>
               <td className="px-4 py-3 text-center">
                 {row.bonADelivrer ? (

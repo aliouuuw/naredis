@@ -5,17 +5,31 @@ import { customers } from "@/lib/db/schema";
 import { canMutateOperationalData } from "@/lib/auth/permissions";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
-import { DeclarationsPageView } from "@/components/declarations/declarations-page-view";
+import { agencyCalendarDate } from "@/lib/domain/timezone";
+import { DeclarationsView } from "@/components/declarations/declarations-view";
+import {
+  parseDeclarationsViewState,
+  viewStateToListFilters,
+} from "@/lib/modules/declarations/declarations-query";
 import { serializeDeclarationListItem } from "@/lib/modules/declarations/serialize-list";
 import { listDeclarations } from "@/lib/modules/declarations/service";
 import { listAgencies } from "@/lib/modules/agencies/service";
 import { PageHeader } from "@/components/shell/page-header";
 import { NewDeclarationButton } from "@/components/shell/page-actions";
 
-export default async function DeclarationsPage() {
+export default async function DeclarationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const auth = await requireAuthContext();
   const ctx = toModuleContext(auth);
   const db = getDb();
+  const today = agencyCalendarDate();
+
+  const viewState = parseDeclarationsViewState(params, today);
+  const listFilters = viewStateToListFilters(viewState);
 
   const canEdit = await canMutateOperationalData(
     auth.userId,
@@ -23,7 +37,7 @@ export default async function DeclarationsPage() {
   );
 
   const [rows, customerRows, agencies] = await Promise.all([
-    listDeclarations(db, ctx).then((items) =>
+    listDeclarations(db, ctx, listFilters).then((items) =>
       items.map(serializeDeclarationListItem),
     ),
     db
@@ -38,7 +52,7 @@ export default async function DeclarationsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Déclarations"
-        description="Une ligne par connaissement (BL) — cliquez une ligne pour ouvrir la fiche."
+        description="Une ligne par connaissement (BL). Filtres et tri synchronisés dans l'URL."
         actions={canEdit ? <NewDeclarationButton /> : undefined}
       />
       <Suspense
@@ -48,8 +62,9 @@ export default async function DeclarationsPage() {
           </div>
         }
       >
-        <DeclarationsPageView
+        <DeclarationsView
           rows={rows}
+          viewState={viewState}
           customers={customerRows}
           agencies={agencies.map((a) => ({ id: a.id, name: a.name }))}
           canEdit={canEdit}

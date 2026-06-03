@@ -1,8 +1,8 @@
-# Progress — Ndouckmane Transit
+# Progress — Naredis (MVP)
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-06-03 (pilot alignment pass)
+**Last updated:** 2026-06-03
 
 ---
 
@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `CLI-003` (solde ouverture / contre-passation), declaration list filters/column order, `DECL-003` Activité feed, `DOS-001`, `POL-002` dashboard.
+**Next up:** `DECL-003` Activité feed, `DOS-001` dossier hub tabs, `POL-002` dashboard.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -25,7 +25,10 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema (pilot 0003, review 0004) | Done |
-| Unit tests (`bun test`, domain + slug + ledger) | Done (28) |
+| Unit tests (`bun test`, domain + slug + ledger) | Done (35+) |
+| Product branding (Naredis) + login panel | Done |
+| CLI-003 opening balance + contre-passation | Done |
+| DECL-001 list filters + column order | Done |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done — pilot-shaped; `bun run db:reseed` |
 | Better Auth | Done |
@@ -76,12 +79,10 @@ From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 After the 2026-06-03 alignment pass:
 
-1. **CLI-003** — opening balance + contre-passation (solde trust in ops)  
-2. **DECL-001 enhancement** — declaration list filters + column order (like `/transactions`)  
-3. **DECL-003** — declaration fiche Activité (`activity_log`)  
-4. **DOS-001** — dossier hub tabs  
-5. **POL-002** — actionable dashboard  
-6. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
+1. **DECL-003** — declaration fiche Activité (`activity_log`)  
+2. **DOS-001** — dossier hub tabs  
+3. **POL-002** — actionable dashboard  
+4. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
 
 ---
 
@@ -99,7 +100,6 @@ After the 2026-06-03 alignment pass:
 
 | Item | Deferred |
 |------|----------|
-| Declaration list column order + filter panel | Backlog |
 | Configurable zones in Settings | Backlog (hardcoded pilot list) |
 
 ---
@@ -118,6 +118,9 @@ After the 2026-06-03 alignment pass:
 
 | ID | Title | Date |
 |----|-------|------|
+| — | Naredis branding + login product panel | 2026-06-03 |
+| CLI-003 | Opening balance + contre-passation UI | 2026-06-03 |
+| DECL-001 | Declarations list filters, presets, URL sync, Reste column | 2026-06-03 |
 | PLAT-001 | PostgreSQL 17 local dev + DATABASE_URL | 2026-05-19 |
 | PLAT-002 | Drizzle ORM setup + migration scripts | 2026-05-19 |
 | PLAT-003 | Core schema (orgs, customers, dossiers, declarations) | 2026-05-19 |

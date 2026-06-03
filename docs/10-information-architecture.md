@@ -31,7 +31,7 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ [NT] Ndouckmane Transit          [ 🔍 Rechercher… ⌘K ]        [User ▾] │  ← row 1 (64px)
+│ [NR] Naredis                     [ 🔍 Rechercher… ⌘K ]        [User ▾] │  ← row 1 (64px)
 ├──────────────────────────────────────────────────────────────────────────┤
 │  Tableau de bord │ Déclarations ● │ Clients │ Réglages                   │  ← row 2 (40px)
 ├──────────────────────────────────────────────────────────────────────────┤
