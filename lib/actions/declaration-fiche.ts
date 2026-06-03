@@ -24,10 +24,11 @@ export async function getDeclarationFicheAction(
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const [data, editLog, activity] = await Promise.all([
+  const [data, editLog, activity, agencies] = await Promise.all([
     getDeclarationById(db, ctx, declarationId),
     listDeclarationEditLog(db, ctx, declarationId),
     listActivityForDeclaration(db, ctx, declarationId),
+    listAgencies(db, ctx, false),
   ]);
 
   if (!data) {
@@ -35,6 +36,10 @@ export async function getDeclarationFicheAction(
   }
 
   const { declaration, dossier, customer, containers, payingAgencyName } = data;
+
+  const agencyNameById = Object.fromEntries(
+    agencies.map((a) => [a.id, a.name]),
+  );
 
   return actionOk({
     declarationId: declaration.id,
@@ -66,6 +71,7 @@ export async function getDeclarationFicheAction(
       payingAgencyId: declaration.payingAgencyId ?? "",
       bonADelivrer: declaration.bonADelivrer,
     },
+    agencyNameById,
     editLog: editLog.map((entry) => ({
       id: entry.id,
       changes: entry.changes,

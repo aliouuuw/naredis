@@ -47,6 +47,7 @@ export type DeclarationFicheSerialized = {
     payingAgencyId: string;
     bonADelivrer: boolean;
   };
+  agencyNameById: Record<string, string>;
   editLog: DeclarationEditLogEntrySerialized[];
   activityLog: ActivityLogEntrySerialized[];
 };

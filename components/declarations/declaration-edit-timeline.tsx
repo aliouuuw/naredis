@@ -14,9 +14,12 @@ function formatWhen(date: Date | string) {
 
 export function DeclarationEditTimeline({
   entries,
+  agencyNameById = {},
 }: {
   entries: DeclarationEditLogEntrySerialized[];
+  agencyNameById?: Record<string, string>;
 }) {
+  const displayContext = { agencyNameById };
   if (entries.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -42,10 +45,10 @@ export function DeclarationEditTimeline({
                   <span className="font-medium">{declarationFieldLabel(field)}</span>
                   <span className="text-muted-foreground"> : </span>
                   <span className="text-muted-foreground line-through">
-                    {formatEditLogValue(field, diff.from)}
+                    {formatEditLogValue(field, diff.from, displayContext)}
                   </span>
                   <span className="mx-1 text-muted-foreground">→</span>
-                  <span>{formatEditLogValue(field, diff.to)}</span>
+                  <span>{formatEditLogValue(field, diff.to, displayContext)}</span>
                 </li>
               ))}
             </ul>

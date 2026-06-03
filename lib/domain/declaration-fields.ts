@@ -19,9 +19,22 @@ export function declarationFieldLabel(key: string): string {
   return DECLARATION_FIELD_LABELS[key] ?? key;
 }
 
+export type EditLogDisplayContext = {
+  agencyNameById?: Record<string, string>;
+};
+
 /** Format stored edit-log values for display. */
-export function formatEditLogValue(key: string, value: string | null): string {
+export function formatEditLogValue(
+  key: string,
+  value: string | null,
+  context?: EditLogDisplayContext,
+): string {
   if (value == null || value === "") return "—";
+
+  if (key === "paying_agency_id") {
+    const name = context?.agencyNameById?.[value];
+    return name ?? "—";
+  }
 
   if (key === "bon_a_delivrer") {
     return value === "true" ? "Oui" : "Non";

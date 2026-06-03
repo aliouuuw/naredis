@@ -36,6 +36,7 @@ export function DeclarationFicheTabs({
   agencies,
   editLog,
   activityLog,
+  agencyNameById,
   canEdit,
   formKey,
   onSaved,
@@ -55,6 +56,7 @@ export function DeclarationFicheTabs({
   agencies: AgencyOption[];
   editLog: DeclarationEditLogEntrySerialized[];
   activityLog: ActivityLogEntrySerialized[];
+  agencyNameById: Record<string, string>;
   canEdit: boolean;
   formKey: string;
   onSaved?: () => void;
@@ -211,7 +213,11 @@ export function DeclarationFicheTabs({
           <p className="mb-4 text-xs text-muted-foreground">
             Journal détaillé des champs modifiés sur cette fiche.
           </p>
-          <DeclarationEditTimeline key={formKey} entries={editLog} />
+          <DeclarationEditTimeline
+            key={formKey}
+            entries={editLog}
+            agencyNameById={agencyNameById}
+          />
         </section>
       ) : (
         <section className="max-w-2xl">
