@@ -16,7 +16,6 @@ import { listDeclarations } from "@/lib/modules/declarations/service";
 import { listAgencies } from "@/lib/modules/agencies/service";
 import { PageHeader } from "@/components/shell/page-header";
 import { NewDeclarationButton } from "@/components/shell/page-actions";
-import { ButtonLink } from "@/components/ui/button";
 
 export default async function DeclarationsPage({
   searchParams,
@@ -54,14 +53,7 @@ export default async function DeclarationsPage({
       <PageHeader
         title="Déclarations"
         description="Une ligne par connaissement (BL) — montants et BAD. Filtres et tri dans l'URL."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <ButtonLink href="/dossiers" variant="outline" className="rounded-full px-4">
-              Dossiers
-            </ButtonLink>
-            {canEdit ? <NewDeclarationButton /> : null}
-          </div>
-        }
+        actions={canEdit ? <NewDeclarationButton /> : undefined}
       />
       <Suspense
         fallback={

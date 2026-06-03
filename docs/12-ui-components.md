@@ -19,6 +19,9 @@ See **[00-glossary.md](./00-glossary.md)** and [10-information-architecture.md](
 | `FormSuggestInput` | Text field with Notion-style dropdown of existing values (BL, libellés, conteneurs, …) |
 | `FormEntityPicker` | Searchable picker for entities (client, etc.) with hidden `name` for forms |
 | `FormSelect` | **Required** for value/label dropdowns (enums, entity ids, filters). Never use raw `Select` + `SelectValue` — Base UI shows the stored value (UUID) in the trigger. Uses `resolveSelectDisplayText` so opaque ids never leak. |
+| `TableColumnSettings` | Popover on list pages — reorder (↑↓) and show/hide columns; prefs in `localStorage` via `useTableColumns` + `lib/ui/table-columns.ts`. Tables: `declarations`, `clients`, `transactions`. |
+| `DownloadAccountStatementButton` | Client fiche — downloads `.xlsx` relevé via `GET /api/clients/[id]/releve` (journal + soldes, fr-FR). |
+| `DownloadExcelButton` | List pages — `GET /api/declarations/export` and `/api/transactions/export` with current URL filters (all matching rows, not only the current page). |
 
 ---
 

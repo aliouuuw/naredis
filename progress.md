@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `DOS-002` document upload, `POL-001` search, `CLI-004` relevé PDF.
+**Next up:** `DOS-002` document upload, `POL-001` search.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -29,6 +29,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Product branding (Naredis) + login panel | Done |
 | CLI-003 opening balance + contre-passation | Done |
 | DECL-001 list filters + column order | Done |
+| UI-006 editable list columns (localStorage) | Done |
+| CLI-004 relevé Excel export | Done |
 | DECL-003 fiche Activité tab | Done |
 | DOS-001 dossier hub tabs + close | Done |
 | DOS-003 dossier finances (charges / payé / reste) | Done |

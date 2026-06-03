@@ -1,9 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
+import type { ClientListColumnId } from "@/lib/ui/list-table-columns";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CustomerListItemSerialized } from "@/lib/modules/customers/serialize-list";
@@ -13,14 +15,106 @@ const accountStatusLabel = {
   pas_a_jour: "Pas à jour",
 } as const;
 
+const HEADER: Record<
+  ClientListColumnId,
+  { label: ReactNode; className?: string }
+> = {
+  name: { label: "Client" },
+  phone: { label: "Téléphone" },
+  balance: { label: "Solde", className: "text-right" },
+  fees: { label: "Frais dossiers", className: "text-right" },
+  transactionsToday: { label: "Transactions jour", className: "text-right" },
+  status: { label: "Statut" },
+  actions: {
+    label: <span className="sr-only">Actions</span>,
+    className: "text-right",
+  },
+};
+
 export function ClientsTable({
   rows,
   bare = false,
+  visibleColumnIds,
 }: {
   rows: CustomerListItemSerialized[];
   bare?: boolean;
+  visibleColumnIds: ClientListColumnId[];
 }) {
   const router = useRouter();
+
+  function renderCell(columnId: ClientListColumnId, row: CustomerListItemSerialized) {
+    const href = `/clients/${row.id}`;
+
+    switch (columnId) {
+      case "name":
+        return (
+          <td key={columnId} className="px-4 py-3">
+            <span className="font-medium text-foreground">{row.name}</span>
+            <p className="text-xs text-muted-foreground">{row.slug}</p>
+          </td>
+        );
+      case "phone":
+        return (
+          <td key={columnId} className="px-4 py-3">
+            {row.phone ?? "—"}
+          </td>
+        );
+      case "balance":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right tabular-nums">
+            <span>{formatXof(BigInt(row.balanceAmount))} XOF</span>
+            <span className="ml-1 text-xs text-muted-foreground">
+              {row.balanceLabel}
+            </span>
+          </td>
+        );
+      case "fees":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right tabular-nums">
+            {formatXof(BigInt(row.feesAllTime))} XOF
+          </td>
+        );
+      case "transactionsToday":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right tabular-nums">
+            {formatXof(BigInt(row.transactionsToday))} XOF
+          </td>
+        );
+      case "status":
+        return (
+          <td key={columnId} className="px-4 py-3">
+            <span
+              className={cn(
+                "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                row.accountStatus === "a_jour"
+                  ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                  : "bg-amber-500/10 text-amber-800 dark:text-amber-300",
+              )}
+            >
+              {accountStatusLabel[row.accountStatus]}
+            </span>
+          </td>
+        );
+      case "actions":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right">
+            <Link
+              href={href}
+              onClick={(event) => event.stopPropagation()}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "inline-flex gap-1",
+              )}
+            >
+              Ouvrir
+              <ChevronRight className="size-4" aria-hidden />
+            </Link>
+          </td>
+        );
+      default:
+        return null;
+    }
+  }
 
   return (
     <div
@@ -31,15 +125,17 @@ export function ClientsTable({
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Client</th>
-            <th className="px-4 py-3 font-medium">Téléphone</th>
-            <th className="px-4 py-3 font-medium text-right">Solde</th>
-            <th className="px-4 py-3 font-medium text-right">Frais dossiers</th>
-            <th className="px-4 py-3 font-medium text-right">Transactions jour</th>
-            <th className="px-4 py-3 font-medium">Statut</th>
-            <th className="px-4 py-3 font-medium text-right">
-              <span className="sr-only">Actions</span>
-            </th>
+            {visibleColumnIds.map((id) => {
+              const meta = HEADER[id];
+              return (
+                <th
+                  key={id}
+                  className={cn("px-4 py-3 font-medium", meta.className)}
+                >
+                  {meta.label}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -60,48 +156,7 @@ export function ClientsTable({
                   }
                 }}
               >
-                <td className="px-4 py-3">
-                  <span className="font-medium text-foreground">{row.name}</span>
-                  <p className="text-xs text-muted-foreground">{row.slug}</p>
-                </td>
-                <td className="px-4 py-3">{row.phone ?? "—"}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  <span>{formatXof(BigInt(row.balanceAmount))} XOF</span>
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    {row.balanceLabel}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {formatXof(BigInt(row.feesAllTime))} XOF
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {formatXof(BigInt(row.transactionsToday))} XOF
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={cn(
-                      "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                      row.accountStatus === "a_jour"
-                        ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
-                        : "bg-amber-500/10 text-amber-800 dark:text-amber-300",
-                    )}
-                  >
-                    {accountStatusLabel[row.accountStatus]}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={href}
-                    onClick={(event) => event.stopPropagation()}
-                    className={cn(
-                      buttonVariants({ variant: "outline", size: "sm" }),
-                      "inline-flex gap-1",
-                    )}
-                  >
-                    Ouvrir
-                    <ChevronRight className="size-4" aria-hidden />
-                  </Link>
-                </td>
+                {visibleColumnIds.map((id) => renderCell(id, row))}
               </tr>
             );
           })}

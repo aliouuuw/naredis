@@ -147,6 +147,36 @@ export function serializeDeclarationsSearchParams(
   return sp;
 }
 
+export function formatDeclarationsFilterSummary(
+  state: DeclarationsViewState,
+): string {
+  const parts: string[] = [VIEW_PRESET_LABELS[state.viewPreset]];
+  if (state.search.trim()) parts.push(`Recherche : ${state.search.trim()}`);
+  if (state.customerId) parts.push("Client filtré");
+  if (state.zone) parts.push(`Zone : ${state.zone}`);
+  if (state.dateFrom || state.dateTo) {
+    if (state.dateFrom && state.dateTo) {
+      parts.push(`${state.dateFrom} → ${state.dateTo}`);
+    } else if (state.dateFrom) {
+      parts.push(`À partir du ${state.dateFrom}`);
+    } else {
+      parts.push(`Jusqu'au ${state.dateTo}`);
+    }
+  } else if (state.datePreset !== "all") {
+    const periodLabels: Record<DeclarationDatePreset, string> = {
+      today: "Aujourd'hui",
+      yesterday: "Hier",
+      week: "Cette semaine",
+      month: "Ce mois",
+      last30: "30 jours",
+      all: "Toutes dates",
+    };
+    parts.push(periodLabels[state.datePreset]);
+  }
+  parts.push(`Tri : ${SORT_LABELS[state.sort]}`);
+  return parts.join(" · ");
+}
+
 export function viewHasCustomizations(state: DeclarationsViewState): boolean {
   return (
     state.viewPreset !== "all" ||

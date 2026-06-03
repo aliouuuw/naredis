@@ -58,7 +58,7 @@ Ship a **credible demo** for the pilot forwarder: replace Notion **Clients**, **
 ### UI / exports
 
 - [x] Tab nav shell, dashboard landing, theme (`UI-004`, `UI-005`)
-- [ ] PDF relevé de compte
+- [x] Excel relevé de compte (`.xlsx` from client fiche)
 - [ ] Global search (BL, client, declaration #)
 
 ### Developer experience

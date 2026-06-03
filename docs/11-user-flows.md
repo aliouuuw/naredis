@@ -124,9 +124,9 @@ Unchanged.
 
 ---
 
-## Flow 8 — Relevé PDF
+## Flow 8 — Relevé Excel
 
-Unchanged — client level.
+Client fiche → **Relevé Excel** → `GET /api/clients/[id]/releve` → `.xlsx` (journal du compte, soldes, dates fr-FR / Africa/Dakar).
 
 ---
 
@@ -168,7 +168,7 @@ flowchart TD
   F --> G[Payment + allocation]
   G --> H[Rectificative déclaration optional]
   H --> I[Close dossier]
-  I --> J[Relevé PDF]
+  I --> J[Relevé Excel]
 ```
 
 ---

@@ -1,8 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTableColumns } from "@/components/hooks/use-table-columns";
 import { useTablePage } from "@/components/hooks/use-table-page";
+import { TableColumnSettings } from "@/components/ui/table-column-settings";
+import { DownloadExcelButton } from "@/components/ui/download-excel-button";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { listExportUrl } from "@/lib/ui/list-export-query";
+import {
+  DECLARATION_LIST_COLUMNS,
+  DECLARATION_LIST_TABLE_ID,
+  type DeclarationListColumnId,
+} from "@/lib/ui/list-table-columns";
 import { paginateSlice } from "@/lib/ui/table-pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -44,6 +53,10 @@ export function DeclarationsView({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { page, setPage } = useTablePage();
+  const tableColumns = useTableColumns(
+    DECLARATION_LIST_TABLE_ID,
+    DECLARATION_LIST_COLUMNS,
+  );
 
   const sortedRows = useMemo(
     () => sortDeclarationRows(rows, viewState.sort),
@@ -53,6 +66,11 @@ export function DeclarationsView({
   const { items: pagedRows, page: safePage } = useMemo(
     () => paginateSlice(sortedRows, page),
     [sortedRows, page],
+  );
+
+  const declarationsExportUrl = useMemo(
+    () => listExportUrl("/api/declarations/export", searchParams),
+    [searchParams],
   );
 
   const openDeclaration = useCallback(
@@ -112,6 +130,19 @@ export function DeclarationsView({
         state={viewState}
         totalCount={sortedRows.length}
         customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+        exportExcel={
+          <DownloadExcelButton exportUrl={declarationsExportUrl} />
+        }
+        columnSettings={
+          tableColumns.ready ? (
+            <TableColumnSettings
+              columns={DECLARATION_LIST_COLUMNS}
+              prefs={tableColumns.prefs}
+              onPrefsChange={tableColumns.updatePrefs}
+              onReset={tableColumns.resetPrefs}
+            />
+          ) : null
+        }
       />
 
       {sortedRows.length === 0 ? (
@@ -137,6 +168,9 @@ export function DeclarationsView({
           <DeclarationsTable
             rows={pagedRows}
             bare
+            visibleColumnIds={
+              tableColumns.visibleIds as DeclarationListColumnId[]
+            }
             onOpenRow={(id) => openDeclaration(id)}
           />
           <TablePagination

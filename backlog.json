@@ -363,6 +363,22 @@
       ]
     },
     {
+      "id": "UI-006",
+      "epic": "ui-shell",
+      "title": "List table column preferences (déclarations, clients, transactions)",
+      "priority": "p1",
+      "status": "done",
+      "dependsOn": ["DECL-001"],
+      "docs": ["docs/12-ui-components.md", "docs/10-information-architecture.md"],
+      "acceptanceCriteria": [
+        "Colonnes control on /declarations, /clients, /transactions toolbars",
+        "Reorder (up/down) and show/hide per column; required columns stay visible",
+        "Preferences persisted in localStorage per table id",
+        "Reset to defaults"
+      ],
+      "notes": "Pilot call: editable column order. Client fiche ledger keeps fixed columns."
+    },
+    {
       "id": "DECL-001",
       "epic": "declarations",
       "title": "Declarations list page (/declarations)",
@@ -525,16 +541,17 @@
     {
       "id": "CLI-004",
       "epic": "clients-ledger",
-      "title": "Relevé de compte PDF export",
+      "title": "Relevé de compte Excel export",
       "priority": "p1",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["CLI-001", "DOM-005"],
-      "docs": ["docs/03-mvp-scope.md"],
+      "docs": ["docs/03-mvp-scope.md", "docs/11-user-flows.md"],
       "acceptanceCriteria": [
-        "PDF download from client fiche",
-        "Chronological entries + final solde",
-        "fr-FR / Africa-Dakar dates"
-      ]
+        "Excel (.xlsx) download from client fiche",
+        "Chronological entries + solde après ligne (same data as Résumé journal)",
+        "fr-FR / Africa/Dakar dates in header"
+      ],
+      "notes": "GET /api/clients/[id]/releve — SheetJS xlsx. Pilot format: Excel, not PDF."
     },
     {
       "id": "POL-001",

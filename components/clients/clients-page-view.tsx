@@ -8,8 +8,15 @@ import {
   filterAndSortClients,
   type ClientsViewState,
 } from "@/lib/modules/customers/clients-query";
+import { useTableColumns } from "@/components/hooks/use-table-columns";
 import { useTablePage } from "@/components/hooks/use-table-page";
+import { TableColumnSettings } from "@/components/ui/table-column-settings";
 import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  CLIENT_LIST_COLUMNS,
+  CLIENT_LIST_TABLE_ID,
+  type ClientListColumnId,
+} from "@/lib/ui/list-table-columns";
 import { paginateSlice } from "@/lib/ui/table-pagination";
 import { ClientsTable } from "./clients-table";
 import { ClientsToolbar } from "./clients-toolbar";
@@ -27,6 +34,7 @@ export function ClientsPageView({
   const searchParams = useSearchParams();
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const { page, setPage } = useTablePage();
+  const tableColumns = useTableColumns(CLIENT_LIST_TABLE_ID, CLIENT_LIST_COLUMNS);
 
   const filteredRows = useMemo(
     () => filterAndSortClients(rows, viewState),
@@ -49,7 +57,20 @@ export function ClientsPageView({
 
   return (
     <div className="space-y-6">
-      <ClientsToolbar state={viewState} totalCount={filteredRows.length} />
+      <ClientsToolbar
+        state={viewState}
+        totalCount={filteredRows.length}
+        columnSettings={
+          tableColumns.ready ? (
+            <TableColumnSettings
+              columns={CLIENT_LIST_COLUMNS}
+              prefs={tableColumns.prefs}
+              onPrefsChange={tableColumns.updatePrefs}
+              onReset={tableColumns.resetPrefs}
+            />
+          ) : null
+        }
+      />
 
       {filteredRows.length === 0 ? (
         <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
@@ -73,7 +94,11 @@ export function ClientsPageView({
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
-          <ClientsTable rows={pagedRows} bare />
+          <ClientsTable
+            rows={pagedRows}
+            bare
+            visibleColumnIds={tableColumns.visibleIds as ClientListColumnId[]}
+          />
           <TablePagination
             totalItems={filteredRows.length}
             page={safePage}

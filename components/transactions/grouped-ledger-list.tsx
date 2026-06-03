@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import type { LedgerGroupNode } from "@/lib/modules/ledger/transactions-query";
 import { GROUP_DIMENSION_LABELS } from "@/lib/modules/ledger/transactions-query";
+import type { TransactionListColumnId } from "@/lib/ui/list-table-columns";
 import { LedgerEntriesTable } from "./ledger-entries-table";
 
 function GroupTotals({ node }: { node: LedgerGroupNode }) {
@@ -32,11 +33,13 @@ function GroupSection({
   depth,
   showCustomer,
   defaultOpen,
+  visibleColumnIds,
 }: {
   node: LedgerGroupNode;
   depth: number;
   showCustomer: boolean;
   defaultOpen: boolean;
+  visibleColumnIds?: TransactionListColumnId[];
 }) {
   const [open, setOpen] = useState(defaultOpen || depth < 2);
   const hasChildren = node.children && node.children.length > 0;
@@ -85,11 +88,16 @@ function GroupSection({
                   depth={depth + 1}
                   showCustomer={showCustomer}
                   defaultOpen={depth + 1 < 1}
+                  visibleColumnIds={visibleColumnIds}
                 />
               ))
             : null}
           {hasRows ? (
-            <LedgerEntriesTable rows={node.rows!} showCustomer={showCustomer} />
+            <LedgerEntriesTable
+              rows={node.rows!}
+              showCustomer={showCustomer}
+              visibleColumnIds={visibleColumnIds}
+            />
           ) : null}
         </div>
       ) : null}
@@ -101,10 +109,12 @@ export function GroupedLedgerList({
   tree,
   showCustomer,
   bare = false,
+  visibleColumnIds,
 }: {
   tree: LedgerGroupNode[];
   showCustomer: boolean;
   bare?: boolean;
+  visibleColumnIds?: TransactionListColumnId[];
 }) {
   if (tree.length === 0) {
     if (bare) return null;
@@ -124,6 +134,7 @@ export function GroupedLedgerList({
           depth={0}
           showCustomer={showCustomer}
           defaultOpen
+          visibleColumnIds={visibleColumnIds}
         />
       ))}
     </div>

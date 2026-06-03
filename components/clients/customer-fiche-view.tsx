@@ -19,6 +19,7 @@ import type { ActivityLogEntrySerialized } from "@/lib/modules/declarations/seri
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import { DashboardActivityFeed } from "@/components/dashboard/dashboard-activity-feed";
 import { ledgerSectionCopy } from "@/components/ledger/ledger-table-styles";
+import { DownloadAccountStatementButton } from "./download-account-statement-button";
 import { AccountStatusControl } from "./account-status-control";
 import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
@@ -211,6 +212,11 @@ export function CustomerFicheView({
                     Nouvelle transaction
                   </Button>
                 ) : null}
+                <DownloadAccountStatementButton
+                  customerId={customer.id}
+                  label="Relevé Excel"
+                  size="sm"
+                />
                 <ButtonLink
                   href={`/transactions?f=customer%3Aeq%3A${encodeURIComponent(customer.id)}&preset=last30`}
                   variant="outline"
@@ -327,11 +333,17 @@ export function CustomerFicheView({
           </section>
 
           <section className="space-y-3">
-            <div>
-              <h2 className="text-sm font-semibold">{ledgerCopy.title}</h2>
-              <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-                {ledgerCopy.description}
-              </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold">{ledgerCopy.title}</h2>
+                <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                  {ledgerCopy.description}
+                </p>
+              </div>
+              <DownloadAccountStatementButton
+                customerId={customer.id}
+                className="shrink-0 sm:items-end"
+              />
             </div>
             <CustomerAccountLedger
               ledgerEntries={ledgerEntries}

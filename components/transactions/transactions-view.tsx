@@ -1,8 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { useTableColumns } from "@/components/hooks/use-table-columns";
 import { useTablePage } from "@/components/hooks/use-table-page";
+import { TableColumnSettings } from "@/components/ui/table-column-settings";
+import { DownloadExcelButton } from "@/components/ui/download-excel-button";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { listExportUrl } from "@/lib/ui/list-export-query";
+import {
+  TRANSACTION_LIST_COLUMNS,
+  TRANSACTION_LIST_TABLE_ID,
+  type TransactionListColumnId,
+} from "@/lib/ui/list-table-columns";
 import { paginateSlice } from "@/lib/ui/table-pagination";
 import type {
   LedgerEntrySerialized,
@@ -38,7 +48,12 @@ export function TransactionsView({
   today: string;
   recordIntent?: boolean;
 }) {
+  const searchParams = useSearchParams();
   const { page, setPage } = useTablePage();
+  const tableColumns = useTableColumns(
+    TRANSACTION_LIST_TABLE_ID,
+    TRANSACTION_LIST_COLUMNS,
+  );
 
   const sorted = useMemo(
     () => sortLedgerRows(rows, viewState.sort),
@@ -55,6 +70,11 @@ export function TransactionsView({
     [pagedRows, viewState.groupBy],
   );
 
+  const transactionsExportUrl = useMemo(
+    () => listExportUrl("/api/transactions/export", searchParams),
+    [searchParams],
+  );
+
   return (
     <div className="space-y-6">
       <TransactionsToolbar
@@ -65,6 +85,19 @@ export function TransactionsView({
         dossiers={dossiers}
         today={today}
         defaultFiltersOpen={recordIntent}
+        exportExcel={
+          <DownloadExcelButton exportUrl={transactionsExportUrl} />
+        }
+        columnSettings={
+          tableColumns.ready ? (
+            <TableColumnSettings
+              columns={TRANSACTION_LIST_COLUMNS}
+              prefs={tableColumns.prefs}
+              onPrefsChange={tableColumns.updatePrefs}
+              onReset={tableColumns.resetPrefs}
+            />
+          ) : null
+        }
       />
 
       {sorted.length === 0 ? (
@@ -75,7 +108,14 @@ export function TransactionsView({
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
-          <GroupedLedgerList tree={tree} showCustomer bare />
+          <GroupedLedgerList
+            tree={tree}
+            showCustomer
+            bare
+            visibleColumnIds={
+              tableColumns.visibleIds as TransactionListColumnId[]
+            }
+          />
           <TablePagination
             totalItems={sorted.length}
             page={safePage}

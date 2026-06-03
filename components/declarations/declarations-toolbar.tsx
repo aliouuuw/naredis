@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
@@ -36,10 +37,14 @@ export function DeclarationsToolbar({
   state,
   totalCount,
   customers,
+  columnSettings,
+  exportExcel,
 }: {
   state: DeclarationsViewState;
   totalCount: number;
   customers: CustomerOption[];
+  columnSettings?: ReactNode;
+  exportExcel?: ReactNode;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -111,9 +116,13 @@ export function DeclarationsToolbar({
             </Button>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground tabular-nums">
-          {totalCount} déclaration{totalCount === 1 ? "" : "s"}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-muted-foreground tabular-nums">
+            {totalCount} déclaration{totalCount === 1 ? "" : "s"}
+          </p>
+          {exportExcel}
+          {columnSettings}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">

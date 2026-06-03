@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Plus, X } from "lucide-react";
@@ -317,6 +318,8 @@ export function TransactionsToolbar({
   dossiers,
   today,
   defaultFiltersOpen,
+  columnSettings,
+  exportExcel,
 }: {
   state: TransactionsViewState;
   totalCount: number;
@@ -325,6 +328,8 @@ export function TransactionsToolbar({
   dossiers: DossierAllocationOption[];
   today: string;
   defaultFiltersOpen?: boolean;
+  columnSettings?: ReactNode;
+  exportExcel?: ReactNode;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -389,6 +394,12 @@ export function TransactionsToolbar({
     <section className="rounded-lg border bg-card">
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
         <div className="flex items-start gap-2 p-3">
+          {exportExcel || columnSettings ? (
+            <div className="order-last flex shrink-0 flex-wrap items-center gap-2 sm:order-none">
+              {exportExcel}
+              {columnSettings}
+            </div>
+          ) : null}
           <CollapsibleTrigger
             className={cn(
               "group/trigger flex flex-1 items-start gap-2 rounded-md text-left outline-none",

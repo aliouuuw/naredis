@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
@@ -24,9 +25,11 @@ const STATUS_OPTIONS = [
 export function ClientsToolbar({
   state,
   totalCount,
+  columnSettings,
 }: {
   state: ClientsViewState;
   totalCount: number;
+  columnSettings?: ReactNode;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -74,9 +77,12 @@ export function ClientsToolbar({
         <p className="text-sm text-muted-foreground">
           Soldes en débit/crédit, frais dossiers cumulés et mouvements du jour.
         </p>
-        <p className="text-sm text-muted-foreground tabular-nums">
-          {totalCount} client{totalCount === 1 ? "" : "s"}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-muted-foreground tabular-nums">
+            {totalCount} client{totalCount === 1 ? "" : "s"}
+          </p>
+          {columnSettings}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
