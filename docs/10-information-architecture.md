@@ -205,7 +205,7 @@ Client ACME SARL    ·  Statut dossier: Ouvert
 
 ---
 
-## Page: Nouvelle déclaration (`/declarations/new`)
+## Page: Nouvelle déclaration (modal on `/declarations`)
 
 **Notion analog:** new row in Declarations.
 

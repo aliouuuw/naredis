@@ -8,6 +8,9 @@ const googleSansFlex = Google_Sans_Flex({
   variable: "--font-sans-flex",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  // Google Sans Flex is not in Next's capsized metrics DB — avoids dev warning.
+  adjustFontFallback: false,
+  fallback: ["system-ui", "Segoe UI", "sans-serif"],
 });
 
 export const metadata: Metadata = {
