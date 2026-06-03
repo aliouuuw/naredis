@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "ndouckmane-transit",
-  "updated": "2026-05-23",
+  "updated": "2026-06-03",
   "defaultStatus": "todo",
   "statuses": ["todo", "in_progress", "done", "blocked", "deferred"],
   "priorities": ["p0", "p1", "p2"],
@@ -153,7 +153,8 @@
         "declarations: zone, filing amounts, bon_a_delivrer, paying_agency_id",
         "customers: slug, account_status; ledger: balance_side, versement, notes",
         "bun run db:migrate applies 0003"
-      ]
+      ],
+      "notes": "Migration 0004 adds year-scoped sequences and partial unique on dossiers.bl_reference."
     },
     {
       "id": "PLAT-008",
@@ -366,7 +367,7 @@
       "epic": "declarations",
       "title": "Declarations list page (/declarations)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["DOM-003", "UI-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -374,7 +375,8 @@
         "View presets: Tous, En cours, Clôturées (minimal)",
         "Row navigates to fiche",
         "PageHeader CTA retained (UI-003); filters below header"
-      ]
+      ],
+      "notes": "Shipped: table (N°, client, BL, zone, date, montant, BAD), row → fiche, PageHeader CTA. Follow-up: customs status + N° douane columns, view presets."
     },
     {
       "id": "DECL-002",
@@ -395,14 +397,15 @@
       "epic": "declarations",
       "title": "Declaration fiche (/declarations/[id])",
       "priority": "p0",
-      "status": "todo",
+      "status": "in_progress",
       "dependsOn": ["DECL-001"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "Status stepper + property grid",
         "Dossier context card with link to dossier hub",
         "Résumé + Activité tabs"
-      ]
+      ],
+      "notes": "Read-only fiche: logistics + money grid, BAD display. Missing: FSM stepper, dossier hub card, Résumé/Activité tabs. Edit in DECL-005."
     },
     {
       "id": "DECL-004",
@@ -437,14 +440,15 @@
       "epic": "dossiers",
       "title": "Dossier hub page (/dossiers/[id])",
       "priority": "p0",
-      "status": "todo",
+      "status": "in_progress",
       "dependsOn": ["DOM-002", "DOM-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "Tabs: Déclarations, Documents, Finances, Activité",
         "Declarations table on dossier",
         "Close dossier action with warnings"
-      ]
+      ],
+      "notes": "Minimal page: dossier header + linked declarations list. Missing: tabbed hub, documents, finances, close dossier."
     },
     {
       "id": "DOS-002",
@@ -478,14 +482,15 @@
       "epic": "clients-ledger",
       "title": "Clients list + fiche (/clients)",
       "priority": "p0",
-      "status": "todo",
+      "status": "in_progress",
       "dependsOn": ["DOM-004", "UI-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "List with solde column",
         "Fiche tabs: Déclarations, Comptabilité, Activité",
         "PageHeader CTA retained (UI-003)"
-      ]
+      ],
+      "notes": "Shipped: list (solde, frais, transactions jour, statut) + fiche KPIs (solde, report, frais, tx jour). Missing: fiche tabs (Déclarations, Comptabilité, Activité)."
     },
     {
       "id": "CLI-002",

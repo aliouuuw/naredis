@@ -2,15 +2,15 @@
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-05-23
+**Last updated:** 2026-06-03
 
 ---
 
 ## Current phase
 
-**Platform foundation** — database and schema in place.
+**Domain + read/create UI** — pilot schema (0003–0004), module services, list/fiche pages, create forms. Code review fixes committed (`82968d3`).
 
-**Next up:** `DOM-005` / `CLI-002` (versements + allocations) or declaration edit UI (`DECL-005`)
+**Next up:** `DECL-005` (edit + audit timeline) and `DOM-005` / `CLI-002` (ledger + versements). Finish `DECL-003`, `CLI-001`, `DOS-001` (in progress).
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -24,7 +24,9 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Planning docs (`docs/`) | Done |
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
-| Drizzle + schema (incl. pilot 0003) | Done |
+| Drizzle + schema (pilot 0003, review 0004) | Done |
+| Unit tests (`bun test`, domain + slug) | Done (10) |
+| Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done |
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
@@ -33,7 +35,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Theme switcher (UI-005) | Done |
 | Domain modules (DOM-002–004, 008) | Done — list/fiche read UI wired |
 | Create forms (client + déclaration) | Done |
-| Edit fiche + ledger UI | Not started |
+| Declaration edit + BAD toggle UI (`DECL-005`) | Not started |
+| Ledger module + payment UI (`DOM-005`, `CLI-002`) | Not started |
 
 ---
 
@@ -81,7 +84,11 @@ Matches backlog dependencies:
 
 ## In progress
 
-_None._
+| ID | Title |
+|----|-------|
+| DECL-003 | Declaration fiche (read-only baseline; tabs/stepper pending) |
+| CLI-001 | Clients list + fiche (tabs pending) |
+| DOS-001 | Dossier hub (minimal page; full tabs pending) |
 
 ---
 
@@ -103,6 +110,8 @@ _None._
 | UI-005   | Theme switcher (profile + login) | 2026-05-19 |
 | PLAT-011 | Pilot operations schema (0003) | 2026-05-23 |
 | DOM-002–004, 008 | Module services + list/fiche pages | 2026-05-23 |
+| — | Review fixes: migration 0004, aggregates, audit, tests | 2026-05-23 |
+| DECL-001 | Declarations list page | 2026-06-03 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
@@ -119,6 +128,12 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-06-03 — Checkpoint (review fixes committed)
+
+Migration **0004**: year-scoped `dossier_sequences` / `declaration_sequences`, partial unique on `dossiers.bl_reference`. `updateDeclaration` locks row, logs containers in `declaration_edit_log`, BAD validation inside tx. `listCustomers` single aggregated query. Create actions use `requireRole`. `bun test` (10) for balance, BAD rules, slug.
+
+**Backlog sync:** `DECL-001` → done; `DECL-003`, `CLI-001`, `DOS-001` → in_progress with notes on remaining AC.
 
 ### 2026-05-23 — Create forms (DECL-002, client new)
 
