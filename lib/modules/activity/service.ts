@@ -92,3 +92,106 @@ export async function listActivityForDeclaration(
     createdAt: row.createdAt,
   }));
 }
+
+export async function listActivityForDossier(
+  db: DbLike,
+  ctx: ModuleContext,
+  dossierId: string,
+  limit = 80,
+): Promise<ActivityLogItem[]> {
+  const declRows = await db
+    .select({ id: declarations.id })
+    .from(declarations)
+    .where(
+      and(
+        eq(declarations.dossierId, dossierId),
+        eq(declarations.organizationId, ctx.organizationId),
+      ),
+    );
+
+  const declIds = declRows.map((r) => r.id);
+
+  const ledgerOnDossier = await db
+    .select({ id: ledgerEntries.id })
+    .from(ledgerEntries)
+    .where(
+      and(
+        eq(ledgerEntries.organizationId, ctx.organizationId),
+        eq(ledgerEntries.dossierId, dossierId),
+      ),
+    );
+
+  const ledgerIds = new Set(ledgerOnDossier.map((r) => r.id));
+
+  const entityConditions = [
+    and(
+      eq(activityLog.entityType, "dossier"),
+      eq(activityLog.entityId, dossierId),
+    ),
+  ];
+
+  if (declIds.length > 0) {
+    entityConditions.push(
+      and(
+        eq(activityLog.entityType, "declaration"),
+        inArray(activityLog.entityId, declIds),
+      ),
+    );
+  }
+
+  if (ledgerIds.size > 0) {
+    entityConditions.push(
+      and(
+        eq(activityLog.entityType, "ledger_entry"),
+        inArray(activityLog.entityId, [...ledgerIds]),
+      ),
+    );
+  }
+
+  if (entityConditions.length === 0) return [];
+
+  const rows = await db
+    .select()
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.organizationId, ctx.organizationId),
+        or(...entityConditions),
+      ),
+    )
+    .orderBy(desc(activityLog.createdAt))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    action: row.action,
+    payload: row.payload ?? null,
+    actorId: row.actorId,
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function listRecentOrganizationActivity(
+  db: DbLike,
+  ctx: ModuleContext,
+  limit = 20,
+): Promise<ActivityLogItem[]> {
+  const rows = await db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.organizationId, ctx.organizationId))
+    .orderBy(desc(activityLog.createdAt))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    action: row.action,
+    payload: row.payload ?? null,
+    actorId: row.actorId,
+    createdAt: row.createdAt,
+  }));
+}

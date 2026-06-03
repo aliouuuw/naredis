@@ -77,5 +77,32 @@ export function formatActivityDetail(
     return payload.name;
   }
 
+  if (action === "dossier.updated" && typeof payload.caseStatus === "string") {
+    const labels: Record<string, string> = {
+      open: "rouvert",
+      on_hold: "mis en attente",
+      closed: "clôturé",
+    };
+    return `Statut : ${labels[payload.caseStatus] ?? payload.caseStatus}`;
+  }
+
   return null;
+}
+
+export function activityItemHref(
+  entityType: string,
+  entityId: string,
+): string | null {
+  switch (entityType) {
+    case "declaration":
+      return `/declarations?open=${entityId}`;
+    case "dossier":
+      return `/dossiers/${entityId}`;
+    case "customer":
+      return `/clients/${entityId}`;
+    case "ledger_entry":
+      return "/transactions";
+    default:
+      return null;
+  }
 }

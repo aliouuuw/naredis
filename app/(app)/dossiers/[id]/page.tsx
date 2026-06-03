@@ -1,12 +1,18 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { declarations } from "@/lib/db/schema";
 import { toModuleContext } from "@/lib/auth/module-context";
+import { canMutateOperationalData } from "@/lib/auth/permissions";
 import { requireAuthContext } from "@/lib/auth/session";
-import { getDossierById } from "@/lib/modules/dossiers/service";
+import { getDossierHub } from "@/lib/modules/dossiers/hub";
+import { serializeDossierHub } from "@/lib/modules/dossiers/serialize-hub";
+import { DossierHubView } from "@/components/dossiers/dossier-hub-view";
 import { PageHeader } from "@/components/shell/page-header";
+
+const CASE_STATUS_LABELS: Record<string, string> = {
+  open: "Ouvert",
+  on_hold: "En attente",
+  closed: "Clôturé",
+};
 
 export default async function DossierFichePage({
   params,
@@ -18,56 +24,28 @@ export default async function DossierFichePage({
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const dossier = await getDossierById(db, ctx, id);
-  if (!dossier) {
+  const hub = await getDossierHub(db, ctx, id);
+  if (!hub) {
     notFound();
   }
 
-  const filingRows = await db
-    .select({
-      id: declarations.id,
-      declarationNumber: declarations.declarationNumber,
-      bonADelivrer: declarations.bonADelivrer,
-    })
-    .from(declarations)
-    .where(
-      and(
-        eq(declarations.dossierId, id),
-        eq(declarations.organizationId, ctx.organizationId),
-      ),
-    );
+  const canClose = await canMutateOperationalData(
+    auth.userId,
+    auth.organizationId,
+  );
+
+  const serialized = serializeDossierHub(hub);
+  const statusLabel =
+    CASE_STATUS_LABELS[hub.dossier.caseStatus] ?? hub.dossier.caseStatus;
 
   return (
     <div className="space-y-8">
       <PageHeader
-        title={dossier.dossierNumber}
-        description={`BL ${dossier.blReference ?? "—"} · ${dossier.caseStatus}`}
+        title={hub.dossier.dossierNumber}
+        description={`BL ${hub.dossier.blReference ?? "—"} · ${statusLabel} · ${hub.dossier.customer.name}`}
       />
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Déclarations sur ce dossier</h2>
-        <ul className="divide-y rounded-lg border bg-card">
-          {filingRows.map((row) => (
-            <li key={row.id} className="px-4 py-3 text-sm">
-              <Link
-                href={`/declarations/${row.id}`}
-                className="font-medium hover:underline"
-              >
-                {row.declarationNumber}
-              </Link>
-              {row.bonADelivrer ? (
-                <span className="ml-2 text-xs text-emerald-600">BAD</span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <p className="text-sm text-muted-foreground">
-        <Link href="/declarations" className="hover:underline">
-          ← Déclarations
-        </Link>
-      </p>
+      <DossierHubView hub={serialized} canClose={canClose} />
     </div>
   );
 }

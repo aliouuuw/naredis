@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `DOS-001` dossier hub tabs, `POL-002` dashboard.
+**Next up:** `DOS-003` finances tab (charges), `CLI-001` Activité tab polish, `POL-001` search.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -30,6 +30,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | CLI-003 opening balance + contre-passation | Done |
 | DECL-001 list filters + column order | Done |
 | DECL-003 fiche Activité tab | Done |
+| DOS-001 dossier hub tabs + close | Done |
+| POL-002 actionable dashboard | Done |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done — pilot-shaped; `bun run db:reseed` |
 | Better Auth | Done |
@@ -80,9 +82,9 @@ From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 After the 2026-06-03 alignment pass:
 
-1. **DOS-001** — dossier hub tabs  
-2. **POL-002** — actionable dashboard  
-4. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
+1. **DOS-003** — dossier finances (charges, accountant modals)  
+2. **CLI-001** — optional Activité tab on client fiche  
+3. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, POL-001 search, list pagination  
 
 ---
 

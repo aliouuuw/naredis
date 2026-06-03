@@ -1,41 +1,44 @@
-import { Activity, AlertTriangle, Clock, FileText, Users } from "lucide-react";
+import { Activity, FileText, Users } from "lucide-react";
+import { getDb } from "@/lib/db";
+import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
+import { getDashboardSnapshot } from "@/lib/modules/dashboard/service";
+import { serializeActivityLog } from "@/lib/modules/dossiers/serialize-hub";
+import { DashboardActivityFeed } from "@/components/dashboard/dashboard-activity-feed";
+import { DashboardTodoList } from "@/components/dashboard/dashboard-todo-list";
 import { PageHeader } from "@/components/shell/page-header";
 import {
   NewClientButton,
   NewDeclarationButton,
 } from "@/components/shell/page-actions";
 
-type SummaryCard = {
-  label: string;
-  value: string;
-  hint: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-const summaryCards: SummaryCard[] = [
-  {
-    label: "Déclarations en cours",
-    value: "—",
-    hint: "POL-002 — branchement",
-    icon: FileText,
-  },
-  {
-    label: "Dossiers ouverts",
-    value: "—",
-    hint: "Cases not closed",
-    icon: Activity,
-  },
-  {
-    label: "Soldes à surveiller",
-    value: "—",
-    hint: "Clients en souffrance",
-    icon: Users,
-  },
-];
-
 export default async function DashboardPage() {
-  await requireAuthContext();
+  const auth = await requireAuthContext();
+  const ctx = toModuleContext(auth);
+  const db = getDb();
+  const snapshot = await getDashboardSnapshot(db, ctx);
+  const activity = serializeActivityLog(snapshot.recentActivity);
+
+  const summaryCards = [
+    {
+      label: "Déclarations en cours",
+      value: String(snapshot.declarationsEnCours),
+      hint: "Sans bon à délivrer",
+      icon: FileText,
+    },
+    {
+      label: "Dossiers ouverts",
+      value: String(snapshot.dossiersOuverts),
+      hint: "Cases non clôturées",
+      icon: Activity,
+    },
+    {
+      label: "Soldes à surveiller",
+      value: String(snapshot.soldesASurveiller),
+      hint: "Clients pas à jour",
+      icon: Users,
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -66,7 +69,7 @@ export default async function DashboardPage() {
                 </p>
                 <card.icon className="size-4 text-muted-foreground" />
               </div>
-              <p className="mt-3 text-3xl font-semibold tracking-tight">
+              <p className="mt-3 text-3xl font-semibold tracking-tight tabular-nums">
                 {card.value}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
@@ -84,16 +87,7 @@ export default async function DashboardPage() {
             Tâches prioritaires multi-entités
           </span>
         </div>
-        <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
-          <AlertTriangle className="mx-auto size-5 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            Aucune tâche prioritaire pour le moment.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Déclarations stagnantes, n° douane manquants, soldes en souffrance,
-            dossiers prêts à clôturer apparaîtront ici (POL-002).
-          </p>
-        </div>
+        <DashboardTodoList items={snapshot.todo} />
       </section>
 
       <section aria-labelledby="dash-activity" className="space-y-3">
@@ -103,12 +97,7 @@ export default async function DashboardPage() {
         >
           Activité récente
         </h2>
-        <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
-          <Clock className="mx-auto size-5 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            L&apos;activité du cabinet apparaîtra ici.
-          </p>
-        </div>
+        <DashboardActivityFeed entries={activity} />
       </section>
     </div>
   );

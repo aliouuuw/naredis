@@ -441,7 +441,7 @@
       "epic": "dossiers",
       "title": "Dossier hub page (/dossiers/[id])",
       "priority": "p0",
-      "status": "in_progress",
+      "status": "done",
       "dependsOn": ["DOM-002", "DOM-003"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -449,7 +449,7 @@
         "Declarations table on dossier",
         "Close dossier action with warnings"
       ],
-      "notes": "Minimal page: dossier header + linked declarations list. Missing: tabbed hub, documents, finances, close dossier."
+      "notes": "DossierHubView tabs; declarations table with BAD/reste; documents list (seed); finances totals + ledger rows; activity feed; close with warnings (closeDossierCaseAction). Upload deferred DOS-002."
     },
     {
       "id": "DOS-002",
@@ -554,7 +554,7 @@
       "epic": "polish",
       "title": "Actionable dashboard (/dashboard data wiring)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["UI-004", "DECL-001", "CLI-001"],
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
@@ -562,7 +562,8 @@
         "À faire queue: stale declarations, overdue solde, dossiers ready to close",
         "Activité récente: unified timeline (last N events) with links to source entities",
         "Empty states for first-time orgs"
-      ]
+      ],
+      "notes": "getDashboardSnapshot: counts + todo (sans BAD, pas_a_jour clients, dossiers prêts à clôturer) + recent activity_log with entity links. Stale/overdue deferred."
     },
     {
       "id": "POL-003",
