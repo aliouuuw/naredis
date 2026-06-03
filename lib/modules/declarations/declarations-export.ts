@@ -56,10 +56,14 @@ export function buildDeclarationsExportWorkbook(
       "BL",
       "Zone",
       "Date",
+      "Nb conteneurs",
+      "N° conteneurs",
       "Montant client (XOF)",
+      "GAINDE (XOF)",
+      "Prix de revient (XOF)",
       "Reste (XOF)",
+      "Maison-mère",
       "BAD",
-      "Agence payeur",
     ],
   ];
 
@@ -71,10 +75,16 @@ export function buildDeclarationsExportWorkbook(
     row.blReference ?? "",
     row.zoneOrTerminal ?? "",
     formatDeclarationDate(row.declarationDate),
+    row.containerCount != null && row.containerCount > 0
+      ? row.containerCount
+      : "",
+    row.containers.join("; "),
     formatMoney(row.clientAmountPaid),
+    formatMoney(row.gaindeDutyAmount),
+    formatMoney(row.costPrice),
     formatReste(row.clientAmountPaid, row.costPrice),
-    row.bonADelivrer ? "Oui" : "Non",
     row.payingAgencyName ?? "",
+    row.bonADelivrer ? "Oui" : "Non",
   ]);
 
   const sheet = XLSX.utils.aoa_to_sheet([...header, ...body]);
@@ -86,10 +96,14 @@ export function buildDeclarationsExportWorkbook(
     { wch: 18 },
     { wch: 10 },
     { wch: 12 },
+    { wch: 10 },
+    { wch: 28 },
     { wch: 16 },
     { wch: 14 },
-    { wch: 6 },
+    { wch: 14 },
+    { wch: 14 },
     { wch: 18 },
+    { wch: 6 },
   ];
 
   const workbook = XLSX.utils.book_new();

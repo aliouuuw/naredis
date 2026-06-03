@@ -42,8 +42,13 @@ const HEADER: Record<
   bl: { label: "BL" },
   zone: { label: "Zone" },
   date: { label: "Date" },
-  amount: { label: "Montant", className: "text-right" },
+  containerCount: { label: "Nb cont.", className: "text-center tabular-nums" },
+  containers: { label: "N° conteneurs" },
+  amount: { label: "Montant client", className: "text-right" },
+  gainde: { label: "GAINDE", className: "text-right" },
+  cost: { label: "Prix de revient", className: "text-right" },
   reste: { label: "Reste", className: "text-right" },
+  agency: { label: "Maison-mère" },
   bad: { label: "BAD", className: "text-center" },
   actions: {
     label: <span className="sr-only">Actions</span>,
@@ -124,10 +129,45 @@ export function DeclarationsTable({
             {formatDate(row.declarationDate)}
           </td>
         );
+      case "containerCount":
+        return (
+          <td key={columnId} className="px-4 py-3 text-center tabular-nums">
+            {row.containerCount != null && row.containerCount > 0
+              ? row.containerCount
+              : "—"}
+          </td>
+        );
+      case "containers":
+        return (
+          <td key={columnId} className="max-w-[14rem] px-4 py-3">
+            {row.containers.length > 0 ? (
+              <span
+                className="line-clamp-2 font-mono text-xs leading-relaxed"
+                title={row.containers.join(", ")}
+              >
+                {row.containers.join(", ")}
+              </span>
+            ) : (
+              "—"
+            )}
+          </td>
+        );
       case "amount":
         return (
           <td key={columnId} className="px-4 py-3 text-right tabular-nums">
             {formatMoney(row.clientAmountPaid)}
+          </td>
+        );
+      case "gainde":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right tabular-nums">
+            {formatMoney(row.gaindeDutyAmount)}
+          </td>
+        );
+      case "cost":
+        return (
+          <td key={columnId} className="px-4 py-3 text-right tabular-nums">
+            {formatMoney(row.costPrice)}
           </td>
         );
       case "reste":
@@ -137,6 +177,12 @@ export function DeclarationsTable({
             className="px-4 py-3 text-right tabular-nums text-muted-foreground"
           >
             {formatReste(row.clientAmountPaid, row.costPrice)}
+          </td>
+        );
+      case "agency":
+        return (
+          <td key={columnId} className="px-4 py-3">
+            {row.payingAgencyName ?? "—"}
           </td>
         );
       case "bad":
@@ -182,7 +228,7 @@ export function DeclarationsTable({
         bare ? "overflow-x-auto" : "overflow-x-auto rounded-lg border bg-card"
       }
     >
-      <table className="w-full min-w-[960px] text-sm">
+      <table className="w-full min-w-[72rem] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">
             {visibleColumnIds.map((id) => {

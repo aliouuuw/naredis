@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import { getBonADelivrerMissingFields } from "@/lib/domain/declaration-completion";
 import {
@@ -43,6 +43,7 @@ export type DeclarationListItem = {
   payingAgencyName: string | null;
   dossierId: string;
   dossierNumber: string;
+  containers: string[];
   createdAt: Date;
 };
 
@@ -112,6 +113,33 @@ async function loadContainers(
     .where(eq(declarationContainers.declarationId, declarationId))
     .orderBy(declarationContainers.sortOrder);
   return rows.map((r) => r.containerNumber);
+}
+
+async function loadContainersByDeclarationIds(
+  db: DbLike,
+  declarationIds: string[],
+): Promise<Map<string, string[]>> {
+  if (declarationIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({
+      declarationId: declarationContainers.declarationId,
+      containerNumber: declarationContainers.containerNumber,
+    })
+    .from(declarationContainers)
+    .where(inArray(declarationContainers.declarationId, declarationIds))
+    .orderBy(
+      asc(declarationContainers.declarationId),
+      asc(declarationContainers.sortOrder),
+    );
+
+  const map = new Map<string, string[]>();
+  for (const row of rows) {
+    const list = map.get(row.declarationId) ?? [];
+    list.push(row.containerNumber);
+    map.set(row.declarationId, list);
+  }
+  return map;
 }
 
 /** Error subclasses so server actions can map to French messages. */
@@ -220,9 +248,15 @@ export async function listDeclarations(
     .orderBy(desc(declarations.updatedAt))
     .limit(limit);
 
+  const containersById = await loadContainersByDeclarationIds(
+    db,
+    rows.map((r) => r.id),
+  );
+
   return rows.map((r) => ({
     ...r,
     declarationDate: r.declarationDate ?? null,
+    containers: containersById.get(r.id) ?? [],
   }));
 }
 
@@ -267,9 +301,15 @@ export async function listDeclarationsForCustomer(
     .orderBy(desc(declarations.updatedAt))
     .limit(limit);
 
+  const containersById = await loadContainersByDeclarationIds(
+    db,
+    rows.map((r) => r.id),
+  );
+
   return rows.map((r) => ({
     ...r,
     declarationDate: r.declarationDate ?? null,
+    containers: containersById.get(r.id) ?? [],
   }));
 }
 

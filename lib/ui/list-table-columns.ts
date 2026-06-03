@@ -9,8 +9,17 @@ export const DECLARATION_LIST_COLUMNS: TableColumnDef[] = [
   { id: "bl", label: "BL" },
   { id: "zone", label: "Zone" },
   { id: "date", label: "Date" },
-  { id: "amount", label: "Montant" },
+  { id: "containerCount", label: "Nb conteneurs", defaultHidden: true },
+  {
+    id: "containers",
+    label: "N° conteneurs",
+    defaultHidden: true,
+  },
+  { id: "amount", label: "Montant client" },
+  { id: "gainde", label: "GAINDE", defaultHidden: true },
+  { id: "cost", label: "Prix de revient", defaultHidden: true },
   { id: "reste", label: "Reste" },
+  { id: "agency", label: "Maison-mère", defaultHidden: true },
   { id: "bad", label: "BAD" },
   { id: "actions", label: "Actions", pinnedEnd: true, required: true },
 ];
