@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { LEDGER_MUTATION_ROLES, memberHasRole } from "@/lib/auth/permissions";
+import {
+  LEDGER_MUTATION_ROLES,
+  memberHasRole,
+} from "@/lib/auth/permissions";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
 import { listDeclarationsForCustomer } from "@/lib/modules/declarations/service";
@@ -11,6 +14,7 @@ import {
   listLedgerEntriesForCustomer,
 } from "@/lib/modules/ledger/service";
 import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
+import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
 import { CustomerFicheTabs } from "@/components/clients/customer-fiche-tabs";
 import { PageHeader } from "@/components/shell/page-header";
@@ -28,12 +32,13 @@ export default async function ClientFichePage({
   const auth = await requireAuthContext();
   const ctx = toModuleContext(auth);
 
-  const [fiche, ledgerRows, dossiers, declarationRows, canRecordLedger] =
+  const [fiche, ledgerRows, dossiers, declarationRows, transactionTypes, canRecordLedger] =
     await Promise.all([
       getCustomerFiche(getDb(), ctx, id),
       listLedgerEntriesForCustomer(getDb(), ctx, id),
       listDossiersForCustomer(getDb(), ctx, id),
       listDeclarationsForCustomer(getDb(), ctx, id),
+      listTransactionTypes(getDb(), ctx),
       memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
     ]);
 
@@ -45,8 +50,8 @@ export default async function ClientFichePage({
     fiche;
 
   const initialTab =
-    tabParam === "comptabilite"
-      ? ("comptabilite" as const)
+    tabParam === "transactions"
+      ? ("transactions" as const)
       : tabParam === "declarations"
         ? ("declarations" as const)
         : undefined;
@@ -84,6 +89,7 @@ export default async function ClientFichePage({
         ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
         dossiers={dossiers}
         declarations={declarationRows.map(serializeDeclarationListItem)}
+        transactionTypes={transactionTypes}
         canRecordLedger={canRecordLedger}
         initialTab={initialTab}
       />

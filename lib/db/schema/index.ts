@@ -9,5 +9,6 @@ export * from "./declarations";
 export * from "./documents";
 export * from "./dossiers";
 export * from "./ledger";
+export * from "./ledger-transaction-types";
 export * from "./organizations";
 export * from "./sequences";

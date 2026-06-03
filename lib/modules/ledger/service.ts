@@ -1,10 +1,12 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import type { BalanceSide } from "@/lib/db/enums";
 import {
+  customers,
   declarations,
   dossiers,
   ledgerEntries,
+  ledgerTransactionTypes,
   paymentAllocations,
 } from "@/lib/db/schema";
 import { appendActivity } from "@/lib/modules/activity/append-activity";
@@ -19,7 +21,13 @@ import {
   AllocationValidationError,
   validateVersementAllocations,
 } from "./allocations";
-import type { RecordChargeInput, RecordVersementInput } from "./schemas";
+import type { RecordTransactionInput } from "./schemas";
+import {
+  allowsAllocations,
+  entryTypeForTransactionType,
+  ensureDefaultTransactionTypes,
+  getTransactionTypeById,
+} from "./transaction-types";
 
 export { AllocationValidationError };
 
@@ -33,6 +41,10 @@ export type LedgerAllocationRow = {
 
 export type LedgerEntryListItem = {
   id: string;
+  customerId: string;
+  customerName: string;
+  transactionTypeId: string | null;
+  transactionTypeName: string;
   entryType: (typeof ledgerEntries.$inferSelect)["entryType"];
   balanceSide: BalanceSide;
   amount: bigint;
@@ -44,6 +56,14 @@ export type LedgerEntryListItem = {
   declarationId: string | null;
   createdAt: Date;
   allocations: LedgerAllocationRow[];
+};
+
+export type LedgerListFilters = {
+  customerId?: string;
+  transactionTypeId?: string;
+  balanceSide?: BalanceSide;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 export type DossierAllocationOption = {
@@ -75,29 +95,13 @@ export async function listDossiersForCustomer(
     .orderBy(desc(dossiers.createdAt));
 }
 
-export async function listLedgerEntriesForCustomer(
+async function loadAllocationsForEntries(
   db: DbLike,
-  ctx: ModuleContext,
-  customerId: string,
-): Promise<LedgerEntryListItem[]> {
-  await assertCustomerInOrg(db, ctx.organizationId, customerId);
+  organizationId: string,
+  entryIds: string[],
+): Promise<Map<string, LedgerAllocationRow[]>> {
+  if (entryIds.length === 0) return new Map();
 
-  const entries = await db
-    .select()
-    .from(ledgerEntries)
-    .where(
-      and(
-        eq(ledgerEntries.organizationId, ctx.organizationId),
-        eq(ledgerEntries.customerId, customerId),
-      ),
-    )
-    .orderBy(desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt));
-
-  if (entries.length === 0) {
-    return [];
-  }
-
-  const entryIds = entries.map((e) => e.id);
   const allocationRows = await db
     .select({
       id: paymentAllocations.id,
@@ -111,7 +115,7 @@ export async function listLedgerEntriesForCustomer(
     .innerJoin(dossiers, eq(paymentAllocations.dossierId, dossiers.id))
     .where(
       and(
-        eq(paymentAllocations.organizationId, ctx.organizationId),
+        eq(paymentAllocations.organizationId, organizationId),
         inArray(paymentAllocations.ledgerEntryId, entryIds),
       ),
     );
@@ -128,9 +132,29 @@ export async function listLedgerEntriesForCustomer(
     });
     byEntry.set(row.ledgerEntryId, list);
   }
+  return byEntry;
+}
 
-  return entries.map((entry) => ({
+type EntryRow = {
+  id: string;
+  customerId: string;
+  customerName: string;
+  transactionTypeId: string | null;
+  transactionTypeName: string | null;
+  entry: typeof ledgerEntries.$inferSelect;
+};
+
+function mapEntryRow(
+  row: EntryRow,
+  allocations: Map<string, LedgerAllocationRow[]>,
+): LedgerEntryListItem {
+  const { entry } = row;
+  return {
     id: entry.id,
+    customerId: row.customerId,
+    customerName: row.customerName,
+    transactionTypeId: row.transactionTypeId,
+    transactionTypeName: row.transactionTypeName ?? entry.entryType,
     entryType: entry.entryType,
     balanceSide: entry.balanceSide,
     amount: entry.amount,
@@ -141,28 +165,138 @@ export async function listLedgerEntriesForCustomer(
     dossierId: entry.dossierId,
     declarationId: entry.declarationId,
     createdAt: entry.createdAt,
-    allocations: byEntry.get(entry.id) ?? [],
-  }));
+    allocations: allocations.get(entry.id) ?? [],
+  };
 }
 
-export async function recordVersement(
+async function queryLedgerEntries(
   db: DbLike,
   ctx: ModuleContext,
-  input: RecordVersementInput,
+  filters: LedgerListFilters,
+): Promise<LedgerEntryListItem[]> {
+  await ensureDefaultTransactionTypes(db, ctx.organizationId);
+
+  const conditions = [eq(ledgerEntries.organizationId, ctx.organizationId)];
+
+  if (filters.customerId) {
+    conditions.push(eq(ledgerEntries.customerId, filters.customerId));
+  }
+  if (filters.transactionTypeId) {
+    conditions.push(
+      eq(ledgerEntries.transactionTypeId, filters.transactionTypeId),
+    );
+  }
+  if (filters.balanceSide) {
+    conditions.push(eq(ledgerEntries.balanceSide, filters.balanceSide));
+  }
+  if (filters.dateFrom) {
+    conditions.push(gte(ledgerEntries.effectiveDate, filters.dateFrom));
+  }
+  if (filters.dateTo) {
+    conditions.push(lte(ledgerEntries.effectiveDate, filters.dateTo));
+  }
+
+  const rows = await db
+    .select({
+      id: ledgerEntries.id,
+      customerId: ledgerEntries.customerId,
+      customerName: customers.name,
+      transactionTypeId: ledgerEntries.transactionTypeId,
+      transactionTypeName: ledgerTransactionTypes.name,
+      entry: ledgerEntries,
+    })
+    .from(ledgerEntries)
+    .innerJoin(customers, eq(ledgerEntries.customerId, customers.id))
+    .leftJoin(
+      ledgerTransactionTypes,
+      eq(ledgerEntries.transactionTypeId, ledgerTransactionTypes.id),
+    )
+    .where(and(...conditions))
+    .orderBy(desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt));
+
+  const entryIds = rows.map((r) => r.id);
+  const allocations = await loadAllocationsForEntries(
+    db,
+    ctx.organizationId,
+    entryIds,
+  );
+
+  return rows.map((row) => mapEntryRow(row, allocations));
+}
+
+export async function listLedgerEntriesForCustomer(
+  db: DbLike,
+  ctx: ModuleContext,
+  customerId: string,
+): Promise<LedgerEntryListItem[]> {
+  await assertCustomerInOrg(db, ctx.organizationId, customerId);
+  return queryLedgerEntries(db, ctx, { customerId });
+}
+
+export async function listLedgerEntriesForOrganization(
+  db: DbLike,
+  ctx: ModuleContext,
+  filters: LedgerListFilters = {},
+): Promise<LedgerEntryListItem[]> {
+  return queryLedgerEntries(db, ctx, filters);
+}
+
+export async function recordTransaction(
+  db: DbLike,
+  ctx: ModuleContext,
+  input: RecordTransactionInput,
 ) {
   await assertCustomerInOrg(db, ctx.organizationId, input.customerId);
+  await ensureDefaultTransactionTypes(db, ctx.organizationId);
+
+  const type = await getTransactionTypeById(
+    db,
+    ctx.organizationId,
+    input.transactionTypeId,
+  );
+  if (!type || !type.active) {
+    throw new OrgScopeError("Type de transaction introuvable.");
+  }
 
   const allocations = input.allocations ?? [];
-  validateVersementAllocations(input.amount, allocations);
+  if (allowsAllocations(type)) {
+    validateVersementAllocations(input.amount, allocations);
+    for (const line of allocations) {
+      await assertDossierInOrgForCustomer(
+        db,
+        ctx.organizationId,
+        line.dossierId,
+        input.customerId,
+      );
+    }
+  } else if (allocations.length > 0) {
+    throw new AllocationValidationError(
+      "Les affectations dossier ne s'appliquent qu'aux écritures crédit.",
+    );
+  }
 
-  for (const line of allocations) {
+  let dossierId = input.dossierId;
+  const declarationId = input.declarationId;
+
+  if (declarationId) {
+    const decl = await assertDeclarationInOrgForCustomer(
+      db,
+      ctx.organizationId,
+      declarationId,
+      input.customerId,
+    );
+    dossierId = decl.dossierId;
+  } else if (dossierId) {
     await assertDossierInOrgForCustomer(
       db,
       ctx.organizationId,
-      line.dossierId,
+      dossierId,
       input.customerId,
     );
   }
+
+  const entryType = entryTypeForTransactionType(type);
+  const balanceSide = type.balanceSide;
 
   return db.transaction(async (tx) => {
     const [entry] = await tx
@@ -170,8 +304,11 @@ export async function recordVersement(
       .values({
         organizationId: ctx.organizationId,
         customerId: input.customerId,
-        entryType: "versement",
-        balanceSide: "credit",
+        transactionTypeId: type.id,
+        dossierId: dossierId ?? null,
+        declarationId: declarationId ?? null,
+        entryType,
+        balanceSide,
         amount: input.amount,
         label: input.label.trim(),
         notes: input.notes?.trim() || null,
@@ -195,13 +332,11 @@ export async function recordVersement(
       organizationId: ctx.organizationId,
       entityType: "ledger_entry",
       entityId: entry.id,
-      action: "ledger.versement_recorded",
+      action: "ledger.transaction_recorded",
       payload: {
+        transactionType: type.name,
         amount: entry.amount.toString(),
         balanceSide: entry.balanceSide,
-        allocationTotal: allocations
-          .reduce((s, a) => s + a.amount, BigInt(0))
-          .toString(),
       },
       actorId: ctx.userId,
     });
@@ -210,67 +345,20 @@ export async function recordVersement(
   });
 }
 
+/** @deprecated Use recordTransaction */
+export async function recordVersement(
+  db: DbLike,
+  ctx: ModuleContext,
+  input: RecordTransactionInput,
+) {
+  return recordTransaction(db, ctx, input);
+}
+
+/** @deprecated Use recordTransaction */
 export async function recordCharge(
   db: DbLike,
   ctx: ModuleContext,
-  input: RecordChargeInput,
+  input: RecordTransactionInput,
 ) {
-  await assertCustomerInOrg(db, ctx.organizationId, input.customerId);
-
-  let dossierId = input.dossierId;
-  const declarationId = input.declarationId;
-
-  if (declarationId) {
-    const decl = await assertDeclarationInOrgForCustomer(
-      db,
-      ctx.organizationId,
-      declarationId,
-      input.customerId,
-    );
-    dossierId = decl.dossierId;
-  } else if (dossierId) {
-    await assertDossierInOrgForCustomer(
-      db,
-      ctx.organizationId,
-      dossierId,
-      input.customerId,
-    );
-  }
-
-  return db.transaction(async (tx) => {
-    const [entry] = await tx
-      .insert(ledgerEntries)
-      .values({
-        organizationId: ctx.organizationId,
-        customerId: input.customerId,
-        dossierId: dossierId ?? null,
-        declarationId: declarationId ?? null,
-        entryType: "charge",
-        balanceSide: "debit",
-        category: input.category ?? null,
-        amount: input.amount,
-        label: input.label.trim(),
-        notes: input.notes?.trim() || null,
-        effectiveDate: input.effectiveDate,
-        createdBy: ctx.userId,
-      })
-      .returning();
-
-    await appendActivity(tx, {
-      organizationId: ctx.organizationId,
-      entityType: "ledger_entry",
-      entityId: entry.id,
-      action: "ledger.charge_recorded",
-      payload: {
-        amount: entry.amount.toString(),
-        balanceSide: entry.balanceSide,
-        dossierId: entry.dossierId,
-        declarationId: entry.declarationId,
-      },
-      actorId: ctx.userId,
-    });
-
-    return entry;
-  });
+  return recordTransaction(db, ctx, input);
 }
-

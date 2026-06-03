@@ -9,27 +9,27 @@ import { requireRole } from "@/lib/auth/session";
 import { OrgScopeError } from "@/lib/modules/shared/org-refs";
 import {
   AllocationValidationError,
-  recordCharge,
-  recordVersement,
+  recordTransaction,
 } from "@/lib/modules/ledger/service";
 import {
-  recordChargeBodySchema,
-  recordVersementBodySchema,
-  type RecordChargeBodyValues,
-  type RecordVersementBodyValues,
+  recordTransactionBodySchema,
+  type RecordTransactionBodyValues,
 } from "@/lib/modules/ledger/schemas";
 import { actionError, actionOk, type ActionResult } from "./form-result";
 
 const customerIdParam = z.string().uuid("Client invalide.");
 
-function revalidateCustomer(customerId: string) {
+function revalidateLedgerPaths(customerId?: string) {
+  revalidatePath("/transactions");
   revalidatePath("/clients");
-  revalidatePath(`/clients/${customerId}`);
+  if (customerId) {
+    revalidatePath(`/clients/${customerId}`);
+  }
 }
 
-export async function recordVersementAction(
+export async function recordTransactionAction(
   customerId: string,
-  input: RecordVersementBodyValues,
+  input: RecordTransactionBodyValues,
 ): Promise<ActionResult<{ id: string }>> {
   const auth = await requireRole([...LEDGER_MUTATION_ROLES]);
 
@@ -38,18 +38,18 @@ export async function recordVersementAction(
     return actionError("Client invalide.");
   }
 
-  const bodyParsed = recordVersementBodySchema.safeParse(input);
+  const bodyParsed = recordTransactionBodySchema.safeParse(input);
   if (!bodyParsed.success) {
     const first = bodyParsed.error.issues[0];
     return actionError(first?.message ?? "Données invalides");
   }
 
   try {
-    const entry = await recordVersement(getDb(), toModuleContext(auth), {
+    const entry = await recordTransaction(getDb(), toModuleContext(auth), {
       customerId: idParsed.data,
       ...bodyParsed.data,
     });
-    revalidateCustomer(idParsed.data);
+    revalidateLedgerPaths(idParsed.data);
     return actionOk({ id: entry.id });
   } catch (err) {
     if (err instanceof AllocationValidationError) {
@@ -61,33 +61,8 @@ export async function recordVersementAction(
   }
 }
 
-export async function recordChargeAction(
-  customerId: string,
-  input: RecordChargeBodyValues,
-): Promise<ActionResult<{ id: string }>> {
-  const auth = await requireRole([...LEDGER_MUTATION_ROLES]);
+/** @deprecated Use recordTransactionAction */
+export const recordVersementAction = recordTransactionAction;
 
-  const idParsed = customerIdParam.safeParse(customerId);
-  if (!idParsed.success) {
-    return actionError("Client invalide.");
-  }
-
-  const bodyParsed = recordChargeBodySchema.safeParse(input);
-  if (!bodyParsed.success) {
-    const first = bodyParsed.error.issues[0];
-    return actionError(first?.message ?? "Données invalides");
-  }
-
-  try {
-    const entry = await recordCharge(getDb(), toModuleContext(auth), {
-      customerId: idParsed.data,
-      ...bodyParsed.data,
-    });
-    revalidateCustomer(idParsed.data);
-    return actionOk({ id: entry.id });
-  } catch (err) {
-    if (err instanceof OrgScopeError) return actionError(err.message);
-    const message = err instanceof Error ? err.message : "Erreur inconnue";
-    return actionError(message);
-  }
-}
+/** @deprecated Use recordTransactionAction */
+export const recordChargeAction = recordTransactionAction;

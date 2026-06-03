@@ -15,27 +15,12 @@ export const allocationLineSchema = z.object({
   amount: moneyField,
 });
 
-const versementFields = {
+const transactionBodyFields = {
+  transactionTypeId: z.string().uuid("Type de transaction invalide"),
   label: z.string().min(1, "Le libellé est requis"),
   amount: moneyField,
   effectiveDate: z.string().min(1, "La date est requise"),
   notes: z.string().optional(),
-  allocations: z.array(allocationLineSchema).optional().default([]),
-};
-
-/** Client payload — `customerId` is supplied by the route/server action, not the form body. */
-export const recordVersementBodySchema = z.object(versementFields);
-
-export const recordVersementSchema = z.object({
-  customerId: z.string().uuid(),
-  ...versementFields,
-});
-
-const chargeFields = {
-  label: z.string().min(1, "Le libellé est requis"),
-  amount: moneyField,
-  effectiveDate: z.string().min(1, "La date est requise"),
-  category: z.enum(["honoraires", "debours", "other"]).optional(),
   dossierId: z
     .union([z.string().uuid(), z.literal("")])
     .optional()
@@ -44,17 +29,34 @@ const chargeFields = {
     .union([z.string().uuid(), z.literal("")])
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined)),
-  notes: z.string().optional(),
+  allocations: z.array(allocationLineSchema).optional().default([]),
 };
 
-export const recordChargeBodySchema = z.object(chargeFields);
+/** Client payload — `customerId` is supplied by the route/server action. */
+export const recordTransactionBodySchema = z.object(transactionBodyFields);
 
-export const recordChargeSchema = z.object({
+export const recordTransactionSchema = z.object({
   customerId: z.string().uuid(),
-  ...chargeFields,
+  ...transactionBodyFields,
 });
 
-export type RecordVersementInput = z.infer<typeof recordVersementSchema>;
-export type RecordVersementBodyValues = z.input<typeof recordVersementBodySchema>;
-export type RecordChargeInput = z.infer<typeof recordChargeSchema>;
-export type RecordChargeBodyValues = z.input<typeof recordChargeBodySchema>;
+export const createTransactionTypeSchema = z.object({
+  name: z.string().min(1, "Le nom est requis").max(80),
+  balanceSide: z.enum(["debit", "credit"]),
+});
+
+/** @deprecated Use recordTransactionBodySchema */
+export const recordVersementBodySchema = recordTransactionBodySchema;
+export const recordVersementSchema = recordTransactionSchema;
+
+/** @deprecated Use recordTransactionBodySchema */
+export const recordChargeBodySchema = recordTransactionBodySchema;
+export const recordChargeSchema = recordTransactionSchema;
+
+export type RecordTransactionInput = z.infer<typeof recordTransactionSchema>;
+export type RecordTransactionBodyValues = z.input<
+  typeof recordTransactionBodySchema
+>;
+export type CreateTransactionTypeInput = z.infer<
+  typeof createTransactionTypeSchema
+>;

@@ -18,6 +18,7 @@ import { customers } from "./customers";
 import { declarations } from "./declarations";
 import { dossiers } from "./dossiers";
 import { organizations } from "./organizations";
+import { ledgerTransactionTypes } from "./ledger-transaction-types";
 
 export const ledgerEntries = pgTable(
   "ledger_entries",
@@ -35,6 +36,10 @@ export const ledgerEntries = pgTable(
     declarationId: uuid("declaration_id").references(() => declarations.id, {
       onDelete: "restrict",
     }),
+    transactionTypeId: uuid("transaction_type_id").references(
+      () => ledgerTransactionTypes.id,
+      { onDelete: "restrict" },
+    ),
     entryType: ledgerEntryTypeEnum("entry_type").notNull(),
     balanceSide: balanceSideEnum("balance_side").notNull(),
     category: ledgerCategoryEnum("category"),
@@ -62,6 +67,11 @@ export const ledgerEntries = pgTable(
     ),
     index("ledger_entries_dossier_id_idx").on(table.dossierId),
     index("ledger_entries_declaration_id_idx").on(table.declarationId),
+    index("ledger_entries_transaction_type_id_idx").on(table.transactionTypeId),
+    index("ledger_entries_organization_id_effective_date_idx").on(
+      table.organizationId,
+      table.effectiveDate,
+    ),
   ],
 );
 

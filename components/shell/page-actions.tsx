@@ -22,11 +22,27 @@ export function NewClientButton() {
 export function RecordPaymentButton({ customerId }: { customerId: string }) {
   return (
     <ButtonLink
-      href={`/clients/${customerId}?tab=comptabilite`}
+      href={`/clients/${customerId}?tab=transactions`}
       className="rounded-full px-4"
     >
       <Plus className="size-4" />
-      Enregistrer un versement
+      Nouvelle transaction
+    </ButtonLink>
+  );
+}
+
+export function NewTransactionButton({
+  customerId,
+}: {
+  customerId?: string;
+}) {
+  const href = customerId
+    ? `/transactions?customer=${customerId}`
+    : "/transactions";
+  return (
+    <ButtonLink href={href} className="rounded-full px-4">
+      <Plus className="size-4" />
+      Nouvelle transaction
     </ButtonLink>
   );
 }

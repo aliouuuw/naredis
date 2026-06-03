@@ -5,18 +5,17 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { formatBalanceLabel, formatXof } from "@/lib/domain/balance";
 import type { CustomerAccountStatus } from "@/lib/db/enums";
-import type { LedgerEntrySerialized } from "@/lib/modules/ledger/serialize";
+import type {
+  LedgerEntrySerialized,
+  TransactionTypeSerialized,
+} from "@/lib/modules/ledger/serialize";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
-import { LedgerEntriesTable } from "./ledger-entries-table";
-import { RecordVersementForm } from "./record-versement-form";
+import { AccountStatusControl } from "./account-status-control";
+import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
+import { RecordTransactionForm } from "@/components/transactions/record-transaction-form";
 
-type TabId = "resume" | "comptabilite" | "declarations";
-
-const accountStatusLabel = {
-  a_jour: "À jour",
-  pas_a_jour: "Pas à jour",
-} as const satisfies Record<CustomerAccountStatus, string>;
+type TabId = "resume" | "transactions" | "declarations";
 
 export function CustomerFicheTabs({
   customer,
@@ -27,6 +26,7 @@ export function CustomerFicheTabs({
   ledgerEntries,
   dossiers,
   declarations,
+  transactionTypes,
   canRecordLedger,
   initialTab,
 }: {
@@ -44,6 +44,7 @@ export function CustomerFicheTabs({
   ledgerEntries: LedgerEntrySerialized[];
   dossiers: DossierAllocationOption[];
   declarations: DeclarationListItemSerialized[];
+  transactionTypes: TransactionTypeSerialized[];
   canRecordLedger: boolean;
   initialTab?: TabId;
 }) {
@@ -51,7 +52,7 @@ export function CustomerFicheTabs({
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "resume", label: "Résumé" },
-    { id: "comptabilite", label: "Comptabilité" },
+    { id: "transactions", label: "Transactions" },
     { id: "declarations", label: "Déclarations" },
   ];
 
@@ -115,33 +116,50 @@ export function CustomerFicheTabs({
             </div>
           </div>
 
-          <dl className="grid max-w-lg gap-2 text-sm">
+          <dl className="grid max-w-lg gap-4 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Téléphone</dt>
               <dd>{customer.phone ?? "—"}</dd>
             </div>
-            <div className="flex justify-between gap-4">
+            <div className="flex flex-col gap-1">
               <dt className="text-muted-foreground">Statut compte</dt>
-              <dd>{accountStatusLabel[customer.accountStatus]}</dd>
+              <dd>
+                <AccountStatusControl
+                  customerId={customer.id}
+                  value={customer.accountStatus}
+                  canEdit={canRecordLedger}
+                />
+              </dd>
             </div>
           </dl>
         </div>
       ) : null}
 
-      {tab === "comptabilite" ? (
+      {tab === "transactions" ? (
         <div className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            <Link
+              href={`/transactions?customer=${customer.id}`}
+              className="font-medium text-foreground hover:underline"
+            >
+              Vue globale des transactions
+            </Link>{" "}
+            (filtres et regroupement par jour, client ou type).
+          </p>
           {canRecordLedger ? (
-            <RecordVersementForm
+            <RecordTransactionForm
               customerId={customer.id}
+              customerName={customer.name}
               dossiers={dossiers}
+              transactionTypes={transactionTypes}
             />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Vous n&apos;avez pas les droits pour enregistrer un versement.
+              Vous n&apos;avez pas les droits pour enregistrer une transaction.
             </p>
           )}
           <div>
-            <h3 className="mb-3 text-sm font-semibold">Écritures</h3>
+            <h3 className="mb-3 text-sm font-semibold">Historique</h3>
             <LedgerEntriesTable rows={ledgerEntries} />
           </div>
         </div>

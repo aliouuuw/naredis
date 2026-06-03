@@ -1,4 +1,5 @@
 import type { LedgerEntryListItem } from "./service";
+import type { TransactionTypeRow } from "./transaction-types";
 
 export type LedgerEntrySerialized = Omit<
   LedgerEntryListItem,
@@ -11,6 +12,8 @@ export type LedgerEntrySerialized = Omit<
     }
   >;
 };
+
+export type TransactionTypeSerialized = TransactionTypeRow;
 
 export function serializeLedgerEntry(
   row: LedgerEntryListItem,

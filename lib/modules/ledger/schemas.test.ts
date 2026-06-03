@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { recordVersementBodySchema } from "./schemas";
+import { recordTransactionBodySchema } from "./schemas";
 
-describe("recordVersementBodySchema", () => {
+describe("recordTransactionBodySchema", () => {
   test("parses body without customerId", () => {
-    const parsed = recordVersementBodySchema.safeParse({
+    const parsed = recordTransactionBodySchema.safeParse({
+      transactionTypeId: "00000000-0000-4000-8000-000000000001",
       label: "Virement",
       amount: "1000",
       effectiveDate: "2026-06-03",
@@ -15,9 +16,10 @@ describe("recordVersementBodySchema", () => {
     }
   });
 
-  test("strips customerId from body (action binds it separately)", () => {
-    const parsed = recordVersementBodySchema.safeParse({
+  test("strips customerId from body", () => {
+    const parsed = recordTransactionBodySchema.safeParse({
       customerId: "00000000-0000-4000-8000-000000000099",
+      transactionTypeId: "00000000-0000-4000-8000-000000000001",
       label: "Virement",
       amount: "1000",
       effectiveDate: "2026-06-03",

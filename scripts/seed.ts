@@ -18,10 +18,12 @@ import {
   dossierSequences,
   dossiers,
   ledgerEntries,
+  ledgerTransactionTypes,
   organizationAgencies,
   organizations,
   paymentAllocations,
 } from "../lib/db/schema";
+import { ensureDefaultTransactionTypes } from "../lib/modules/ledger/transaction-types";
 import { slugFromName } from "../lib/utils/slug";
 
 config({ path: ".env.local" });
@@ -57,6 +59,15 @@ async function main() {
     .returning();
 
   const admin = await ensureDevAdmin(org.id);
+
+  await ensureDefaultTransactionTypes(db, org.id);
+  const typeRows = await db
+    .select()
+    .from(ledgerTransactionTypes)
+    .where(eq(ledgerTransactionTypes.organizationId, org.id));
+  const typeIdByCode = Object.fromEntries(
+    typeRows.map((t) => [t.code, t.id]),
+  ) as Record<string, string>;
 
   const insertedAgencies = await db
     .insert(organizationAgencies)
@@ -288,6 +299,7 @@ async function main() {
     .values({
       organizationId: org.id,
       customerId: c1.id,
+      transactionTypeId: typeIdByCode.opening_balance,
       entryType: "opening_balance",
       balanceSide: "debit",
       amount: BigInt(150_000),
@@ -302,6 +314,7 @@ async function main() {
     .values({
       organizationId: org.id,
       customerId: c1.id,
+      transactionTypeId: typeIdByCode.charge,
       dossierId: d1.id,
       declarationId: dec1.id,
       entryType: "charge",
@@ -319,6 +332,7 @@ async function main() {
     .values({
       organizationId: org.id,
       customerId: c1.id,
+      transactionTypeId: typeIdByCode.versement,
       entryType: "versement",
       balanceSide: "credit",
       amount: BigInt(100_000),

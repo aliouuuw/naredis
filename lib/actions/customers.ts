@@ -3,13 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
+import { LEDGER_MUTATION_ROLES } from "@/lib/auth/permissions";
 import { requireRole } from "@/lib/auth/session";
 import {
   createCustomerSchema,
   type CreateCustomerInput,
 } from "@/lib/modules/customers/schemas";
-import { createCustomer } from "@/lib/modules/customers/service";
-import { actionError, type ActionResult } from "./form-result";
+import { createCustomer, updateCustomer } from "@/lib/modules/customers/service";
+import type { CustomerAccountStatus } from "@/lib/db/enums";
+import { actionError, actionOk, type ActionResult } from "./form-result";
 
 export async function createCustomerAction(
   input: CreateCustomerInput,
@@ -34,4 +36,25 @@ export async function createCustomerAction(
     const message = err instanceof Error ? err.message : "Erreur inconnue";
     return actionError(message);
   }
+}
+
+export async function updateCustomerAccountStatusAction(
+  customerId: string,
+  accountStatus: CustomerAccountStatus,
+): Promise<ActionResult<void>> {
+  const auth = await requireRole([...LEDGER_MUTATION_ROLES]);
+  const updated = await updateCustomer(
+    getDb(),
+    toModuleContext(auth),
+    customerId,
+    { accountStatus },
+  );
+
+  if (!updated) {
+    return actionError("Client introuvable.");
+  }
+
+  revalidatePath("/clients");
+  revalidatePath(`/clients/${customerId}`);
+  return actionOk();
 }

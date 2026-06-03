@@ -22,6 +22,7 @@ import { ThemeMenuItems } from "@/components/shell/theme-menu-items";
 const tabs = [
   { title: "Tableau de bord", href: "/dashboard" },
   { title: "Déclarations", href: "/declarations" },
+  { title: "Transactions", href: "/transactions" },
   { title: "Clients", href: "/clients" },
   { title: "Réglages", href: "/settings" },
 ] as const;
