@@ -56,6 +56,7 @@ export function DeclarationsToolbar({
   const pushState = useCallback(
     (next: DeclarationsViewState, preserveOpen = true) => {
       const sp = serializeDeclarationsSearchParams(next);
+      sp.delete("page");
       const open = preserveOpen ? searchParams.get("open") : null;
       if (open) sp.set("open", open);
       const qs = sp.toString();

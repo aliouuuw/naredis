@@ -19,8 +19,6 @@ import type { ActivityLogEntrySerialized } from "@/lib/modules/declarations/seri
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import { DashboardActivityFeed } from "@/components/dashboard/dashboard-activity-feed";
 import { ledgerSectionCopy } from "@/components/ledger/ledger-table-styles";
-
-const ledgerCopy = ledgerSectionCopy();
 import { AccountStatusControl } from "./account-status-control";
 import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
@@ -29,6 +27,8 @@ import { RecordTransactionDialog } from "@/components/transactions/record-transa
 import { ReverseEntryDialog } from "@/components/transactions/reverse-entry-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const ledgerCopy = ledgerSectionCopy();
 
 const TAB_IDS = ["resume", "transactions", "declarations", "activite"] as const;
 type TabId = (typeof TAB_IDS)[number];
@@ -347,11 +347,9 @@ export function CustomerFicheView({
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0 max-w-2xl">
-                  <p className="text-sm font-medium">
-                    {ledgerSectionCopy().title}
-                  </p>
+                  <p className="text-sm font-medium">{ledgerCopy.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {ledgerSectionCopy().transactionsDescription}
+                    {ledgerCopy.transactionsDescription}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

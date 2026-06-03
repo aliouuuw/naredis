@@ -100,11 +100,14 @@ function GroupSection({
 export function GroupedLedgerList({
   tree,
   showCustomer,
+  bare = false,
 }: {
   tree: LedgerGroupNode[];
   showCustomer: boolean;
+  bare?: boolean;
 }) {
   if (tree.length === 0) {
+    if (bare) return null;
     return (
       <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
         Aucune transaction pour ces filtres.
@@ -113,7 +116,7 @@ export function GroupedLedgerList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className={bare ? "space-y-6 p-4" : "space-y-6"}>
       {tree.map((node) => (
         <GroupSection
           key={node.key}

@@ -12,7 +12,7 @@ export function NewDeclarationButton() {
 
 export function NewClientButton() {
   return (
-    <ButtonLink href="/clients?new=1" variant="outline" className="rounded-full px-4">
+    <ButtonLink href="/clients?new=1" className="rounded-full px-4">
       <Plus className="size-4" />
       Nouveau client
     </ButtonLink>

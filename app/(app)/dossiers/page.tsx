@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
 import { listDossiers } from "@/lib/modules/dossiers/service";
-import { DossiersTable } from "@/components/dossiers/dossiers-table";
+import { DossiersPageView } from "@/components/dossiers/dossiers-page-view";
 import { PageHeader } from "@/components/shell/page-header";
+import { ListCrossLinks } from "@/components/shell/list-cross-links";
 import { NewDeclarationButton } from "@/components/shell/page-actions";
 
 export default async function DossiersPage() {
@@ -18,16 +18,20 @@ export default async function DossiersPage() {
       <PageHeader
         title="Dossiers"
         description="Connaissements (BL) et regroupement des déclarations — hub par dossier."
-        actions={<NewDeclarationButton />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <ListCrossLinks
+              links={[
+                { href: "/declarations", label: "Déclarations" },
+                { href: "/clients", label: "Clients" },
+              ]}
+            />
+            <NewDeclarationButton />
+          </div>
+        }
       />
 
-      <DossiersTable rows={rows} />
-
-      <p className="text-sm text-muted-foreground">
-        <Link href="/declarations" className="hover:underline">
-          ← Déclarations
-        </Link>
-      </p>
+      <DossiersPageView rows={rows} />
     </div>
   );
 }

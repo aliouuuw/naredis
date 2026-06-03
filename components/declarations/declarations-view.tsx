@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTablePage } from "@/components/hooks/use-table-page";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { paginateSlice } from "@/lib/ui/table-pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import type {
@@ -40,9 +43,16 @@ export function DeclarationsView({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const { page, setPage } = useTablePage();
+
   const sortedRows = useMemo(
     () => sortDeclarationRows(rows, viewState.sort),
     [rows, viewState.sort],
+  );
+
+  const { items: pagedRows, page: safePage } = useMemo(
+    () => paginateSlice(sortedRows, page),
+    [sortedRows, page],
   );
 
   const openDeclaration = useCallback(
@@ -123,10 +133,19 @@ export function DeclarationsView({
           ) : null}
         </div>
       ) : (
-        <DeclarationsTable
-          rows={sortedRows}
-          onOpenRow={(id) => openDeclaration(id)}
-        />
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <DeclarationsTable
+            rows={pagedRows}
+            bare
+            onOpenRow={(id) => openDeclaration(id)}
+          />
+          <TablePagination
+            totalItems={sortedRows.length}
+            page={safePage}
+            onPageChange={setPage}
+            itemLabel="déclaration"
+          />
+        </div>
       )}
 
       <DeclarationFicheSheet

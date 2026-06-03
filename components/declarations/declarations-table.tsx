@@ -33,12 +33,18 @@ function formatReste(
 export function DeclarationsTable({
   rows,
   onOpenRow,
+  bare = false,
 }: {
   rows: DeclarationListItemSerialized[];
   onOpenRow: (id: string) => void;
+  bare?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
+    <div
+      className={
+        bare ? "overflow-x-auto" : "overflow-x-auto rounded-lg border bg-card"
+      }
+    >
       <table className="w-full min-w-[960px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">

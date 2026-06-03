@@ -15,10 +15,8 @@ import { serializeDeclarationListItem } from "@/lib/modules/declarations/seriali
 import { listDeclarations } from "@/lib/modules/declarations/service";
 import { listAgencies } from "@/lib/modules/agencies/service";
 import { PageHeader } from "@/components/shell/page-header";
-import {
-  NewDeclarationButton,
-} from "@/components/shell/page-actions";
-import { ButtonLink } from "@/components/ui/button";
+import { ListCrossLinks } from "@/components/shell/list-cross-links";
+import { NewDeclarationButton } from "@/components/shell/page-actions";
 
 export default async function DeclarationsPage({
   searchParams,
@@ -55,12 +53,15 @@ export default async function DeclarationsPage({
     <div className="space-y-8">
       <PageHeader
         title="Déclarations"
-        description="Une ligne par connaissement (BL). Filtres et tri synchronisés dans l'URL."
+        description="Une ligne par connaissement (BL) — montants et BAD. Filtres et tri dans l'URL."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <ButtonLink href="/dossiers" variant="outline" className="rounded-full px-4">
-              Dossiers
-            </ButtonLink>
+            <ListCrossLinks
+              links={[
+                { href: "/dossiers", label: "Dossiers" },
+                { href: "/clients", label: "Clients" },
+              ]}
+            />
             {canEdit ? <NewDeclarationButton /> : null}
           </div>
         }

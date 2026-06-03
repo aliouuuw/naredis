@@ -13,11 +13,21 @@ const accountStatusLabel = {
   pas_a_jour: "Pas à jour",
 } as const;
 
-export function ClientsTable({ rows }: { rows: CustomerListItemSerialized[] }) {
+export function ClientsTable({
+  rows,
+  bare = false,
+}: {
+  rows: CustomerListItemSerialized[];
+  bare?: boolean;
+}) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
+    <div
+      className={
+        bare ? "overflow-x-auto" : "overflow-x-auto rounded-lg border bg-card"
+      }
+    >
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">

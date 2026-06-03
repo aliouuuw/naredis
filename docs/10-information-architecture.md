@@ -118,6 +118,19 @@ Déclarations                         [ + Nouvelle déclaration ]
 - Row click → `/declarations/[id]`
 - Same dossier number on two rows = two filings for one job (expected)
 - Empty state: « Créez votre première déclaration »
+- Pagination client au-delà de 20 lignes (`?page=`)
+- Liens croisés : Dossiers, Clients
+
+---
+
+## Page: Transactions (`/transactions`)
+
+**Notion analog:** ledger database view.
+
+- Toolbar repliable (filtres combinables, période, regroupements, tri) — URL `f=`, `group=`, `preset=`, `sort=`
+- Liste groupée (jour par défaut) avec colonnes Débit / Crédit alignées sur la fiche client
+- Pagination au-delà de 20 écritures (`?page=`)
+- CTA **Nouvelle transaction** dans l’en-tête (comptable) ; liens croisés Clients / Déclarations
 
 ---
 
@@ -230,7 +243,7 @@ Titre            optional
 
 ## Page: Clients
 
-**List (`/clients`):** sortable table — solde, frais dossiers (all time), transactions du jour, statut compte (`a_jour` / `pas_a_jour`).
+**List (`/clients`):** toolbar (recherche, statut compte, tri) synchronisé dans l’URL ; table — solde, frais dossiers (all time), transactions du jour, statut compte (`a_jour` / `pas_a_jour`) ; pagination au-delà de 20 lignes. Liens croisés vers Transactions et Déclarations.
 
 **Fiche (`/clients/[id]`):** URL-driven tabs (`?tab=resume|transactions|declarations`). Header shows solde hero + KPIs (report jour, frais dossiers, transactions aujourd’hui). Primary CTA **Nouvelle transaction** → modal dialog (`?tab=transactions&record=1` opens it from deep links).
 

@@ -352,7 +352,9 @@ export function TransactionsToolbar({
 
   const pushState = useCallback(
     (next: TransactionsViewState) => {
-      const qs = serializeTransactionsSearchParams(next).toString();
+      const sp = serializeTransactionsSearchParams(next);
+      sp.delete("page");
+      const qs = sp.toString();
       startTransition(() => {
         router.replace(qs ? `/transactions?${qs}` : "/transactions", {
           scroll: false,

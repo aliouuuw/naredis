@@ -10,17 +10,19 @@ const CASE_STATUS_LABELS: Record<string, string> = {
   closed: "Clôturé",
 };
 
-export function DossiersTable({ rows }: { rows: DossierListItem[] }) {
-  if (rows.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground">
-        Aucun dossier pour cette organisation.
-      </p>
-    );
-  }
-
+export function DossiersTable({
+  rows,
+  bare = false,
+}: {
+  rows: DossierListItem[];
+  bare?: boolean;
+}) {
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
+    <div
+      className={
+        bare ? "overflow-x-auto" : "overflow-x-auto rounded-lg border bg-card"
+      }
+    >
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">
