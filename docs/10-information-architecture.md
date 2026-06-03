@@ -232,7 +232,7 @@ Titre            optional
 
 **List (`/clients`):** sortable table — solde, frais dossiers (all time), transactions du jour, statut compte (`a_jour` / `pas_a_jour`).
 
-**Fiche (`/clients/[id]`):** URL-driven tabs (`?tab=resume|transactions|declarations`). Header shows solde hero + KPIs (report jour, frais dossiers, transactions aujourd’hui). Primary CTA **Nouvelle transaction** → `?tab=transactions&record=1` (scroll to form).
+**Fiche (`/clients/[id]`):** URL-driven tabs (`?tab=resume|transactions|declarations`). Header shows solde hero + KPIs (report jour, frais dossiers, transactions aujourd’hui). Primary CTA **Nouvelle transaction** → modal dialog (`?tab=transactions&record=1` opens it from deep links).
 
 | Tab | Content |
 |-----|---------|

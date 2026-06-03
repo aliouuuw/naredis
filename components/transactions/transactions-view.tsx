@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import type {
   LedgerEntrySerialized,
   TransactionTypeSerialized,
@@ -13,8 +14,9 @@ import {
   sortLedgerRows,
   type TransactionsViewState,
 } from "@/lib/modules/ledger/transactions-query";
+import { Button } from "@/components/ui/button";
 import { GroupedLedgerList } from "./grouped-ledger-list";
-import { RecordTransactionForm } from "./record-transaction-form";
+import { RecordTransactionDialog } from "./record-transaction-dialog";
 import { TransactionsToolbar } from "./transactions-toolbar";
 
 type CustomerOption = { id: string; name: string };
@@ -38,6 +40,8 @@ export function TransactionsView({
   today: string;
   recordIntent?: boolean;
 }) {
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+
   const sorted = useMemo(
     () => sortLedgerRows(rows, viewState.sort),
     [rows, viewState.sort],
@@ -55,13 +59,9 @@ export function TransactionsView({
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
   useEffect(() => {
-    if (!recordIntent || !selectedCustomer) return;
-    const timer = window.setTimeout(() => {
-      document
-        .getElementById("record-transaction")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 120);
-    return () => window.clearTimeout(timer);
+    if (recordIntent && selectedCustomer) {
+      setRecordDialogOpen(true);
+    }
   }, [recordIntent, selectedCustomer]);
 
   return (
@@ -77,17 +77,30 @@ export function TransactionsView({
       />
 
       {canRecord && selectedCustomer ? (
-        <RecordTransactionForm
-          customerId={selectedCustomer.id}
-          customerName={selectedCustomer.name}
-          dossiers={dossiers}
-          transactionTypes={transactionTypes}
-          highlighted={recordIntent}
-        />
+        <>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              className="rounded-full"
+              onClick={() => setRecordDialogOpen(true)}
+            >
+              <Plus className="size-4" />
+              Nouvelle transaction
+            </Button>
+          </div>
+          <RecordTransactionDialog
+            open={recordDialogOpen}
+            onOpenChange={setRecordDialogOpen}
+            customerId={selectedCustomer.id}
+            customerName={selectedCustomer.name}
+            dossiers={dossiers}
+            transactionTypes={transactionTypes}
+          />
+        </>
       ) : canRecord ? (
         <p className="text-sm text-muted-foreground">
-          Ajoutez un filtre <strong>Client</strong> pour saisir une transaction
-          ici, ou ouvrez une{" "}
+          Ajoutez un filtre <strong>Client</strong> pour saisir une transaction,
+          ou ouvrez une{" "}
           <Link href="/clients" className="underline">
             fiche client
           </Link>

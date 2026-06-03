@@ -22,13 +22,16 @@ export function RecordTransactionForm({
   customerName,
   dossiers,
   transactionTypes: initialTypes,
-  highlighted = false,
+  embedded = false,
+  onSuccess,
 }: {
   customerId: string;
   customerName: string;
   dossiers: DossierAllocationOption[];
   transactionTypes: TransactionTypeSerialized[];
-  highlighted?: boolean;
+  /** Render inside a dialog (no card chrome or duplicate title). */
+  embedded?: boolean;
+  onSuccess?: () => void;
 }) {
   const router = useRouter();
   const submitLock = useRef(false);
@@ -165,6 +168,9 @@ export function RecordTransactionForm({
       setAllocations([]);
       (event.target as HTMLFormElement).reset();
       router.refresh();
+      if (onSuccess) {
+        window.setTimeout(onSuccess, 600);
+      }
     } finally {
       submitLock.current = false;
       setPending(false);
@@ -176,16 +182,19 @@ export function RecordTransactionForm({
       id="record-transaction"
       onSubmit={onSubmit}
       className={cn(
-        "scroll-mt-24 space-y-4 rounded-lg border bg-card p-4 transition-shadow",
-        highlighted && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        "space-y-4",
+        !embedded &&
+          "scroll-mt-24 rounded-lg border bg-card p-4 transition-shadow",
       )}
     >
-      <div>
-        <h3 className="text-sm font-semibold">Nouvelle transaction</h3>
-        <p className="text-xs text-muted-foreground">
-          Client : {customerName} — crédit ou débit selon le type choisi.
-        </p>
-      </div>
+      {!embedded ? (
+        <div>
+          <h3 className="text-sm font-semibold">Nouvelle transaction</h3>
+          <p className="text-xs text-muted-foreground">
+            Client : {customerName} — crédit ou débit selon le type choisi.
+          </p>
+        </div>
+      ) : null}
 
       {error ? <FormAlert variant="error">{error}</FormAlert> : null}
       {success ? <FormAlert variant="success">{success}</FormAlert> : null}

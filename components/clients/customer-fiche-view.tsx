@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { formatBalanceLabel, formatXof } from "@/lib/domain/balance";
@@ -14,7 +14,7 @@ import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import { AccountStatusControl } from "./account-status-control";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
-import { RecordTransactionForm } from "@/components/transactions/record-transaction-form";
+import { RecordTransactionDialog } from "@/components/transactions/record-transaction-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +65,7 @@ export function CustomerFicheView({
   const searchParams = useSearchParams();
 
   const openRecord = searchParams.get("record") === "1";
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const tabFromUrl = searchParams.get("tab");
   const tab: TabId = isTabId(tabFromUrl)
     ? tabFromUrl
@@ -92,15 +93,16 @@ export function CustomerFicheView({
     [customer.id, router, searchParams],
   );
 
+  const openRecordDialog = useCallback(() => {
+    setQuery({ tab: "transactions", record: null });
+    setRecordDialogOpen(true);
+  }, [setQuery]);
+
   useEffect(() => {
-    if (!openRecord || tab !== "transactions") return;
-    const timer = window.setTimeout(() => {
-      document
-        .getElementById("record-transaction")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [openRecord, tab]);
+    if (!openRecord) return;
+    setRecordDialogOpen(true);
+    setQuery({ tab: "transactions", record: null });
+  }, [openRecord, setQuery]);
 
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: "resume", label: "Résumé" },
@@ -164,9 +166,7 @@ export function CustomerFicheView({
                 <Button
                   type="button"
                   className="rounded-full"
-                  onClick={() =>
-                    setQuery({ tab: "transactions", record: true })
-                  }
+                  onClick={openRecordDialog}
                 >
                   <Plus className="size-4" />
                   Nouvelle transaction
@@ -284,22 +284,39 @@ export function CustomerFicheView({
       ) : null}
 
       {tab === "transactions" ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {canRecordLedger ? (
-            <RecordTransactionForm
-              customerId={customer.id}
-              customerName={customer.name}
-              dossiers={dossiers}
-              transactionTypes={transactionTypes}
-              highlighted={openRecord}
-            />
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Historique des écritures pour ce compte.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setRecordDialogOpen(true)}
+                >
+                  <Plus className="size-3.5" />
+                  Nouvelle transaction
+                </Button>
+              </div>
+              <RecordTransactionDialog
+                open={recordDialogOpen}
+                onOpenChange={setRecordDialogOpen}
+                customerId={customer.id}
+                customerName={customer.name}
+                dossiers={dossiers}
+                transactionTypes={transactionTypes}
+              />
+            </>
           ) : (
             <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
               Vous n&apos;avez pas les droits pour enregistrer une transaction.
             </p>
           )}
           <section>
-            <h2 className="mb-3 text-sm font-semibold">Historique</h2>
             <LedgerEntriesTable rows={ledgerEntries} />
           </section>
         </div>

@@ -47,12 +47,15 @@ export function ContainerNumbersField({
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteValue, setPasteValue] = useState("");
 
+  // Stable primitive — avoids depending on inline `[]` (new reference every parent render).
+  const resetKey = `${formKey ?? ""}|${initialContainers.join("\n")}|${initialCount}`;
+
   useEffect(() => {
     setCount(Math.max(0, initialCount ?? initialContainers.length));
     setRows(rowsFromContainers(initialContainers));
     setPasteOpen(false);
     setPasteValue("");
-  }, [formKey, initialContainers, initialCount]);
+  }, [resetKey]);
 
   const filled = useMemo(
     () => rows.map((r) => r.trim()).filter(Boolean),
