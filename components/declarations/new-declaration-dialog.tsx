@@ -2,6 +2,7 @@
 
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -40,7 +41,7 @@ export function NewDeclarationDialog({
             associée.
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto px-6 pb-6">
+        <DialogBody>
           <NewDeclarationForm
             key={open ? `new-${defaultCustomerId ?? "none"}` : "closed"}
             embedded
@@ -54,7 +55,7 @@ export function NewDeclarationDialog({
               window.setTimeout(() => onOpenChange(false), 500);
             }}
           />
-        </div>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

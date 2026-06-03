@@ -15,6 +15,7 @@ import {
   BonADelivrerIncompleteError,
   createDeclaration,
   DuplicateBlError,
+  DuplicateDeclarationNumberError,
   setBonADelivrer,
   updateDeclaration,
 } from "@/lib/modules/declarations/service";
@@ -47,10 +48,14 @@ export async function createDeclarationAction(
       parsed.data,
     );
     revalidatePath("/declarations");
+    revalidatePath("/clients");
     revalidatePath(`/declarations/${declaration.id}`);
     return actionOk({ id: declaration.id });
   } catch (err) {
     if (err instanceof DuplicateBlError) return actionError(err.message);
+    if (err instanceof DuplicateDeclarationNumberError) {
+      return actionError(err.message);
+    }
     if (err instanceof BonADelivrerIncompleteError) {
       return actionError(formatBonADelivrerError(err.missing));
     }

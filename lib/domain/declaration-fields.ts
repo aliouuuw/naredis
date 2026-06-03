@@ -7,6 +7,7 @@ export const DECLARATION_FIELD_LABELS: Record<string, string> = {
   client_amount_paid: "Montant client",
   gainde_duty_amount: "Droit GAINDE",
   cost_price: "Prix de revient",
+  reste: "Reste (marge)",
   paying_agency_id: "Maison-mère",
   bl_reference: "Numéro BL",
   customs_reference: "N° douane",

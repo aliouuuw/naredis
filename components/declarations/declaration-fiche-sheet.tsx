@@ -12,6 +12,7 @@ import type { DeclarationFicheSerialized } from "@/lib/modules/declarations/seri
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -135,7 +136,7 @@ export function DeclarationFicheSheet({
             <DialogTitle>{headerTitle}</DialogTitle>
             <DialogDescription>{headerDescription}</DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          <DialogBody className="min-h-0 flex-1">
             <DeclarationFicheBody
               loading={loading}
               error={error}
@@ -145,7 +146,7 @@ export function DeclarationFicheSheet({
               variant="page"
               onSaved={handleSaved}
             />
-          </div>
+          </DialogBody>
         </DialogContent>
       </Dialog>
     </>

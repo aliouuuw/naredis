@@ -86,7 +86,8 @@ Optional: `docker compose` with `postgres:17` — add `compose.yml` when impleme
 ```bash
 bun run db:generate   # drizzle-kit generate
 bun run db:migrate    # apply migrations
-bun run db:seed       # dev seed data
+bun run db:seed       # dev seed data (pilot-shaped)
+bun run db:reseed     # wipe demo-transit org and seed again
 bun run db:studio     # drizzle-kit studio (optional)
 bun run dev           # Next.js dev server
 bun run build         # production build

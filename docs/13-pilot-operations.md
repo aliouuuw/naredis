@@ -20,8 +20,8 @@ Canonical desk model from the pilot freight forwarder (Dakar). Supersedes generi
 
 | Field (desk) | Code | Notes |
 |--------------|------|-------|
-| Unique id | `declaration_number` | Display reference |
-| Zone / terminal | `zone_or_terminal` | Port zone, terminal, etc. |
+| Unique id | `declaration_number` | **Operator-assigned**, format `{prefix}-{zone}-D{suffix}` (e.g. `1-18N-D001`). Prefix and suffix are typed; zone comes from the org zone list (`lib/domain/pilot-zones.ts`, settings later). Unique per org. |
+| Zone / terminal | `zone_or_terminal` | Slug/code embedded in the declaration number (same as selected zone at create). |
 | Client | via `dossier.customer_id` | Compte client |
 | BL | `dossiers.bl_reference` | One BL per row (1 dossier ↔ 1 BL in MVP) |
 | Date of declaration | `declaration_date` | Business date |
@@ -30,10 +30,13 @@ Canonical desk model from the pilot freight forwarder (Dakar). Supersedes generi
 | **Montant** | `client_amount_paid` | **Total client paid agency** for this BL |
 | **Droit de douane (GAINDE)** | `gainde_duty_amount` | Customs duty via GAINDE |
 | **Prix de revient** | `cost_price` | Agency all-in cost (customs + fees paid for dossier); **may diverge** from GAINDE alone |
+| **Reste (marge)** | computed | `client_amount_paid − cost_price` (UI only, not stored). Shown on create/edit fiche. |
 | **Maison-mère** | `paying_agency_id` → `organization_agencies` | Which agency entity used its GAINDE card — **informational only**, does not change solde |
 | **Bon à délivrer** | `bon_a_delivrer` | **Checkbox** (not a customs pipeline stage). Per BL row. All required row fields filled before it can be checked |
 
 Filing economics (**montant**, GAINDE, prix de revient) live **only on the declaration row**, not duplicated as ledger lines unless you later choose to.
+
+**Not used in pilot UI (schema may retain):** `customs_reference` (n° douane), `bureau`, dossier import/export/transit on create.
 
 ### Rectificative
 
@@ -91,6 +94,21 @@ Agency perspective:
 | Total dossier fees (global) | computed | **All time** — sum of declaration `cost_price` (prix de revient) |
 | Total transactions today | computed | **All types**, calendar day in `Africa/Dakar` |
 | Status | `account_status` | Manual: `a_jour` \| `pas_a_jour` (“accounts reconciled”) |
+
+### Client fiche — tab **Résumé** (journal du compte)
+
+Single timeline for the account:
+
+- **Ledger entries** (transactions) — affect running **solde** (débit/crédit net).
+- **Declarations** for the client — informational in the journal (montant, reste, BL, BAD); **do not** post to the ledger.
+- Grouped by calendar day (`Africa/Dakar`), newest days first; within a day, newest events first.
+- Each row shows **solde après** (balance after that point in chronological order) and deep-links to transaction or declaration fiche.
+- Separate tabs **Transactions** and **Déclarations** remain for full tables and actions.
+
+### Transaction types
+
+- Org-configurable types (`ledger_transaction_types`): create + **rename** in the Nouvelle transaction flow.
+- System types (versement, charge, …) keep stable `code` / `system_key`; display name is editable.
 
 ---
 

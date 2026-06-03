@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { balanceFromTotals, formatBalanceLabel } from "./balance";
+import {
+  balanceFromTotals,
+  describeBalanceSide,
+  formatBalanceLabel,
+  formatBalanceStatement,
+} from "./balance";
 
 describe("balanceFromTotals", () => {
   const z = BigInt(0);
@@ -27,5 +32,16 @@ describe("formatBalanceLabel", () => {
   it("maps balance sides to French labels", () => {
     expect(formatBalanceLabel("debit")).toBe("Débit");
     expect(formatBalanceLabel("credit")).toBe("Crédit");
+  });
+});
+
+describe("describeBalanceSide", () => {
+  it("shows équilibré for zero net", () => {
+    expect(describeBalanceSide({ amount: BigInt(0), side: "debit" })).toBe(
+      "Équilibré",
+    );
+    expect(formatBalanceStatement({ amount: BigInt(0), side: "debit" })).toBe(
+      "0 XOF · Équilibré",
+    );
   });
 });

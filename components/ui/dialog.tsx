@@ -78,7 +78,17 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1 border-b px-6 py-4 pr-14", className)}
+      className={cn("flex shrink-0 flex-col gap-1 border-b px-6 py-4 pr-14", className)}
+      {...props}
+    />
+  );
+}
+
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn("flex-1 overflow-y-auto px-6 pt-5 pb-6", className)}
       {...props}
     />
   );
@@ -112,6 +122,7 @@ export {
   DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogBody,
   DialogTitle,
   DialogDescription,
 };

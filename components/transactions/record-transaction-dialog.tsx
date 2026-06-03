@@ -2,6 +2,7 @@
 
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -9,7 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
+import { FormSelect } from "@/components/ui/form-select";
 import { RecordTransactionForm } from "./record-transaction-form";
+
+type CustomerOption = { id: string; name: string };
 
 export function RecordTransactionDialog({
   open,
@@ -17,34 +21,73 @@ export function RecordTransactionDialog({
   customerId,
   customerName,
   dossiers,
+  dossiersLoading = false,
   transactionTypes,
+  needsCustomerPick = false,
+  customers = [],
+  pickCustomerId = "",
+  onPickCustomerChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  customerId: string;
-  customerName: string;
+  customerId?: string;
+  customerName?: string;
   dossiers: DossierAllocationOption[];
+  dossiersLoading?: boolean;
   transactionTypes: TransactionTypeSerialized[];
+  needsCustomerPick?: boolean;
+  customers?: CustomerOption[];
+  pickCustomerId?: string;
+  onPickCustomerChange?: (customerId: string) => void;
 }) {
+  const canSubmit = Boolean(customerId && customerName);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(92vh,880px)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 p-0">
         <DialogHeader>
           <DialogTitle>Nouvelle transaction</DialogTitle>
           <DialogDescription>
-            Client : {customerName} — crédit ou débit selon le type choisi.
+            {canSubmit
+              ? `Client : ${customerName} — crédit ou débit selon le type choisi.`
+              : "Choisissez un client pour enregistrer une écriture."}
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto px-6 pb-6">
-          <RecordTransactionForm
-            embedded
-            customerId={customerId}
-            customerName={customerName}
-            dossiers={dossiers}
-            transactionTypes={transactionTypes}
-            onSuccess={() => onOpenChange(false)}
-          />
-        </div>
+        <DialogBody>
+          {needsCustomerPick && !canSubmit ? (
+            <div className="mb-4 flex flex-col gap-2">
+              <label htmlFor="pick-customer" className="text-sm font-medium">
+                Client <span className="text-destructive">*</span>
+              </label>
+              <FormSelect
+                id="pick-customer"
+                value={pickCustomerId}
+                onValueChange={(id) => onPickCustomerChange?.(id)}
+                placeholder="Choisir un client"
+                options={customers.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                }))}
+              />
+            </div>
+          ) : null}
+
+          {canSubmit ? (
+            <RecordTransactionForm
+              embedded
+              customerId={customerId!}
+              customerName={customerName!}
+              dossiers={dossiers}
+              dossiersLoading={dossiersLoading}
+              transactionTypes={transactionTypes}
+              onSuccess={() => onOpenChange(false)}
+            />
+          ) : needsCustomerPick ? (
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez un client pour continuer.
+            </p>
+          ) : null}
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

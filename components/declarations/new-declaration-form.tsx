@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createDeclarationAction } from "@/lib/actions/declarations";
+import { buildDeclarationNumber } from "@/lib/domain/declaration-number";
+import { pilotZoneOptions } from "@/lib/domain/pilot-zones";
 import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
+import { DeclarationResteField } from "@/components/declarations/declaration-reste-field";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
 
 export type CustomerOption = { id: string; name: string; slug: string };
@@ -40,6 +44,19 @@ export function NewDeclarationForm({
     containers: [] as string[],
     containerCount: 1,
   });
+  const [numberPrefix, setNumberPrefix] = useState("1");
+  const [numberZone, setNumberZone] = useState("18N");
+  const [numberSuffix, setNumberSuffix] = useState("001");
+  const [clientAmountPaid, setClientAmountPaid] = useState("");
+  const [costPrice, setCostPrice] = useState("");
+
+  const previewNumber = useMemo(() => {
+    try {
+      return buildDeclarationNumber(numberPrefix, numberZone, numberSuffix);
+    } catch {
+      return null;
+    }
+  }, [numberPrefix, numberZone, numberSuffix]);
 
   const hasCustomers = customers.length > 0;
 
@@ -53,8 +70,10 @@ export function NewDeclarationForm({
 
     const result = await createDeclarationAction({
       customerId: String(form.get("customerId") ?? ""),
+      declarationNumberPrefix: String(form.get("declarationNumberPrefix") ?? ""),
+      declarationZoneSlug: String(form.get("declarationZoneSlug") ?? ""),
+      declarationNumberSuffix: String(form.get("declarationNumberSuffix") ?? ""),
       blReference: String(form.get("blReference") ?? ""),
-      zoneOrTerminal: String(form.get("zoneOrTerminal") ?? "") || undefined,
       declarationDate: String(form.get("declarationDate") ?? "") || undefined,
       containerCount: containerPayload.containerCount,
       containers: containerPayload.containers,
@@ -62,8 +81,6 @@ export function NewDeclarationForm({
       gaindeDutyAmount: parseMoney(String(form.get("gaindeDutyAmount") ?? "")),
       costPrice: parseMoney(String(form.get("costPrice") ?? "")),
       payingAgencyId: String(form.get("payingAgencyId") ?? ""),
-      dossierType:
-        (form.get("dossierType") as "import" | "export" | "transit") || "import",
       title: String(form.get("title") ?? "") || undefined,
     });
 
@@ -104,28 +121,85 @@ export function NewDeclarationForm({
       {error ? <FormAlert variant="error">{error}</FormAlert> : null}
       {success ? <FormAlert variant="success">{success}</FormAlert> : null}
       <section className="space-y-4">
+        <h2 className="text-sm font-semibold">Numéro de déclaration</h2>
+        <p className="text-xs text-muted-foreground">
+          Format : préfixe — zone — D suffixe (ex. 1-18N-D001).
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="declarationNumberPrefix" className="text-sm font-medium">
+              Préfixe <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="declarationNumberPrefix"
+              name="declarationNumberPrefix"
+              required
+              className="font-mono"
+              value={numberPrefix}
+              onChange={(e) => setNumberPrefix(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="declarationZoneSlug" className="text-sm font-medium">
+              Zone / terminal <span className="text-destructive">*</span>
+            </label>
+            <FormSelect
+              id="declarationZoneSlug"
+              name="declarationZoneSlug"
+              required
+              value={numberZone}
+              onValueChange={setNumberZone}
+              options={pilotZoneOptions()}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="declarationNumberSuffix"
+              className="text-sm font-medium"
+            >
+              Suffixe <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="declarationNumberSuffix"
+              name="declarationNumberSuffix"
+              required
+              className="font-mono"
+              placeholder="001"
+              value={numberSuffix}
+              onChange={(e) => setNumberSuffix(e.target.value)}
+            />
+          </div>
+        </div>
+        {previewNumber ? (
+          <p className="text-sm">
+            Aperçu :{" "}
+            <span className="font-mono font-semibold">{previewNumber}</span>
+          </p>
+        ) : (
+          <p className="text-sm text-destructive">
+            Numéro incomplet ou invalide.
+          </p>
+        )}
+      </section>
+
+      <section className="space-y-4">
         <h2 className="text-sm font-semibold">Client & BL</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2 sm:col-span-2">
             <label htmlFor="customerId" className="text-sm font-medium">
               Client <span className="text-destructive">*</span>
             </label>
-            <select
+            <FormSelect
               id="customerId"
               name="customerId"
               required
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
+              placeholder="Choisir un client"
               defaultValue={defaultCustomerId ?? ""}
-            >
-              <option value="" disabled>
-                Choisir un client
-              </option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.slug})
-                </option>
-              ))}
-            </select>
+              options={customers.map((c) => ({
+                value: c.id,
+                label: `${c.name} (${c.slug})`,
+              }))}
+            />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
             <label htmlFor="blReference" className="text-sm font-medium">
@@ -140,33 +214,12 @@ export function NewDeclarationForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="dossierType" className="text-sm font-medium">
-              Type
-            </label>
-            <select
-              id="dossierType"
-              name="dossierType"
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
-              defaultValue="import"
-            >
-              <option value="import">Import</option>
-              <option value="export">Export</option>
-              <option value="transit">Transit</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-2">
             <label htmlFor="declarationDate" className="text-sm font-medium">
               Date de déclaration
             </label>
             <Input id="declarationDate" name="declarationDate" type="date" />
           </div>
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <label htmlFor="zoneOrTerminal" className="text-sm font-medium">
-              Zone / terminal
-            </label>
-            <Input id="zoneOrTerminal" name="zoneOrTerminal" />
-          </div>
-          <div className="flex flex-col gap-2 sm:col-span-2">
+          <div className="flex flex-col gap-2">
             <label htmlFor="title" className="text-sm font-medium">
               Titre (optionnel)
             </label>
@@ -202,6 +255,8 @@ export function NewDeclarationForm({
               min={0}
               step={1}
               placeholder="0"
+              value={clientAmountPaid}
+              onChange={(e) => setClientAmountPaid(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -226,25 +281,25 @@ export function NewDeclarationForm({
               type="number"
               min={0}
               step={1}
+              value={costPrice}
+              onChange={(e) => setCostPrice(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-2">
+          <DeclarationResteField
+            clientAmountPaid={clientAmountPaid}
+            costPrice={costPrice}
+          />
+          <div className="flex flex-col gap-2 sm:col-span-2">
             <label htmlFor="payingAgencyId" className="text-sm font-medium">
               Maison-mère (agence)
             </label>
-            <select
+            <FormSelect
               id="payingAgencyId"
               name="payingAgencyId"
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
+              emptyOption="—"
               defaultValue=""
-            >
-              <option value="">—</option>
-              {agencies.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+              options={agencies.map((a) => ({ value: a.id, label: a.name }))}
+            />
           </div>
         </div>
       </section>
@@ -257,7 +312,7 @@ export function NewDeclarationForm({
         }
       >
         <div className="flex gap-3">
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending || !previewNumber}>
             {pending ? "Création…" : "Créer la déclaration"}
           </Button>
           {onCancel ? (

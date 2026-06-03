@@ -1,4 +1,5 @@
 import { formatXof } from "@/lib/domain/balance";
+import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
 import type { EditDeclarationInitial } from "./edit-declaration-form";
 
 function formatMoney(value: string) {
@@ -17,6 +18,14 @@ export function DeclarationReadOnlySummary({
   initial: EditDeclarationInitial;
   payingAgencyName: string | null;
 }) {
+  const reste =
+    initial.clientAmountPaid && initial.costPrice
+      ? computeDeclarationReste(
+          BigInt(initial.clientAmountPaid),
+          BigInt(initial.costPrice),
+        )
+      : null;
+
   return (
     <dl className="grid gap-4 text-sm sm:grid-cols-2">
       <div>
@@ -67,6 +76,12 @@ export function DeclarationReadOnlySummary({
       <div>
         <dt className="text-muted-foreground">Prix de revient</dt>
         <dd className="tabular-nums">{formatMoney(initial.costPrice)}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">Reste (marge)</dt>
+        <dd className="tabular-nums">
+          {reste != null ? formatMoney(reste.toString()) : "—"}
+        </dd>
       </div>
       <div>
         <dt className="text-muted-foreground">Maison-mère</dt>

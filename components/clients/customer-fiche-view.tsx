@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Plus } from "lucide-react";
-import { formatBalanceLabel, formatXof } from "@/lib/domain/balance";
+import {
+  describeBalanceSide,
+  formatBalanceStatement,
+  formatXof,
+} from "@/lib/domain/balance";
 import type { CustomerAccountStatus } from "@/lib/db/enums";
 import type {
   LedgerEntrySerialized,
@@ -13,6 +17,7 @@ import type {
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import { AccountStatusControl } from "./account-status-control";
+import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
 import { RecordTransactionDialog } from "@/components/transactions/record-transaction-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -24,11 +29,6 @@ type TabId = (typeof TAB_IDS)[number];
 function isTabId(value: string | null): value is TabId {
   return TAB_IDS.includes(value as TabId);
 }
-
-const accountStatusLabel = {
-  a_jour: "Comptes à jour",
-  pas_a_jour: "Comptes pas à jour",
-} as const;
 
 export function CustomerFicheView({
   customer,
@@ -118,108 +118,123 @@ export function CustomerFicheView({
     },
   ];
 
+  const balanceBig = {
+    amount: BigInt(balance.amount),
+    side: balance.side,
+  };
+  const dayOpenBig = {
+    amount: BigInt(dayOpenBalance.amount),
+    side: dayOpenBalance.side,
+  };
+
   const balanceTone =
     balance.side === "debit"
-      ? "text-amber-800 dark:text-amber-300"
-      : "text-emerald-800 dark:text-emerald-400";
+      ? "text-amber-900 dark:text-amber-200"
+      : balance.amount === "0"
+        ? "text-muted-foreground"
+        : "text-emerald-900 dark:text-emerald-200";
 
   return (
     <div className="space-y-6">
       <section className="rounded-xl border bg-card">
-        <div className="border-b px-5 py-5 md:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Compte client
-              </p>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {customer.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-mono text-xs">{customer.slug}</span>
-                {customer.phone ? (
-                  <>
-                    {" "}
-                    ·{" "}
-                    <a
-                      href={`tel:${customer.phone}`}
-                      className="hover:text-foreground hover:underline"
-                    >
-                      {customer.phone}
-                    </a>
-                  </>
-                ) : null}
-              </p>
-              <p
-                className={cn(
-                  "text-xs font-medium",
-                  customer.accountStatus === "a_jour"
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-amber-700 dark:text-amber-400",
-                )}
-              >
-                {accountStatusLabel[customer.accountStatus]}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-2">
-              {canRecordLedger ? (
-                <Button
-                  type="button"
-                  className="rounded-full"
-                  onClick={openRecordDialog}
-                >
-                  <Plus className="size-4" />
-                  Nouvelle transaction
-                </Button>
-              ) : null}
-              <ButtonLink
-                href={`/transactions?f=customer%3Aeq%3A${encodeURIComponent(customer.id)}&preset=last30`}
-                variant="outline"
-                className="rounded-full"
-              >
-                Vue globale
-              </ButtonLink>
-            </div>
-          </div>
-        </div>
+        <div className="px-5 py-5 md:px-6 md:py-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1 space-y-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Compte client
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                  {customer.name}
+                </h1>
+              </div>
 
-        <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-card p-4 sm:col-span-2 lg:col-span-1">
-            <p className="text-xs font-medium text-muted-foreground">Solde</p>
-            <p className={cn("mt-1 text-2xl font-semibold tabular-nums", balanceTone)}>
-              {formatXof(BigInt(balance.amount))}{" "}
-              <span className="text-base font-medium">XOF</span>
-            </p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {formatBalanceLabel(balance.side)}
-            </p>
-          </div>
-          <div className="bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground">
-              Report (ouverture jour)
-            </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {formatXof(BigInt(dayOpenBalance.amount))} XOF
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatBalanceLabel(dayOpenBalance.side)}
-            </p>
-          </div>
-          <div className="bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground">
-              Frais dossiers (total)
-            </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {formatXof(BigInt(feesAllTime))} XOF
-            </p>
-          </div>
-          <div className="bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground">
-              Transactions aujourd&apos;hui
-            </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {formatXof(BigInt(transactionsToday))} XOF
-            </p>
+              <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:max-w-xl">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Identifiant</dt>
+                  <dd className="mt-0.5 font-mono text-xs">{customer.slug}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Téléphone</dt>
+                  <dd className="mt-0.5 font-medium">
+                    {customer.phone ? (
+                      <a
+                        href={`tel:${customer.phone}`}
+                        className="hover:underline"
+                      >
+                        {customer.phone}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted-foreground">
+                    Réconciliation comptable
+                  </dt>
+                  <dd className="mt-1.5">
+                    <AccountStatusControl
+                      customerId={customer.id}
+                      value={customer.accountStatus}
+                      canEdit={canRecordLedger}
+                    />
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="flex shrink-0 flex-col gap-4 lg:items-end">
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                {canRecordLedger ? (
+                  <Button
+                    type="button"
+                    className="rounded-full"
+                    onClick={openRecordDialog}
+                  >
+                    <Plus className="size-4" />
+                    Nouvelle transaction
+                  </Button>
+                ) : null}
+                <ButtonLink
+                  href={`/transactions?f=customer%3Aeq%3A${encodeURIComponent(customer.id)}&preset=last30`}
+                  variant="outline"
+                  className="rounded-full"
+                >
+                  Vue globale
+                </ButtonLink>
+              </div>
+
+              <div className="w-full min-w-[min(100%,16rem)] rounded-lg border bg-muted/25 px-5 py-4 lg:text-right">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Solde courant
+                </p>
+                <p
+                  className={cn(
+                    "mt-1 text-3xl font-semibold tabular-nums tracking-tight",
+                    balanceTone,
+                  )}
+                >
+                  {formatXof(balanceBig.amount)}{" "}
+                  <span className="text-lg font-medium">XOF</span>
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {describeBalanceSide(balanceBig)}
+                  <span className="mx-1.5 text-border">·</span>
+                  <span className="text-xs">
+                    {balance.side === "debit"
+                      ? "Le client doit à l'agence"
+                      : balance.amount === "0"
+                        ? "Compte soldé"
+                        : "L'agence doit au client"}
+                  </span>
+                </p>
+                <p className="mt-2 text-[11px] text-muted-foreground/90">
+                  Calculé sur le grand livre (débit − crédit). Se met à jour
+                  après chaque écriture enregistrée.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -258,29 +273,58 @@ export function CustomerFicheView({
       </nav>
 
       {tab === "resume" ? (
-        <section className="rounded-lg border bg-card p-5">
-          <h2 className="text-sm font-semibold">Coordonnées et statut</h2>
-          <dl className="mt-4 grid max-w-xl gap-4 text-sm sm:grid-cols-2">
+        <div className="space-y-6">
+          <section className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Report à l&apos;ouverture (aujourd&apos;hui)
+              </p>
+              <p className="mt-2 text-lg font-semibold tabular-nums">
+                {formatBalanceStatement(dayOpenBig)}
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                Solde du compte avant les écritures du jour (fuseau Dakar).
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Frais dossiers (cumul)
+              </p>
+              <p className="mt-2 text-lg font-semibold tabular-nums">
+                {formatXof(BigInt(feesAllTime))} XOF
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                Somme des prix de revient sur les déclarations.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Mouvements du jour
+              </p>
+              <p className="mt-2 text-lg font-semibold tabular-nums">
+                {formatXof(BigInt(transactionsToday))} XOF
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                Volume des écritures enregistrées aujourd&apos;hui (tous types).
+              </p>
+            </div>
+          </section>
+
+          <section className="space-y-3">
             <div>
-              <dt className="text-muted-foreground">Téléphone</dt>
-              <dd className="mt-1 font-medium">{customer.phone ?? "—"}</dd>
+              <h2 className="text-sm font-semibold">Relevé de compte</h2>
+              <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                Écritures comptables (débit / crédit) et références déclaration,
+                classées par date. Le solde cumulé ne tient compte que des
+                transactions.
+              </p>
             </div>
-            <div>
-              <dt className="text-muted-foreground">Identifiant</dt>
-              <dd className="mt-1 font-mono text-xs">{customer.slug}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Statut compte (réconciliation)</dt>
-              <dd className="mt-2">
-                <AccountStatusControl
-                  customerId={customer.id}
-                  value={customer.accountStatus}
-                  canEdit={canRecordLedger}
-                />
-              </dd>
-            </div>
-          </dl>
-        </section>
+            <CustomerAccountLedger
+              ledgerEntries={ledgerEntries}
+              declarations={declarations}
+            />
+          </section>
+        </div>
       ) : null}
 
       {tab === "transactions" ? (

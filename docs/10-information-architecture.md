@@ -236,10 +236,10 @@ Titre            optional
 
 | Tab | Content |
 |-----|---------|
-| **Résumé** | Solde, report, frais, contact, statut compte (manual reconcile) |
-| **Transactions** | Record form + ledger history; link to global `/transactions` with client filter |
+| **Résumé** | Contact + statut compte; **journal du compte** (ledger + déclarations, grouped by day, running solde after ledger lines, deep-links) |
+| **Transactions** | Record dialog + ledger table; link to global `/transactions` with client filter |
 | **Déclarations** | BL rows for client → déclaration fiche |
-| **Activité** | (planned) Client-level `activity_log` timeline |
+| **Activité** | (optional later) `activity_log` audit feed — distinct from Résumé journal |
 
 ---
 

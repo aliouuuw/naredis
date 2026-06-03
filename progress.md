@@ -2,15 +2,15 @@
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-06-03
+**Last updated:** 2026-06-03 (pilot alignment pass)
 
 ---
 
 ## Current phase
 
-**Pilot desk UI** — déclarations, ledger/transactions, client fiches. Global `/transactions` with URL filters, grouping, and extensible types (`524fcd6`–`b22eaae`).
+**Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `CLI-001` (Activité tab + fiche UX polish), `CLI-003` (solde ouverture / contre-passation), `DECL-003` Activité, `DOS-001` hub tabs, `POL-002` dashboard.
+**Next up:** `CLI-003` (solde ouverture / contre-passation), declaration list filters/column order, `DECL-003` Activité feed, `DOS-001`, `POL-002` dashboard.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -25,9 +25,9 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema (pilot 0003, review 0004) | Done |
-| Unit tests (`bun test`, domain + slug + ledger) | Done (15) |
+| Unit tests (`bun test`, domain + slug + ledger) | Done (28) |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
-| Dev seed data | Done |
+| Dev seed data | Done — pilot-shaped; `bun run db:reseed` |
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
 | shadcn + app shell (PLAT-008) | Done |
@@ -37,7 +37,9 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Create forms (client + déclaration) | Done |
 | Declaration edit + BAD toggle UI (`DECL-005`) | Done |
 | Ledger module + payment UI (`DOM-005`, `CLI-002`) | Done |
-| Client fiche (`CLI-001` partial) | Résumé + Transactions + Déclarations; global `/transactions`; Google Sans Flex |
+| Client fiche (`CLI-001` partial) | Résumé = journal du compte (ledger + déclarations, solde courant); Transactions + Déclarations tabs |
+| Pilot declaration # + reste | Operator format `1-18N-D001`; reste computed; zones from pilot list |
+| Transaction UX fixes | Type label in selects; `/transactions` Nouvelle transaction with client picker; types rename |
 | Transactions module | Types extensibles, filtres URL, regroupement imbriqué |
 
 ---
@@ -70,17 +72,35 @@ From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 ---
 
-## Suggested implementation order
+## Suggested implementation order (pilot)
 
-Matches backlog dependencies:
+After the 2026-06-03 alignment pass:
 
-1. **Platform** — PLAT-001 … PLAT-008  
-2. **Domain** — DOM-001 … DOM-007 (FSM + modules)  
-3. **Shell** — UI-001, UI-002  
-4. **Déclarations UI** — DECL-001 … DECL-005  
-5. **Dossier hub** — DOS-001 … DOS-003  
-6. **Clients & money** — CLI-001 … CLI-004  
-7. **Polish** — POL-001 … POL-004  
+1. **CLI-003** — opening balance + contre-passation (solde trust in ops)  
+2. **DECL-001 enhancement** — declaration list filters + column order (like `/transactions`)  
+3. **DECL-003** — declaration fiche Activité (`activity_log`)  
+4. **DOS-001** — dossier hub tabs  
+5. **POL-002** — actionable dashboard  
+6. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
+
+---
+
+## Pilot alignment (2026-06-03) — shipped
+
+| Item | Status |
+|------|--------|
+| Declaration # operator format | Done |
+| Reste (marge) on fiches | Done (computed) |
+| Hide n° douane / bureau; no dossier type on create | Done |
+| Client Résumé = account journal | Done |
+| FormSelect shows type name | Done |
+| Nouvelle transaction from `/transactions` | Done (client picker in dialog) |
+| Transaction types rename | Done |
+
+| Item | Deferred |
+|------|----------|
+| Declaration list column order + filter panel | Backlog |
+| Configurable zones in Settings | Backlog (hardcoded pilot list) |
 
 ---
 

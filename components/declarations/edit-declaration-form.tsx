@@ -8,8 +8,11 @@ import {
 } from "@/lib/actions/declarations";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
 import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
+import { DeclarationResteField } from "@/components/declarations/declaration-reste-field";
+import { pilotZoneOptions } from "@/lib/domain/pilot-zones";
 import type { AgencyOption } from "./new-declaration-form";
 
 export type EditDeclarationInitial = {
@@ -23,8 +26,6 @@ export type EditDeclarationInitial = {
   gaindeDutyAmount: string;
   costPrice: string;
   payingAgencyId: string;
-  customsReference: string;
-  bureau: string;
   bonADelivrer: boolean;
 };
 
@@ -61,6 +62,10 @@ export function EditDeclarationForm({
     containers: initial.containers,
     containerCount: initial.containerCount,
   });
+  const [clientAmountPaid, setClientAmountPaid] = useState(
+    initial.clientAmountPaid,
+  );
+  const [costPrice, setCostPrice] = useState(initial.costPrice);
 
   useEffect(() => {
     setBonADelivrer(initial.bonADelivrer);
@@ -68,7 +73,16 @@ export function EditDeclarationForm({
       containers: initial.containers,
       containerCount: initial.containerCount,
     });
-  }, [formKey, initial.bonADelivrer, initial.containers, initial.containerCount]);
+    setClientAmountPaid(initial.clientAmountPaid);
+    setCostPrice(initial.costPrice);
+  }, [
+    formKey,
+    initial.bonADelivrer,
+    initial.containers,
+    initial.containerCount,
+    initial.clientAmountPaid,
+    initial.costPrice,
+  ]);
 
   const containerCountShortfall =
     containerPayload.containerCount > 0 &&
@@ -95,8 +109,6 @@ export function EditDeclarationForm({
       gaindeDutyAmount: parseMoney(String(form.get("gaindeDutyAmount") ?? "")),
       costPrice: parseMoney(String(form.get("costPrice") ?? "")),
       payingAgencyId: String(form.get("payingAgencyId") ?? ""),
-      customsReference: String(form.get("customsReference") ?? "") || null,
-      bureau: String(form.get("bureau") ?? "") || null,
       bonADelivrer,
     });
 
@@ -196,31 +208,18 @@ export function EditDeclarationForm({
               defaultValue={initial.declarationDate}
             />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:col-span-2">
             <label htmlFor="zoneOrTerminal" className="text-sm font-medium">
               Zone / terminal
             </label>
-            <Input
+            <FormSelect
+              key={`${formKey}-zone`}
               id="zoneOrTerminal"
               name="zoneOrTerminal"
               defaultValue={initial.zoneOrTerminal}
+              options={pilotZoneOptions()}
+              emptyOption="—"
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="customsReference" className="text-sm font-medium">
-              N° douane
-            </label>
-            <Input
-              id="customsReference"
-              name="customsReference"
-              defaultValue={initial.customsReference}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="bureau" className="text-sm font-medium">
-              Bureau
-            </label>
-            <Input id="bureau" name="bureau" defaultValue={initial.bureau} />
           </div>
         </div>
       </section>
@@ -262,7 +261,8 @@ export function EditDeclarationForm({
               min={0}
               step={1}
               inputMode="numeric"
-              defaultValue={initial.clientAmountPaid}
+              value={clientAmountPaid}
+              onChange={(e) => setClientAmountPaid(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -290,26 +290,26 @@ export function EditDeclarationForm({
               min={0}
               step={1}
               inputMode="numeric"
-              defaultValue={initial.costPrice}
+              value={costPrice}
+              onChange={(e) => setCostPrice(e.target.value)}
             />
           </div>
+          <DeclarationResteField
+            clientAmountPaid={clientAmountPaid}
+            costPrice={costPrice}
+          />
           <div className="flex flex-col gap-2">
             <label htmlFor="payingAgencyId" className="text-sm font-medium">
               Maison-mère
             </label>
-            <select
+            <FormSelect
+              key={`${formKey}-payingAgency`}
               id="payingAgencyId"
               name="payingAgencyId"
-              className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              emptyOption="—"
               defaultValue={initial.payingAgencyId}
-            >
-              <option value="">—</option>
-              {agencies.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+              options={agencies.map((a) => ({ value: a.id, label: a.name }))}
+            />
           </div>
         </div>
       </section>

@@ -212,6 +212,35 @@ export async function createTransactionType(
   return mapRow(row);
 }
 
+export async function updateTransactionType(
+  db: DbLike,
+  ctx: ModuleContext,
+  transactionTypeId: string,
+  input: { name: string },
+): Promise<TransactionTypeRow> {
+  const existing = await getTransactionTypeById(
+    db,
+    ctx.organizationId,
+    transactionTypeId,
+  );
+  if (!existing) {
+    throw new Error("Type de transaction introuvable.");
+  }
+
+  const [row] = await db
+    .update(ledgerTransactionTypes)
+    .set({ name: input.name.trim() })
+    .where(
+      and(
+        eq(ledgerTransactionTypes.id, transactionTypeId),
+        eq(ledgerTransactionTypes.organizationId, ctx.organizationId),
+      ),
+    )
+    .returning();
+
+  return mapRow(row);
+}
+
 /** Maps a transaction type to the legacy `ledger_entry_type` enum column. */
 export function entryTypeForTransactionType(type: TransactionTypeRow): LedgerEntryType {
   if (type.systemKey) return type.systemKey;

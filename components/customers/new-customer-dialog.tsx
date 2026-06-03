@@ -2,6 +2,7 @@
 
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -27,7 +28,7 @@ export function NewCustomerDialog({
             Ajoutez un compte client. Le solde sera géré via les transactions.
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto px-6 pb-6">
+        <DialogBody>
           <NewCustomerForm
             key={open ? "new-customer" : "closed"}
             embedded
@@ -37,7 +38,7 @@ export function NewCustomerDialog({
               window.setTimeout(() => onOpenChange(false), 500);
             }}
           />
-        </div>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

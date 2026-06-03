@@ -491,7 +491,7 @@
         "Fiche tabs: Déclarations, Transactions, Activité",
         "PageHeader CTA retained (UI-003)"
       ],
-      "notes": "Shipped: list + URL tabs Résumé/Transactions/Déclarations, global /transactions, statut compte, extensible types. In progress: fiche UX rework, Activité tab, record=1 deep link for Nouvelle transaction."
+      "notes": "Résumé tab = journal du compte (transactions + déclarations, solde après chaque écriture, par jour). Remaining: optional dedicated Activité tab from activity_log, list polish."
     },
     {
       "id": "CLI-002",
@@ -558,7 +558,7 @@
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "Synthèse cards: déclarations en cours, dossiers ouverts, soldes à surveiller",
-        "À faire queue: stale declarations, missing n° douane, overdue solde, dossiers ready to close",
+        "À faire queue: stale declarations, overdue solde, dossiers ready to close",
         "Activité récente: unified timeline (last N events) with links to source entities",
         "Empty states for first-time orgs"
       ]

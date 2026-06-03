@@ -45,6 +45,11 @@ export const createTransactionTypeSchema = z.object({
   balanceSide: z.enum(["debit", "credit"]),
 });
 
+export const updateTransactionTypeSchema = z.object({
+  transactionTypeId: z.string().uuid(),
+  name: z.string().min(1, "Le nom est requis").max(80),
+});
+
 /** @deprecated Use recordTransactionBodySchema */
 export const recordVersementBodySchema = recordTransactionBodySchema;
 export const recordVersementSchema = recordTransactionSchema;
@@ -59,4 +64,7 @@ export type RecordTransactionBodyValues = z.input<
 >;
 export type CreateTransactionTypeInput = z.infer<
   typeof createTransactionTypeSchema
+>;
+export type UpdateTransactionTypeInput = z.infer<
+  typeof updateTransactionTypeSchema
 >;

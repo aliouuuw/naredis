@@ -4,7 +4,10 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { recordTransactionAction } from "@/lib/actions/ledger";
-import { createTransactionTypeAction } from "@/lib/actions/transaction-types";
+import {
+  createTransactionTypeAction,
+  updateTransactionTypeAction,
+} from "@/lib/actions/transaction-types";
 import { formatXof } from "@/lib/domain/balance";
 import { agencyCalendarDate } from "@/lib/domain/timezone";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
@@ -12,6 +15,7 @@ import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import { sumAllocations } from "@/lib/modules/ledger/allocations";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +25,7 @@ export function RecordTransactionForm({
   customerId,
   customerName,
   dossiers,
+  dossiersLoading = false,
   transactionTypes: initialTypes,
   embedded = false,
   onSuccess,
@@ -28,6 +33,7 @@ export function RecordTransactionForm({
   customerId: string;
   customerName: string;
   dossiers: DossierAllocationOption[];
+  dossiersLoading?: boolean;
   transactionTypes: TransactionTypeSerialized[];
   /** Render inside a dialog (no card chrome or duplicate title). */
   embedded?: boolean;
@@ -45,9 +51,12 @@ export function RecordTransactionForm({
   );
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
   const [showNewType, setShowNewType] = useState(false);
+  const [showManageTypes, setShowManageTypes] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeSide, setNewTypeSide] = useState<"credit" | "debit">("credit");
   const [typePending, setTypePending] = useState(false);
+  const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+  const [editingTypeName, setEditingTypeName] = useState("");
 
   const selectedType = types.find((t) => t.id === transactionTypeId);
   const isCredit = selectedType?.balanceSide === "credit";
@@ -129,6 +138,29 @@ export function RecordTransactionForm({
     setShowNewType(false);
   }
 
+  async function handleRenameType(typeId: string) {
+    const name = editingTypeName.trim();
+    if (!name) return;
+    setTypePending(true);
+    setError(null);
+    const result = await updateTransactionTypeAction({
+      transactionTypeId: typeId,
+      name,
+    });
+    setTypePending(false);
+    if (!result.ok || !result.data) {
+      setError(result.ok ? "Réponse invalide." : result.error);
+      return;
+    }
+    setTypes((prev) =>
+      prev
+        .map((t) => (t.id === typeId ? result.data! : t))
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    );
+    setEditingTypeId(null);
+    setEditingTypeName("");
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitLock.current || !transactionTypeId) return;
@@ -205,37 +237,35 @@ export function RecordTransactionForm({
             Type <span className="text-destructive">*</span>
           </label>
           <div className="flex flex-wrap gap-2">
-            <select
+            <FormSelect
               id="transaction-type"
               value={transactionTypeId}
-              onChange={(e) => {
-                setTransactionTypeId(e.target.value);
-                if (!types.find((t) => t.id === e.target.value)?.balanceSide) {
-                  return;
-                }
-                const t = types.find((x) => x.id === e.target.value);
+              required
+              triggerClassName="min-w-0 flex-1"
+              onValueChange={(id) => {
+                setTransactionTypeId(id);
+                const t = types.find((x) => x.id === id);
                 if (t?.balanceSide !== "credit") {
                   setAllocations([]);
                 }
               }}
-              required
-              className="h-8 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-sm"
-            >
-              <optgroup label="Crédit (encaissements)">
-                {creditTypes.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Débit (charges)">
-                {debitTypes.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              groups={[
+                {
+                  label: "Crédit (encaissements)",
+                  options: creditTypes.map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                  })),
+                },
+                {
+                  label: "Débit (charges)",
+                  options: debitTypes.map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                  })),
+                },
+              ]}
+            />
             <Button
               type="button"
               variant="outline"
@@ -245,8 +275,77 @@ export function RecordTransactionForm({
               <Plus className="size-3.5" aria-hidden />
               Nouveau type
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowManageTypes((v) => !v)}
+            >
+              Modifier les types
+            </Button>
           </div>
         </div>
+
+        {showManageTypes ? (
+          <div className="sm:col-span-2 space-y-2 rounded-lg border bg-muted/20 p-3">
+            <p className="text-xs font-medium">Renommer un type</p>
+            <ul className="space-y-2">
+              {types.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex flex-wrap items-center gap-2 text-sm"
+                >
+                  {editingTypeId === t.id ? (
+                    <>
+                      <Input
+                        value={editingTypeName}
+                        onChange={(e) => setEditingTypeName(e.target.value)}
+                        className="min-w-[10rem] flex-1"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={typePending || !editingTypeName.trim()}
+                        onClick={() => void handleRenameType(t.id)}
+                      >
+                        Enregistrer
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingTypeId(null);
+                          setEditingTypeName("");
+                        }}
+                      >
+                        Annuler
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="min-w-0 flex-1">{t.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t.balanceSide === "credit" ? "Crédit" : "Débit"}
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingTypeId(t.id);
+                          setEditingTypeName(t.name);
+                        }}
+                      >
+                        Renommer
+                      </Button>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {showNewType ? (
           <div className="sm:col-span-2 rounded-lg border border-dashed bg-muted/30 p-3 space-y-3">
@@ -258,16 +357,17 @@ export function RecordTransactionForm({
                 onChange={(e) => setNewTypeName(e.target.value)}
                 className="min-w-[12rem] flex-1"
               />
-              <select
+              <FormSelect
                 value={newTypeSide}
-                onChange={(e) =>
-                  setNewTypeSide(e.target.value as "credit" | "debit")
+                onValueChange={(v) =>
+                  setNewTypeSide(v as "credit" | "debit")
                 }
-                className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm"
-              >
-                <option value="credit">Crédit</option>
-                <option value="debit">Débit</option>
-              </select>
+                triggerClassName="w-[7rem]"
+                options={[
+                  { value: "credit", label: "Crédit" },
+                  { value: "debit", label: "Débit" },
+                ]}
+              />
               <Button
                 type="button"
                 size="sm"
@@ -341,24 +441,21 @@ export function RecordTransactionForm({
             <ul className="space-y-2">
               {allocations.map((row, index) => (
                 <li key={index} className="flex flex-wrap items-end gap-2">
-                  <select
+                  <FormSelect
                     value={row.dossierId}
-                    onChange={(e) =>
-                      updateAllocation(index, "dossierId", e.target.value)
+                    onValueChange={(v) =>
+                      updateAllocation(index, "dossierId", v)
                     }
-                    className="h-8 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-sm"
                     required
-                  >
-                    <option value="" disabled>
-                      Dossier
-                    </option>
-                    {dossiers.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.dossierNumber}
-                        {d.blReference ? ` · BL ${d.blReference}` : ""}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Dossier"
+                    triggerClassName="min-w-0 flex-1"
+                    options={dossiers.map((d) => ({
+                      value: d.id,
+                      label: `${d.dossierNumber}${
+                        d.blReference ? ` · BL ${d.blReference}` : ""
+                      }`,
+                    }))}
+                  />
                   <Input
                     type="number"
                     min={1}
@@ -398,7 +495,12 @@ export function RecordTransactionForm({
 
       <Button
         type="submit"
-        disabled={pending || allocationMismatch || !transactionTypeId}
+        disabled={
+          pending ||
+          allocationMismatch ||
+          !transactionTypeId ||
+          dossiersLoading
+        }
       >
         {pending ? "Enregistrement…" : "Enregistrer"}
       </Button>

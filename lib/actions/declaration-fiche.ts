@@ -62,8 +62,6 @@ export async function getDeclarationFicheAction(
       gaindeDutyAmount: moneyToInput(declaration.gaindeDutyAmount),
       costPrice: moneyToInput(declaration.costPrice),
       payingAgencyId: declaration.payingAgencyId ?? "",
-      customsReference: declaration.customsReference ?? "",
-      bureau: declaration.bureau ?? "",
       bonADelivrer: declaration.bonADelivrer,
     },
     editLog: editLog.map((entry) => ({

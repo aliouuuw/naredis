@@ -10,6 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "bun run scripts/seed.ts",
+    "db:reseed": "bun run scripts/seed.ts --reset",
     "db:studio": "drizzle-kit studio",
     "test": "bun test"
   },

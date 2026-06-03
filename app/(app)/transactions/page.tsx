@@ -20,7 +20,7 @@ import {
 } from "@/lib/modules/ledger/transactions-query";
 import { TransactionsView } from "@/components/transactions/transactions-view";
 import { PageHeader } from "@/components/shell/page-header";
-import { NewTransactionButton } from "@/components/shell/page-actions";
+import { RecordTransactionLauncher } from "@/components/transactions/record-transaction-launcher";
 
 export default async function TransactionsPage({
   searchParams,
@@ -67,7 +67,12 @@ export default async function TransactionsPage({
         description="Filtres combinables, regroupements imbriqués et tri — la vue se synchronise dans l'URL pour partage et historique."
         actions={
           canRecord ? (
-            <NewTransactionButton customerId={customerId} />
+            <RecordTransactionLauncher
+              customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+              transactionTypes={transactionTypes}
+              initialCustomerId={customerId}
+              recordIntent={recordIntent}
+            />
           ) : undefined
         }
       />

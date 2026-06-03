@@ -20,7 +20,7 @@ import {
   getDossierById,
   updateDossierBlReference,
 } from "@/lib/modules/dossiers/service";
-import { nextDeclarationNumber } from "@/lib/modules/dossiers/sequences";
+import { buildDeclarationNumber } from "@/lib/domain/declaration-number";
 import type { ModuleContext } from "@/lib/modules/shared/types";
 import type {
   CreateDeclarationInput,
@@ -42,6 +42,7 @@ export type DeclarationListItem = {
   bonADelivrer: boolean;
   payingAgencyName: string | null;
   dossierId: string;
+  createdAt: Date;
 };
 
 function serializeValue(value: unknown): string | null {
@@ -111,6 +112,13 @@ export class DuplicateBlError extends Error {
   }
 }
 
+export class DuplicateDeclarationNumberError extends Error {
+  constructor(public readonly declarationNumber: string) {
+    super(`Le numéro de déclaration ${declarationNumber} existe déjà.`);
+    this.name = "DuplicateDeclarationNumberError";
+  }
+}
+
 export class BonADelivrerIncompleteError extends Error {
   constructor(public readonly missing: string[]) {
     super(`Champs manquants pour bon à délivrer: ${missing.join(", ")}`);
@@ -153,6 +161,7 @@ export async function listDeclarations(
       costPrice: declarations.costPrice,
       bonADelivrer: declarations.bonADelivrer,
       dossierId: declarations.dossierId,
+      createdAt: declarations.createdAt,
       blReference: dossiers.blReference,
       customerName: customers.name,
       customerSlug: customers.slug,
@@ -193,6 +202,7 @@ export async function listDeclarationsForCustomer(
       costPrice: declarations.costPrice,
       bonADelivrer: declarations.bonADelivrer,
       dossierId: declarations.dossierId,
+      createdAt: declarations.createdAt,
       blReference: dossiers.blReference,
       customerName: customers.name,
       customerSlug: customers.slug,
@@ -318,10 +328,22 @@ export async function createDeclaration(
         title: input.title,
       });
 
-      const declarationNumber = await nextDeclarationNumber(
-        tx,
-        ctx.organizationId,
-      );
+      const declarationNumber = input.declarationNumber;
+
+      const [existingNumber] = await tx
+        .select({ id: declarations.id })
+        .from(declarations)
+        .where(
+          and(
+            eq(declarations.organizationId, ctx.organizationId),
+            eq(declarations.declarationNumber, declarationNumber),
+          ),
+        )
+        .limit(1);
+
+      if (existingNumber) {
+        throw new DuplicateDeclarationNumberError(declarationNumber);
+      }
 
       const [declaration] = await tx
         .insert(declarations)
@@ -360,6 +382,7 @@ export async function createDeclaration(
     });
   } catch (err) {
     if (err instanceof DuplicateBlError) throw err;
+    if (err instanceof DuplicateDeclarationNumberError) throw err;
     if (isUniqueViolation(err)) {
       throw new DuplicateBlError(bl);
     }

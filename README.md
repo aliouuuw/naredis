@@ -13,7 +13,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 2. Create DB (Homebrew example): `createdb ndouckmane_transit_dev`
 3. Apply schema: `bun run db:migrate`
 4. Load demo data + dev admin: `bun run db:seed`
-5. Log in at `/login` with `admin@demo-transit.sn` / `DemoAdmin2026!` (override via `SEED_ADMIN_*` in `.env.local`)
+5. To refresh demo data after schema/product changes: `bun run db:reseed`
+6. Log in at `/login` with `admin@demo-transit.sn` / `DemoAdmin2026!` (override via `SEED_ADMIN_*` in `.env.local`)
 
 Or use Docker: `docker compose up -d` (Postgres 17 on port 5432).
 
@@ -21,7 +22,8 @@ Or use Docker: `docker compose up -d` (Postgres 17 on port 5432).
 |---------|---------|
 | `bun run db:generate` | Generate migration from schema changes |
 | `bun run db:migrate` | Apply migrations |
-| `bun run db:seed` | Dev seed (org `demo-transit`) |
+| `bun run db:seed` | Dev seed (org `demo-transit`, pilot-shaped data) |
+| `bun run db:reseed` | Wipe `demo-transit` org and seed again |
 | `bun run db:studio` | Drizzle Studio |
 
 ## Getting Started

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { buildDeclarationNumber } from "@/lib/domain/declaration-number";
 
 const moneyField = z
   .union([z.string(), z.number(), z.bigint(), z.literal("")])
@@ -23,6 +24,15 @@ const nullableMoneyField = z
 
 export const createDeclarationSchema = z.object({
   customerId: z.string().uuid(),
+  declarationNumberPrefix: z
+    .string()
+    .trim()
+    .min(1, "Le préfixe du numéro est requis"),
+  declarationZoneSlug: z.string().trim().min(1, "La zone est requise"),
+  declarationNumberSuffix: z
+    .string()
+    .trim()
+    .min(1, "Le suffixe du numéro est requis"),
   blReference: z.string().min(1, "Le numéro BL est requis"),
   zoneOrTerminal: z.string().optional(),
   declarationDate: z.string().optional(),
@@ -37,6 +47,19 @@ export const createDeclarationSchema = z.object({
     .transform((v) => (v && v.length > 0 ? v : null)),
   dossierType: z.enum(["import", "export", "transit"]).optional(),
   title: z.string().optional(),
+}).transform((data) => {
+  const declarationNumber = buildDeclarationNumber(
+    data.declarationNumberPrefix,
+    data.declarationZoneSlug,
+    data.declarationNumberSuffix,
+  );
+  const zoneOrTerminal =
+    data.zoneOrTerminal?.trim() || data.declarationZoneSlug.trim();
+  return {
+    ...data,
+    declarationNumber,
+    zoneOrTerminal,
+  };
 });
 
 const updateDeclarationBase = z.object({

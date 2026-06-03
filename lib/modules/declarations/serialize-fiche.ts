@@ -34,8 +34,6 @@ export type DeclarationFicheSerialized = {
     gaindeDutyAmount: string;
     costPrice: string;
     payingAgencyId: string;
-    customsReference: string;
-    bureau: string;
     bonADelivrer: boolean;
   };
   editLog: DeclarationEditLogEntrySerialized[];
