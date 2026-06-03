@@ -1,11 +1,12 @@
+import { Suspense } from "react";
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
 import { serializeCustomerListItem } from "@/lib/modules/customers/serialize-list";
 import { listCustomers } from "@/lib/modules/customers/service";
+import { ClientsPageView } from "@/components/clients/clients-page-view";
 import { PageHeader } from "@/components/shell/page-header";
 import { NewClientButton } from "@/components/shell/page-actions";
-import { ClientsTable } from "@/components/clients/clients-table";
 
 export default async function ClientsPage() {
   const auth = await requireAuthContext();
@@ -20,18 +21,15 @@ export default async function ClientsPage() {
         description="Comptes clients, solde en débit/crédit et activité du jour (Dakar)."
         actions={<NewClientButton />}
       />
-      {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            Aucun client pour le moment.
-          </p>
-          <div className="mt-4 flex justify-center">
-            <NewClientButton />
+      <Suspense
+        fallback={
+          <div className="rounded-lg border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
+            Chargement…
           </div>
-        </div>
-      ) : (
-        <ClientsTable rows={rows} />
-      )}
+        }
+      >
+        <ClientsPageView rows={rows} />
+      </Suspense>
     </div>
   );
 }

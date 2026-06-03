@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createDeclarationAction } from "@/lib/actions/declarations";
 import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
@@ -20,11 +19,20 @@ function parseMoney(value: string): string | undefined {
 export function NewDeclarationForm({
   customers,
   agencies,
+  embedded = false,
+  defaultCustomerId,
+  onSuccess,
+  onCancel,
+  onRequestNewClient,
 }: {
   customers: CustomerOption[];
   agencies: AgencyOption[];
+  embedded?: boolean;
+  defaultCustomerId?: string;
+  onSuccess?: (declarationId: string) => void;
+  onCancel?: () => void;
+  onRequestNewClient?: () => void;
 }) {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -66,24 +74,33 @@ export function NewDeclarationForm({
       return;
     }
 
-    router.push(`/declarations?open=${result.data!.id}`);
-    router.refresh();
+    setSuccess("Déclaration créée.");
+    onSuccess?.(result.data!.id);
   }
 
   if (!hasCustomers) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Créez d&apos;abord un{" "}
-        <a href="/clients/new" className="font-medium text-foreground underline">
-          client
-        </a>{" "}
-        avant d&apos;ouvrir une déclaration.
-      </p>
+      <div className="space-y-3 py-2 text-sm text-muted-foreground">
+        <p>Créez d&apos;abord un client avant d&apos;ouvrir une déclaration.</p>
+        {onRequestNewClient ? (
+          <Button type="button" size="sm" onClick={onRequestNewClient}>
+            Nouveau client
+          </Button>
+        ) : null}
+        {onCancel ? (
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            Fermer
+          </Button>
+        ) : null}
+      </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
+    <form
+      onSubmit={onSubmit}
+      className={embedded ? "flex flex-col gap-6" : "flex max-w-2xl flex-col gap-6"}
+    >
       {error ? <FormAlert variant="error">{error}</FormAlert> : null}
       {success ? <FormAlert variant="success">{success}</FormAlert> : null}
       <section className="space-y-4">
@@ -98,7 +115,7 @@ export function NewDeclarationForm({
               name="customerId"
               required
               className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
-              defaultValue=""
+              defaultValue={defaultCustomerId ?? ""}
             >
               <option value="" disabled>
                 Choisir un client
@@ -114,7 +131,13 @@ export function NewDeclarationForm({
             <label htmlFor="blReference" className="text-sm font-medium">
               Numéro BL <span className="text-destructive">*</span>
             </label>
-            <Input id="blReference" name="blReference" required className="font-mono" />
+            <Input
+              id="blReference"
+              name="blReference"
+              required
+              className="font-mono"
+              autoFocus={embedded}
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="dossierType" className="text-sm font-medium">
@@ -164,7 +187,8 @@ export function NewDeclarationForm({
       <section className="space-y-4">
         <h2 className="text-sm font-semibold">Montants (fiche)</h2>
         <p className="text-xs text-muted-foreground">
-          Ces montants restent sur la déclaration — ils ne créent pas de transaction.
+          Ces montants restent sur la déclaration — ils ne créent pas de
+          transaction.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
@@ -225,15 +249,23 @@ export function NewDeclarationForm({
         </div>
       </section>
 
-      <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:-mx-0 md:rounded-lg md:border">
-      <div className="flex gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Création…" : "Créer la déclaration"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Annuler
-        </Button>
-      </div>
+      <div
+        className={
+          embedded
+            ? "flex gap-3 border-t pt-4"
+            : "sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:-mx-0 md:rounded-lg md:border"
+        }
+      >
+        <div className="flex gap-3">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Création…" : "Créer la déclaration"}
+          </Button>
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Annuler
+            </Button>
+          ) : null}
+        </div>
       </div>
     </form>
   );

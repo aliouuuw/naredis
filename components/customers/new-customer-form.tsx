@@ -1,20 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createCustomerAction } from "@/lib/actions/customers";
 import { Button } from "@/components/ui/button";
+import { FormAlert } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 
-export function NewCustomerForm() {
-  const router = useRouter();
+export function NewCustomerForm({
+  embedded = false,
+  onSuccess,
+  onCancel,
+}: {
+  embedded?: boolean;
+  onSuccess?: (customerId: string) => void;
+  onCancel?: () => void;
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
+    setSuccess(null);
 
     const form = new FormData(event.currentTarget);
     const result = await createCustomerAction({
@@ -32,17 +41,20 @@ export function NewCustomerForm() {
       return;
     }
 
-    router.push(`/clients/${result.data!.id}`);
-    router.refresh();
+    setSuccess("Client créé.");
+    onSuccess?.(result.data!.id);
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-lg flex-col gap-5">
+    <form
+      onSubmit={onSubmit}
+      className={embedded ? "flex flex-col gap-5" : "flex max-w-lg flex-col gap-5"}
+    >
       <div className="flex flex-col gap-2">
         <label htmlFor="name" className="text-sm font-medium">
           Nom du client <span className="text-destructive">*</span>
         </label>
-        <Input id="name" name="name" required autoFocus />
+        <Input id="name" name="name" required autoFocus={embedded} />
         <p className="text-xs text-muted-foreground">
           L&apos;identifiant (slug) sera généré automatiquement à partir du nom.
         </p>
@@ -71,18 +83,17 @@ export function NewCustomerForm() {
         </label>
         <Input id="notes" name="notes" />
       </div>
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert variant="error">{error}</FormAlert> : null}
+      {success ? <FormAlert variant="success">{success}</FormAlert> : null}
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Création…" : "Créer le client"}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Annuler
-        </Button>
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+        ) : null}
       </div>
     </form>
   );

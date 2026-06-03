@@ -327,7 +327,7 @@ export function CustomerFicheView({
           <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
             <h2 className="text-sm font-semibold">Déclarations</h2>
             <ButtonLink
-              href="/declarations/new"
+              href={`/declarations?new=1&customer=${customer.id}`}
               variant="outline"
               size="sm"
               className="rounded-full"

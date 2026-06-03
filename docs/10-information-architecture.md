@@ -12,11 +12,11 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 /app
 ├── /dashboard                 ← default landing (actionable home)
 ├── /declarations              ← primary operational database
-│   ├── /declarations/new
+│   ├── /declarations?new=1 (modal; /declarations/new redirects)
 │   └── /declarations/[id]     ← fiche déclaration (daily work)
 ├── /dossiers/[id]             ← job hub (multi-filing, docs, money)
 ├── /clients
-│   ├── /clients/new
+│   ├── /clients?new=1 (modal; /clients/new redirects)
 │   └── /clients/[id]
 └── /settings
 ```
