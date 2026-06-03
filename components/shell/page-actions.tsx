@@ -22,7 +22,7 @@ export function NewClientButton() {
 export function RecordPaymentButton({ customerId }: { customerId: string }) {
   return (
     <ButtonLink
-      href={`/clients/${customerId}?tab=transactions`}
+      href={`/clients/${customerId}?tab=transactions&record=1`}
       className="rounded-full px-4"
     >
       <Plus className="size-4" />
@@ -37,8 +37,8 @@ export function NewTransactionButton({
   customerId?: string;
 }) {
   const href = customerId
-    ? `/transactions?f=customer%3Aeq%3A${encodeURIComponent(customerId)}&preset=today`
-    : "/transactions?preset=today";
+    ? `/transactions?f=customer%3Aeq%3A${encodeURIComponent(customerId)}&preset=today&record=1`
+    : "/transactions?preset=today&record=1";
   return (
     <ButtonLink href={href} className="rounded-full px-4">
       <Plus className="size-4" />

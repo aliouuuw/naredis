@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import {
@@ -16,16 +17,14 @@ import {
 import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
 import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
-import { CustomerFicheTabs } from "@/components/clients/customer-fiche-tabs";
-import { PageHeader } from "@/components/shell/page-header";
-import { RecordPaymentButton } from "@/components/shell/page-actions";
+import { CustomerFicheView } from "@/components/clients/customer-fiche-view";
 
 export default async function ClientFichePage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; record?: string }>;
 }) {
   const { id } = await params;
   const { tab: tabParam } = await searchParams;
@@ -57,48 +56,40 @@ export default async function ClientFichePage({
         : undefined;
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title={customer.name}
-        description={`Identifiant : ${customer.slug}`}
-        actions={
-          canRecordLedger ? (
-            <RecordPaymentButton customerId={customer.id} />
-          ) : undefined
-        }
-      />
-
-      <CustomerFicheTabs
-        customer={{
-          id: customer.id,
-          name: customer.name,
-          slug: customer.slug,
-          phone: customer.phone,
-          accountStatus: customer.accountStatus,
-        }}
-        balance={{
-          amount: balance.amount.toString(),
-          side: balance.side,
-        }}
-        dayOpenBalance={{
-          amount: dayOpenBalance.amount.toString(),
-          side: dayOpenBalance.side,
-        }}
-        feesAllTime={feesAllTime.toString()}
-        transactionsToday={transactionsToday.toString()}
-        ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
-        dossiers={dossiers}
-        declarations={declarationRows.map(serializeDeclarationListItem)}
-        transactionTypes={transactionTypes}
-        canRecordLedger={canRecordLedger}
-        initialTab={initialTab}
-      />
-
+    <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         <Link href="/clients" className="hover:underline">
-          ← Retour à la liste
+          ← Clients
         </Link>
       </p>
+
+      <Suspense fallback={<p className="text-sm text-muted-foreground">Chargement…</p>}>
+        <CustomerFicheView
+          customer={{
+            id: customer.id,
+            name: customer.name,
+            slug: customer.slug,
+            phone: customer.phone,
+            accountStatus: customer.accountStatus,
+          }}
+          balance={{
+            amount: balance.amount.toString(),
+            side: balance.side,
+          }}
+          dayOpenBalance={{
+            amount: dayOpenBalance.amount.toString(),
+            side: dayOpenBalance.side,
+          }}
+          feesAllTime={feesAllTime.toString()}
+          transactionsToday={transactionsToday.toString()}
+          ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
+          dossiers={dossiers}
+          declarations={declarationRows.map(serializeDeclarationListItem)}
+          transactionTypes={transactionTypes}
+          canRecordLedger={canRecordLedger}
+          initialTab={initialTab}
+        />
+      </Suspense>
     </div>
   );
 }

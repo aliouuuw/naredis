@@ -13,6 +13,7 @@ import { sumAllocations } from "@/lib/modules/ledger/allocations";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type AllocationRow = { dossierId: string; amount: string };
 
@@ -21,11 +22,13 @@ export function RecordTransactionForm({
   customerName,
   dossiers,
   transactionTypes: initialTypes,
+  highlighted = false,
 }: {
   customerId: string;
   customerName: string;
   dossiers: DossierAllocationOption[];
   transactionTypes: TransactionTypeSerialized[];
+  highlighted?: boolean;
 }) {
   const router = useRouter();
   const submitLock = useRef(false);
@@ -169,7 +172,14 @@ export function RecordTransactionForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-lg border bg-card p-4">
+    <form
+      id="record-transaction"
+      onSubmit={onSubmit}
+      className={cn(
+        "scroll-mt-24 space-y-4 rounded-lg border bg-card p-4 transition-shadow",
+        highlighted && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+      )}
+    >
       <div>
         <h3 className="text-sm font-semibold">Nouvelle transaction</h3>
         <p className="text-xs text-muted-foreground">

@@ -337,6 +337,7 @@ export function TransactionsToolbar({
   transactionTypes,
   dossiers,
   today,
+  defaultFiltersOpen,
 }: {
   state: TransactionsViewState;
   totalCount: number;
@@ -344,6 +345,7 @@ export function TransactionsToolbar({
   transactionTypes: TransactionTypeSerialized[];
   dossiers: DossierAllocationOption[];
   today: string;
+  defaultFiltersOpen?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -388,8 +390,8 @@ export function TransactionsToolbar({
   )?.value;
 
   const summary = formatViewSummary(state, totalCount);
-  const [filtersOpen, setFiltersOpen] = useState(() =>
-    viewHasCustomizations(state),
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => defaultFiltersOpen ?? viewHasCustomizations(state),
   );
 
   const applyPreset = (preset: DatePreset) => {

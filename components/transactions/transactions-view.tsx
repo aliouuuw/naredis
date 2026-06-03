@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type {
   LedgerEntrySerialized,
   TransactionTypeSerialized,
@@ -27,6 +27,7 @@ export function TransactionsView({
   canRecord,
   viewState,
   today,
+  recordIntent = false,
 }: {
   rows: LedgerEntrySerialized[];
   customers: CustomerOption[];
@@ -35,6 +36,7 @@ export function TransactionsView({
   canRecord: boolean;
   viewState: TransactionsViewState;
   today: string;
+  recordIntent?: boolean;
 }) {
   const sorted = useMemo(
     () => sortLedgerRows(rows, viewState.sort),
@@ -52,6 +54,16 @@ export function TransactionsView({
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
+  useEffect(() => {
+    if (!recordIntent || !selectedCustomer) return;
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById("record-transaction")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [recordIntent, selectedCustomer]);
+
   return (
     <div className="space-y-8">
       <TransactionsToolbar
@@ -61,6 +73,7 @@ export function TransactionsView({
         transactionTypes={transactionTypes}
         dossiers={dossiers}
         today={today}
+        defaultFiltersOpen={recordIntent}
       />
 
       {canRecord && selectedCustomer ? (
@@ -69,6 +82,7 @@ export function TransactionsView({
           customerName={selectedCustomer.name}
           dossiers={dossiers}
           transactionTypes={transactionTypes}
+          highlighted={recordIntent}
         />
       ) : canRecord ? (
         <p className="text-sm text-muted-foreground">

@@ -33,6 +33,11 @@ export default async function TransactionsPage({
   const db = getDb();
   const today = agencyCalendarDate();
 
+  const recordIntent = (() => {
+    const v = params.record;
+    return (Array.isArray(v) ? v[0] : v) === "1";
+  })();
+
   const viewState = parseTransactionsViewState(params, today);
   const ledgerFilters = rulesToLedgerFilters(
     viewState.rules,
@@ -75,6 +80,7 @@ export default async function TransactionsPage({
         canRecord={canRecord}
         viewState={viewState}
         today={today}
+        recordIntent={recordIntent}
       />
     </div>
   );

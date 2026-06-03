@@ -69,11 +69,12 @@ export function ClientsTable({ rows }: { rows: CustomerListItemSerialized[] }) {
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={
+                    className={cn(
+                      "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
                       row.accountStatus === "a_jour"
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-amber-700 dark:text-amber-400"
-                    }
+                        ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                        : "bg-amber-500/10 text-amber-800 dark:text-amber-300",
+                    )}
                   >
                     {accountStatusLabel[row.accountStatus]}
                   </span>
