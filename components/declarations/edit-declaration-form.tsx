@@ -94,8 +94,12 @@ export function EditDeclarationForm({
   ]);
 
   const zoneSuggestions = useMemo(
-    () => mergeZoneSuggestions(suggestions?.zoneOrTerminals ?? []),
-    [suggestions?.zoneOrTerminals],
+    () =>
+      mergeZoneSuggestions(
+        suggestions?.zoneCatalog ?? [],
+        suggestions?.zoneOrTerminals ?? [],
+      ),
+    [suggestions?.zoneCatalog, suggestions?.zoneOrTerminals],
   );
 
   const containerCountShortfall =

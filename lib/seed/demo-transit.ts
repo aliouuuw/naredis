@@ -17,6 +17,7 @@ import {
   paymentAllocations,
 } from "@/lib/db/schema";
 import { ensureDefaultTransactionTypes } from "@/lib/modules/ledger/transaction-types";
+import { ensureDefaultZones } from "@/lib/modules/zones/service";
 import { slugFromName } from "@/lib/utils/slug";
 
 export const DEMO_ORG_SLUG = "demo-transit";
@@ -51,6 +52,7 @@ export async function seedDemoTransitData(
   adminUserId: string,
 ): Promise<void> {
   await ensureDefaultTransactionTypes(db, orgId);
+  await ensureDefaultZones(db, orgId);
   const typeRows = await db
     .select()
     .from(ledgerTransactionTypes)

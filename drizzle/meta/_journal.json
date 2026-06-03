@@ -43,6 +43,13 @@
       "when": 1780490021577,
       "tag": "0005_happy_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780509994484,
+      "tag": "0006_lowly_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

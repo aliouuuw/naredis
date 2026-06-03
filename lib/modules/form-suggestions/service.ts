@@ -7,11 +7,14 @@ import {
   ledgerEntries,
 } from "@/lib/db/schema";
 import { parseDeclarationNumberParts } from "@/lib/domain/declaration-number";
+import type { PilotZoneTerminal } from "@/lib/domain/pilot-zones";
+import { listZones } from "@/lib/modules/zones/service";
 import type { ModuleContext } from "@/lib/modules/shared/types";
 
 export type FormSuggestions = {
   declarationPrefixes: string[];
   declarationSuffixes: string[];
+  zoneCatalog: PilotZoneTerminal[];
   zoneOrTerminals: string[];
   containerNumbers: string[];
   ledgerLabels: string[];
@@ -37,7 +40,7 @@ export async function getOrgFormSuggestions(
 ): Promise<FormSuggestions> {
   const orgId = ctx.organizationId;
 
-  const [declNumberRows, zoneRows, containerRows, labelRows, titleRows] =
+  const [declNumberRows, zoneRows, containerRows, labelRows, titleRows, zones] =
     await Promise.all([
       db
         .select({ num: declarations.declarationNumber })
@@ -79,6 +82,7 @@ export async function getOrgFormSuggestions(
         )
         .orderBy(desc(dossiers.updatedAt))
         .limit(40),
+      listZones(db, ctx),
     ]);
 
   const prefixes: string[] = [];
@@ -94,6 +98,7 @@ export async function getOrgFormSuggestions(
   return {
     declarationPrefixes: uniqueNonEmpty(prefixes),
     declarationSuffixes: uniqueNonEmpty(suffixes),
+    zoneCatalog: zones.map((z) => ({ slug: z.slug, label: z.label })),
     zoneOrTerminals: uniqueNonEmpty(zoneRows.map((r) => r.zone)),
     containerNumbers: uniqueNonEmpty(containerRows.map((r) => r.num)),
     ledgerLabels: uniqueNonEmpty(labelRows.map((r) => r.label)),

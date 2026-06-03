@@ -233,6 +233,38 @@ export async function createTransactionType(
   return mapRow(row);
 }
 
+export async function setTransactionTypeActive(
+  db: DbLike,
+  ctx: ModuleContext,
+  transactionTypeId: string,
+  active: boolean,
+): Promise<TransactionTypeRow> {
+  const existing = await getTransactionTypeById(
+    db,
+    ctx.organizationId,
+    transactionTypeId,
+  );
+  if (!existing) {
+    throw new Error("Type de transaction introuvable.");
+  }
+  if (existing.isSystem && !active) {
+    throw new Error("Les types système ne peuvent pas être désactivés.");
+  }
+
+  const [row] = await db
+    .update(ledgerTransactionTypes)
+    .set({ active })
+    .where(
+      and(
+        eq(ledgerTransactionTypes.id, transactionTypeId),
+        eq(ledgerTransactionTypes.organizationId, ctx.organizationId),
+      ),
+    )
+    .returning();
+
+  return mapRow(row);
+}
+
 export async function updateTransactionType(
   db: DbLike,
   ctx: ModuleContext,

@@ -81,8 +81,12 @@ export function NewDeclarationForm({
   }, [defaultCustomerId]);
 
   const zoneSuggestions = useMemo(
-    () => mergeZoneSuggestions(suggestions?.zoneOrTerminals ?? []),
-    [suggestions?.zoneOrTerminals],
+    () =>
+      mergeZoneSuggestions(
+        suggestions?.zoneCatalog ?? [],
+        suggestions?.zoneOrTerminals ?? [],
+      ),
+    [suggestions?.zoneCatalog, suggestions?.zoneOrTerminals],
   );
 
   const previewNumber = useMemo(() => {

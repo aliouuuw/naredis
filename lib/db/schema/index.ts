@@ -12,3 +12,4 @@ export * from "./ledger";
 export * from "./ledger-transaction-types";
 export * from "./organizations";
 export * from "./sequences";
+export * from "./zones";

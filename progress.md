@@ -8,11 +8,11 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 ## Current phase
 
-**Pilot desk alignment** (client call 2026-06-03) — operator declaration numbers, client account journal on Résumé, reste on fiches, transaction UX fixes. See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
+**Pilot desk + reporting** — alignment pass shipped (declaration #, Résumé journal, reste, transaction UX). **Excel exports** on client relevé, déclarations list, and transactions list (filters match URL; pilot format is `.xlsx`, not PDF). See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
 
-**Next up:** `DOS-002` document upload, `POL-001` search.
+**Next up:** `DOS-002` document upload, `POL-001` Cmd+K search. Réglages CRUD for agencies, zones, transaction types is live.
 
-Shell is now tab-based (`UI-004`); dashboard is default landing.
+Shell is tab-based (`UI-004`); dashboard is default landing.
 
 ---
 
@@ -25,12 +25,16 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema (pilot 0003, review 0004) | Done |
-| Unit tests (`bun test`, domain + slug + ledger) | Done (35+) |
+| Unit tests (`bun test`, domain + slug + ledger) | Done (54) |
 | Product branding (Naredis) + login panel | Done |
 | CLI-003 opening balance + contre-passation | Done |
-| DECL-001 list filters + column order | Done |
-| UI-006 editable list columns (localStorage) | Done |
-| CLI-004 relevé Excel export | Done |
+| DECL-001 list filters + presets + URL sync | Done |
+| CLI-004 relevé Excel export (client fiche) | Done |
+| List Excel export (déclarations + transactions) | Done — toolbar **Exporter Excel**; same filters as list |
+| List pagination (20 rows/page) | Done |
+| List IA alignment (toolbars, headers, `FormSelect`) | Done |
+| Réglages — agences, zones, types de transaction | Done (`/settings`, migration 0006) |
+| UI-006 editable list columns (localStorage) | Done — déclarations, clients, transactions |
 | DECL-003 fiche Activité tab | Done |
 | DOS-001 dossier hub tabs + close | Done |
 | DOS-003 dossier finances (charges / payé / reste) | Done |
@@ -74,7 +78,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 From [docs/03-mvp-scope.md](./docs/03-mvp-scope.md):
 
 - [ ] Pilot completes happy path in **déclaration** language
-- [ ] Rectificative: edit declaration row + audit log
+- [x] Rectificative: edit declaration row + audit log (`DECL-005`)
 - [ ] Client solde matches ledger
 - [ ] Invalid customs status transitions blocked
 - [ ] Documents org-scoped
@@ -88,7 +92,8 @@ After the 2026-06-03 alignment pass:
 
 1. **DOS-002** — document upload on dossier  
 2. **POL-001** — Cmd+K search  
-3. **Later** — DECL-004 FSM (defer), POL-004 staging, CLI-004 PDF, list pagination  
+3. **Later** — DECL-004 FSM (defer), POL-004 staging, configurable zones in Settings  
+4. **When data grows** — raise/remove 500-row cap on déclarations list/export; consider ledger export batching  
 
 ---
 
@@ -103,12 +108,11 @@ After the 2026-06-03 alignment pass:
 | FormSelect shows type name | Done |
 | Nouvelle transaction from `/transactions` | Done (client picker in dialog) |
 | Transaction types rename | Done |
+| Excel relevé + list exports | Done (client fiche + `/declarations` + `/transactions`) |
 
 | Item | Deferred |
 |------|----------|
-| Configurable zones in Settings | Backlog (hardcoded pilot list) |
-
----
+| — | Zones now in `organization_zones` (Réglages) |
 
 ---
 
@@ -116,6 +120,10 @@ After the 2026-06-03 alignment pass:
 
 | ID | Title | Date |
 |----|-------|------|
+| — | Excel export: client relevé + déclarations/transactions list APIs + toolbar buttons | 2026-06-03 |
+| UI-006 | Editable list columns (localStorage) on déclarations, clients, transactions | 2026-06-03 |
+| CLI-004 | Relevé de compte Excel from client fiche | 2026-06-03 |
+| — | List-page IA alignment + pagination (20/page) + `FormSelect` in toolbars | 2026-06-03 |
 | — | Naredis branding + login product panel | 2026-06-03 |
 | CLI-003 | Opening balance + contre-passation UI | 2026-06-03 |
 | DECL-001 | Declarations list filters, presets, URL sync, Reste column | 2026-06-03 |
@@ -135,7 +143,6 @@ After the 2026-06-03 alignment pass:
 | PLAT-011 | Pilot operations schema (0003) | 2026-05-23 |
 | DOM-002–004, 008 | Module services + list/fiche pages | 2026-05-23 |
 | — | Review fixes: migration 0004, aggregates, audit, tests | 2026-05-23 |
-| DECL-001 | Declarations list page | 2026-06-03 |
 | DECL-005 | Edit declaration + audit timeline UI | 2026-06-03 |
 | DOM-005 | Ledger module (versements, allocations) | 2026-06-03 |
 | CLI-002 | Payment + allocation UI on client fiche | 2026-06-03 |
@@ -155,6 +162,14 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-06-03 — Réglages CRUD
+
+`/settings`: edit **agences** (maison-mère), **zones/terminaux** (declaration # codes), **types de transaction** (rename all; add/deactivate custom). Zones moved from `pilot-zones.ts` defaults into `organization_zones` (auto-seeded on first access). Declaration forms read zone catalog via `getOrgFormSuggestions`.
+
+### 2026-06-03 — Excel exports + list polish
+
+**Reports = Excel only** (pilot): `GET /api/clients/[id]/releve`, `/api/declarations/export`, `/api/transactions/export`. Shared `DownloadExcelButton` + `listExportUrl()` (preserves filter query string; strips `page` / sheet params). Transactions export is a **flat** table (UI grouping not replicated in the file). Déclarations export shares `listDeclarations` **500-row** service cap with the list page — raise for export when pilot volume grows. Column visibility prefs (`UI-006`) apply to on-screen tables only, not export columns. `bun test` 54 pass.
 
 ### 2026-06-03 — Checkpoint (review fixes committed)
 

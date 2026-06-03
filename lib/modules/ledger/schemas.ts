@@ -50,6 +50,11 @@ export const updateTransactionTypeSchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(80),
 });
 
+export const setTransactionTypeActiveSchema = z.object({
+  transactionTypeId: z.string().uuid(),
+  active: z.boolean(),
+});
+
 export const openingBalanceBodySchema = z.object({
   amount: moneyField,
   balanceSide: z.enum(["debit", "credit"], {
@@ -84,6 +89,9 @@ export type CreateTransactionTypeInput = z.infer<
 >;
 export type UpdateTransactionTypeInput = z.infer<
   typeof updateTransactionTypeSchema
+>;
+export type SetTransactionTypeActiveInput = z.infer<
+  typeof setTransactionTypeActiveSchema
 >;
 export type OpeningBalanceBodyValues = z.input<typeof openingBalanceBodySchema>;
 export type ReverseLedgerEntryBodyValues = z.input<

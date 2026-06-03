@@ -1,42 +1,52 @@
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
+import {
+  canMutateOperationalData,
+  memberHasRole,
+  LEDGER_MUTATION_ROLES,
+} from "@/lib/auth/permissions";
 import { requireAuthContext } from "@/lib/auth/session";
 import { listAgencies } from "@/lib/modules/agencies/service";
+import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
+import { listZones } from "@/lib/modules/zones/service";
+import { SettingsView } from "@/components/settings/settings-view";
 import { PageHeader } from "@/components/shell/page-header";
 
 export default async function SettingsPage() {
   const auth = await requireAuthContext();
-  const agencies = await listAgencies(getDb(), toModuleContext(auth), false);
+  const ctx = toModuleContext(auth);
+  const db = getDb();
+
+  const [canEditOrg, canEditLedger] = await Promise.all([
+    canMutateOperationalData(auth.userId, auth.organizationId),
+    memberHasRole(auth.userId, auth.organizationId, [...LEDGER_MUTATION_ROLES]),
+  ]);
+
+  const [agencies, zones, transactionTypes] = await Promise.all([
+    listAgencies(db, ctx, false),
+    listZones(db, ctx, false),
+    listTransactionTypes(db, ctx, { activeOnly: false }),
+  ]);
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Réglages"
-        description="Cabinet, agences (maison-mère / cartes GAINDE) et membres."
+        description="Données réutilisables du cabinet : agences payeur, zones de déclaration et types d'écriture."
       />
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold">Agences (maison-mère)</h2>
-        {agencies.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Aucune agence configurée. Ajout du formulaire à venir (DOM-008 UI).
-          </p>
-        ) : (
-          <ul className="divide-y rounded-lg border bg-card">
-            {agencies.map((agency) => (
-              <li
-                key={agency.id}
-                className="flex items-center justify-between px-4 py-3 text-sm"
-              >
-                <span className="font-medium">{agency.name}</span>
-                <span className="text-muted-foreground">
-                  {agency.isActive ? "Active" : "Inactive"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <SettingsView
+        agencies={agencies.map((a) => ({
+          id: a.id,
+          name: a.name,
+          notes: a.notes,
+          isActive: a.isActive,
+        }))}
+        zones={zones}
+        transactionTypes={transactionTypes}
+        canEditOrg={canEditOrg}
+        canEditLedger={canEditLedger}
+      />
     </div>
   );
 }

@@ -8,13 +8,16 @@ import { requireRole } from "@/lib/auth/session";
 import {
   createTransactionType,
   listTransactionTypes,
+  setTransactionTypeActive,
   updateTransactionType,
   type TransactionTypeRow,
 } from "@/lib/modules/ledger/transaction-types";
 import {
   createTransactionTypeSchema,
+  setTransactionTypeActiveSchema,
   updateTransactionTypeSchema,
   type CreateTransactionTypeInput,
+  type SetTransactionTypeActiveInput,
   type UpdateTransactionTypeInput,
 } from "@/lib/modules/ledger/schemas";
 import { listDossiersForCustomer } from "@/lib/modules/ledger/service";
@@ -23,8 +26,10 @@ import { actionError, actionOk, type ActionResult } from "./form-result";
 export type TransactionTypeSerialized = TransactionTypeRow;
 
 function revalidateTypes() {
+  revalidatePath("/settings");
   revalidatePath("/transactions");
   revalidatePath("/clients");
+  revalidatePath("/dossiers");
 }
 
 export async function listTransactionTypesAction(): Promise<
@@ -51,6 +56,32 @@ export async function createTransactionTypeAction(
       getDb(),
       toModuleContext(auth),
       parsed.data,
+    );
+    revalidateTypes();
+    return actionOk(row);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Erreur inconnue";
+    return actionError(message);
+  }
+}
+
+export async function setTransactionTypeActiveAction(
+  input: SetTransactionTypeActiveInput,
+): Promise<ActionResult<TransactionTypeSerialized>> {
+  const auth = await requireRole([...LEDGER_MUTATION_ROLES]);
+  const parsed = setTransactionTypeActiveSchema.safeParse(input);
+
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return actionError(first?.message ?? "Données invalides");
+  }
+
+  try {
+    const row = await setTransactionTypeActive(
+      getDb(),
+      toModuleContext(auth),
+      parsed.data.transactionTypeId,
+      parsed.data.active,
     );
     revalidateTypes();
     return actionOk(row);
