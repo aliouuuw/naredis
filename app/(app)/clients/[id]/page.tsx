@@ -1,25 +1,41 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { formatBalanceLabel, formatXof } from "@/lib/domain/balance";
+import { LEDGER_MUTATION_ROLES, memberHasRole } from "@/lib/auth/permissions";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
+import { listDeclarationsForCustomer } from "@/lib/modules/declarations/service";
+import { serializeDeclarationListItem } from "@/lib/modules/declarations/serialize-list";
+import {
+  listDossiersForCustomer,
+  listLedgerEntriesForCustomer,
+} from "@/lib/modules/ledger/service";
+import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
+import { CustomerFicheTabs } from "@/components/clients/customer-fiche-tabs";
 import { PageHeader } from "@/components/shell/page-header";
-
-const accountStatusLabel = {
-  a_jour: "À jour",
-  pas_a_jour: "Pas à jour",
-} as const;
+import { RecordPaymentButton } from "@/components/shell/page-actions";
 
 export default async function ClientFichePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
+  const { tab: tabParam } = await searchParams;
   const auth = await requireAuthContext();
-  const fiche = await getCustomerFiche(getDb(), toModuleContext(auth), id);
+  const ctx = toModuleContext(auth);
+
+  const [fiche, ledgerRows, dossiers, declarationRows, canRecordLedger] =
+    await Promise.all([
+      getCustomerFiche(getDb(), ctx, id),
+      listLedgerEntriesForCustomer(getDb(), ctx, id),
+      listDossiersForCustomer(getDb(), ctx, id),
+      listDeclarationsForCustomer(getDb(), ctx, id),
+      memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
+    ]);
 
   if (!fiche) {
     notFound();
@@ -28,56 +44,49 @@ export default async function ClientFichePage({
   const { customer, balance, dayOpenBalance, feesAllTime, transactionsToday } =
     fiche;
 
+  const initialTab =
+    tabParam === "comptabilite"
+      ? ("comptabilite" as const)
+      : tabParam === "declarations"
+        ? ("declarations" as const)
+        : undefined;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title={customer.name}
         description={`Identifiant : ${customer.slug}`}
+        actions={
+          canRecordLedger ? (
+            <RecordPaymentButton customerId={customer.id} />
+          ) : undefined
+        }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Solde</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">
-            {formatXof(balance.amount)} XOF
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {formatBalanceLabel(balance.side)}
-            </span>
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Report (ouverture jour)</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">
-            {formatXof(dayOpenBalance.amount)} XOF
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {formatBalanceLabel(dayOpenBalance.side)}
-            </span>
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Frais dossiers (total)</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">
-            {formatXof(feesAllTime)} XOF
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Transactions aujourd&apos;hui</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">
-            {formatXof(transactionsToday)} XOF
-          </p>
-        </div>
-      </div>
-
-      <dl className="grid max-w-lg gap-2 text-sm">
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">Téléphone</dt>
-          <dd>{customer.phone ?? "—"}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">Statut compte</dt>
-          <dd>{accountStatusLabel[customer.accountStatus]}</dd>
-        </div>
-      </dl>
+      <CustomerFicheTabs
+        customer={{
+          id: customer.id,
+          name: customer.name,
+          slug: customer.slug,
+          phone: customer.phone,
+          accountStatus: customer.accountStatus,
+        }}
+        balance={{
+          amount: balance.amount.toString(),
+          side: balance.side,
+        }}
+        dayOpenBalance={{
+          amount: dayOpenBalance.amount.toString(),
+          side: dayOpenBalance.side,
+        }}
+        feesAllTime={feesAllTime.toString()}
+        transactionsToday={transactionsToday.toString()}
+        ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
+        dossiers={dossiers}
+        declarations={declarationRows.map(serializeDeclarationListItem)}
+        canRecordLedger={canRecordLedger}
+        initialTab={initialTab}
+      />
 
       <p className="text-sm text-muted-foreground">
         <Link href="/clients" className="hover:underline">

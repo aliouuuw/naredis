@@ -18,3 +18,15 @@ export function NewClientButton() {
     </ButtonLink>
   );
 }
+
+export function RecordPaymentButton({ customerId }: { customerId: string }) {
+  return (
+    <ButtonLink
+      href={`/clients/${customerId}?tab=comptabilite`}
+      className="rounded-full px-4"
+    >
+      <Plus className="size-4" />
+      Enregistrer un versement
+    </ButtonLink>
+  );
+}

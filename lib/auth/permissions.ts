@@ -5,6 +5,13 @@ import { organizationMembers } from "@/lib/db/schema";
 
 export const MUTATION_ROLES: MemberRole[] = ["owner", "admin", "operator"];
 
+/** Roles allowed to record versements, charges, and ledger corrections. */
+export const LEDGER_MUTATION_ROLES: MemberRole[] = [
+  "owner",
+  "admin",
+  "accountant",
+];
+
 export async function memberHasRole(
   userId: string,
   organizationId: string,

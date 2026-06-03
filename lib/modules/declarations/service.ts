@@ -175,6 +175,51 @@ export async function listDeclarations(
   }));
 }
 
+export async function listDeclarationsForCustomer(
+  db: DbLike,
+  ctx: ModuleContext,
+  customerId: string,
+  limit = 50,
+): Promise<DeclarationListItem[]> {
+  const rows = await db
+    .select({
+      id: declarations.id,
+      declarationNumber: declarations.declarationNumber,
+      zoneOrTerminal: declarations.zoneOrTerminal,
+      declarationDate: declarations.declarationDate,
+      containerCount: declarations.containerCount,
+      clientAmountPaid: declarations.clientAmountPaid,
+      gaindeDutyAmount: declarations.gaindeDutyAmount,
+      costPrice: declarations.costPrice,
+      bonADelivrer: declarations.bonADelivrer,
+      dossierId: declarations.dossierId,
+      blReference: dossiers.blReference,
+      customerName: customers.name,
+      customerSlug: customers.slug,
+      payingAgencyName: organizationAgencies.name,
+    })
+    .from(declarations)
+    .innerJoin(dossiers, eq(declarations.dossierId, dossiers.id))
+    .innerJoin(customers, eq(dossiers.customerId, customers.id))
+    .leftJoin(
+      organizationAgencies,
+      eq(declarations.payingAgencyId, organizationAgencies.id),
+    )
+    .where(
+      and(
+        eq(declarations.organizationId, ctx.organizationId),
+        eq(dossiers.customerId, customerId),
+      ),
+    )
+    .orderBy(desc(declarations.updatedAt))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    ...r,
+    declarationDate: r.declarationDate ?? null,
+  }));
+}
+
 export async function getDeclarationById(
   db: DbLike,
   ctx: ModuleContext,

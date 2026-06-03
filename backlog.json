@@ -234,7 +234,7 @@
       "epic": "domain-data",
       "title": "Ledger module (versements, débit/crédit, allocations)",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["PLAT-004", "DOM-002"],
       "docs": ["docs/05-domain-model.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
@@ -491,21 +491,22 @@
         "Fiche tabs: Déclarations, Comptabilité, Activité",
         "PageHeader CTA retained (UI-003)"
       ],
-      "notes": "Shipped: list (solde, frais, transactions jour, statut) + fiche KPIs (solde, report, frais, tx jour). Missing: fiche tabs (Déclarations, Comptabilité, Activité)."
+      "notes": "Shipped: list + fiche tabs Résumé, Comptabilité, Déclarations. Missing: Activité tab."
     },
     {
       "id": "CLI-002",
       "epic": "clients-ledger",
       "title": "Payment + allocation UI",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["CLI-001", "DOM-005"],
       "docs": ["docs/11-user-flows.md", "docs/12-ui-components.md"],
       "acceptanceCriteria": [
         "Record payment on client",
         "Allocate to one or more dossiers",
         "Block save if allocation mismatch"
-      ]
+      ],
+      "notes": "Versement form on Comptabilité tab; multi-dossier allocations; server + client validation."
     },
     {
       "id": "CLI-003",

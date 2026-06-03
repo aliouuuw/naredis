@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Domain + read/create UI** — pilot schema (0003–0004), module services, list/fiche pages, create forms. Code review fixes committed (`82968d3`).
 
-**Next up:** `DOM-005` / `CLI-002` (ledger + versements). Finish `DECL-003` (Activité tab), `CLI-001`, `DOS-001`.
+**Next up:** `DECL-003` (Activité tab), `DECL-004` (FSM statut), `DOS-001`, `CLI-003` (solde ouverture / contre-passation).
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -25,7 +25,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema (pilot 0003, review 0004) | Done |
-| Unit tests (`bun test`, domain + slug) | Done (10) |
+| Unit tests (`bun test`, domain + slug + ledger) | Done (15) |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done |
 | Better Auth | Done |
@@ -36,7 +36,8 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Domain modules (DOM-002–004, 008) | Done — list/fiche read UI wired |
 | Create forms (client + déclaration) | Done |
 | Declaration edit + BAD toggle UI (`DECL-005`) | Done |
-| Ledger module + payment UI (`DOM-005`, `CLI-002`) | Not started |
+| Ledger module + payment UI (`DOM-005`, `CLI-002`) | Done |
+| Client fiche tabs (`CLI-001` partial) | Résumé + Comptabilité + Déclarations |
 
 ---
 
@@ -113,6 +114,8 @@ Matches backlog dependencies:
 | — | Review fixes: migration 0004, aggregates, audit, tests | 2026-05-23 |
 | DECL-001 | Declarations list page | 2026-06-03 |
 | DECL-005 | Edit declaration + audit timeline UI | 2026-06-03 |
+| DOM-005 | Ledger module (versements, allocations) | 2026-06-03 |
+| CLI-002 | Payment + allocation UI on client fiche | 2026-06-03 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |
