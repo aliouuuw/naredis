@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
-import type { DeclarationEditLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
+import type {
+  ActivityLogEntrySerialized,
+  DeclarationEditLogEntrySerialized,
+} from "@/lib/modules/declarations/serialize-fiche";
+import { DeclarationActivityFeed } from "./declaration-activity-feed";
 import { DeclarationEditTimeline } from "./declaration-edit-timeline";
 import {
   EditDeclarationForm,
@@ -13,7 +17,7 @@ import {
 import { DeclarationReadOnlySummary } from "./declaration-read-only-summary";
 import type { AgencyOption } from "./new-declaration-form";
 
-type TabId = "resume" | "historique";
+type TabId = "resume" | "historique" | "activite";
 
 function formatMoney(value: bigint | null) {
   if (value == null) return "—";
@@ -31,6 +35,7 @@ export function DeclarationFicheTabs({
   editInitial,
   agencies,
   editLog,
+  activityLog,
   canEdit,
   formKey,
   onSaved,
@@ -49,6 +54,7 @@ export function DeclarationFicheTabs({
   editInitial: EditDeclarationInitial;
   agencies: AgencyOption[];
   editLog: DeclarationEditLogEntrySerialized[];
+  activityLog: ActivityLogEntrySerialized[];
   canEdit: boolean;
   formKey: string;
   onSaved?: () => void;
@@ -56,9 +62,10 @@ export function DeclarationFicheTabs({
   const isSheet = variant === "sheet";
   const [tab, setTab] = useState<TabId>("resume");
 
-  const tabs: { id: TabId; label: string }[] = [
+  const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: "resume", label: "Résumé" },
-    { id: "historique", label: "Historique" },
+    { id: "historique", label: "Historique", count: editLog.length },
+    { id: "activite", label: "Activité", count: activityLog.length },
   ];
 
   return (
@@ -109,6 +116,11 @@ export function DeclarationFicheTabs({
             }`}
           >
             {t.label}
+            {t.count != null && t.count > 0 ? (
+              <span className="ml-1.5 tabular-nums text-muted-foreground">
+                ({t.count})
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -193,10 +205,21 @@ export function DeclarationFicheTabs({
             </section>
           ) : null}
         </div>
+      ) : tab === "historique" ? (
+        <section className="max-w-2xl">
+          <h2 className="mb-1 text-sm font-semibold">Modifications (rectificative)</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Journal détaillé des champs modifiés sur cette fiche.
+          </p>
+          <DeclarationEditTimeline key={formKey} entries={editLog} />
+        </section>
       ) : (
         <section className="max-w-2xl">
-          <h2 className="mb-4 text-sm font-semibold">Modifications (rectificative)</h2>
-          <DeclarationEditTimeline key={formKey} entries={editLog} />
+          <h2 className="mb-1 text-sm font-semibold">Activité</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Événements système : déclaration, dossier parent et écritures liées.
+          </p>
+          <DeclarationActivityFeed entries={activityLog} />
         </section>
       )}
     </div>

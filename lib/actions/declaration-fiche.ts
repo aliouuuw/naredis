@@ -5,6 +5,7 @@ import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
 import type { DeclarationFicheSerialized } from "@/lib/modules/declarations/serialize-fiche";
 import { listAgencies } from "@/lib/modules/agencies/service";
+import { listActivityForDeclaration } from "@/lib/modules/activity/service";
 import {
   getDeclarationById,
   listDeclarationEditLog,
@@ -23,9 +24,10 @@ export async function getDeclarationFicheAction(
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const [data, editLog] = await Promise.all([
+  const [data, editLog, activity] = await Promise.all([
     getDeclarationById(db, ctx, declarationId),
     listDeclarationEditLog(db, ctx, declarationId),
+    listActivityForDeclaration(db, ctx, declarationId),
   ]);
 
   if (!data) {
@@ -69,6 +71,15 @@ export async function getDeclarationFicheAction(
       changes: entry.changes,
       changedBy: entry.changedBy,
       changedAt: entry.changedAt.toISOString(),
+    })),
+    activityLog: activity.map((entry) => ({
+      id: entry.id,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      action: entry.action,
+      payload: entry.payload,
+      actorId: entry.actorId,
+      createdAt: entry.createdAt.toISOString(),
     })),
   });
 }

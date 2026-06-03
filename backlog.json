@@ -405,7 +405,7 @@
         "Dossier context card with link to dossier hub",
         "Résumé + Activité tabs"
       ],
-      "notes": "Résumé + Historique tabs, dossier card, inline edit form. Missing: customs FSM stepper (DECL-004), Activité feed from activity_log."
+      "notes": "Résumé + Historique + Activité (activity_log). Sheet + edit form done. Deferred: customs FSM stepper (DECL-004)."
     },
     {
       "id": "DECL-004",

@@ -1,3 +1,14 @@
+/** Client-safe activity row (dates as ISO strings after server action JSON). */
+export type ActivityLogEntrySerialized = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  action: string;
+  payload: Record<string, unknown> | null;
+  actorId: string | null;
+  createdAt: string;
+};
+
 /** Client-safe edit log row (dates as ISO strings after server action JSON). */
 export type DeclarationEditLogEntrySerialized = {
   id: string;
@@ -37,4 +48,5 @@ export type DeclarationFicheSerialized = {
     bonADelivrer: boolean;
   };
   editLog: DeclarationEditLogEntrySerialized[];
+  activityLog: ActivityLogEntrySerialized[];
 };

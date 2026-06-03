@@ -63,6 +63,7 @@ export function DeclarationFicheBody({
       editInitial={fiche.editInitial}
       agencies={agencies}
       editLog={fiche.editLog}
+      activityLog={fiche.activityLog}
       canEdit={canEdit}
       formKey={fiche.formKey}
       onSaved={onSaved}
