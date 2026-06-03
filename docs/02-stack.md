@@ -84,14 +84,19 @@ Optional: `docker compose` with `postgres:17` — add `compose.yml` when impleme
 ### Commands
 
 ```bash
-bun run db:generate   # drizzle-kit generate
-bun run db:migrate    # apply migrations
-bun run db:seed       # dev seed data (pilot-shaped)
-bun run db:reseed     # wipe demo-transit org and seed again
-bun run db:studio     # drizzle-kit studio (optional)
-bun run dev           # Next.js dev server
-bun run build         # production build
+bun run db:generate        # drizzle-kit generate
+bun run db:migrate         # apply migrations (local)
+bun run db:migrate:deploy  # apply migrations (Neon / Vercel build; uses DATABASE_URL_UNPOOLED)
+bun run db:seed            # dev seed data (local)
+bun run db:seed:preview    # hosted preview seed (ALLOW_DEV_SEED=true)
+bun run db:reseed          # wipe demo-transit org and seed again (local)
+bun run vercel-build       # migrate + next build (what Vercel runs)
+bun run db:studio          # drizzle-kit studio (optional)
+bun run dev                # Next.js dev server
+bun run build              # production build only
 ```
+
+Hosted deploy: [04-deploy-vercel-neon.md](./04-deploy-vercel-neon.md).
 
 ## Environment variables (planned)
 

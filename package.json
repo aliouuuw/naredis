@@ -5,12 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "bun run db:migrate:deploy && bun run build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:deploy": "bun run scripts/migrate-deploy.ts",
     "db:seed": "bun run scripts/seed.ts",
+    "db:seed:preview": "ALLOW_DEV_SEED=true bun run scripts/seed.ts",
     "db:reseed": "bun run scripts/seed.ts --reset",
+    "db:reseed:preview": "ALLOW_DEV_SEED=true bun run scripts/seed.ts --reset",
     "db:studio": "drizzle-kit studio",
     "test": "bun test"
   },

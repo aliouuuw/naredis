@@ -47,8 +47,11 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy on Vercel + Neon
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Connect the repo to Vercel and add Neon (Storage integration or manual env vars).
+2. Set `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (direct), `BETTER_AUTH_*`, `NEXT_PUBLIC_APP_URL` — see [docs/04-deploy-vercel-neon.md](./docs/04-deploy-vercel-neon.md).
+3. Deploy — migrations run automatically via `vercel-build` (`db:migrate:deploy` then `next build`).
+4. **Once** after first deploy, seed the preview DB from your machine: `ALLOW_DEV_SEED=true bun run db:seed:preview` (with preview env vars loaded).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Full checklist: [docs/04-deploy-vercel-neon.md](./docs/04-deploy-vercel-neon.md).
