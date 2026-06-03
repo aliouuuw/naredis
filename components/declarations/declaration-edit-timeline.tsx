@@ -1,17 +1,21 @@
 import { declarationFieldLabel, formatEditLogValue } from "@/lib/domain/declaration-fields";
-import type { DeclarationEditLogEntry } from "@/lib/modules/declarations/service";
+import type { DeclarationEditLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
 
-function formatWhen(date: Date) {
+function formatWhen(date: Date | string) {
+  const value = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(value.getTime())) {
+    return "—";
+  }
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(date);
+  }).format(value);
 }
 
 export function DeclarationEditTimeline({
   entries,
 }: {
-  entries: DeclarationEditLogEntry[];
+  entries: DeclarationEditLogEntrySerialized[];
 }) {
   if (entries.length === 0) {
     return (

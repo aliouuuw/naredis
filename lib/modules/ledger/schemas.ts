@@ -15,17 +15,23 @@ export const allocationLineSchema = z.object({
   amount: moneyField,
 });
 
-export const recordVersementSchema = z.object({
-  customerId: z.string().uuid(),
+const versementFields = {
   label: z.string().min(1, "Le libellé est requis"),
   amount: moneyField,
   effectiveDate: z.string().min(1, "La date est requise"),
   notes: z.string().optional(),
   allocations: z.array(allocationLineSchema).optional().default([]),
+};
+
+/** Client payload — `customerId` is supplied by the route/server action, not the form body. */
+export const recordVersementBodySchema = z.object(versementFields);
+
+export const recordVersementSchema = z.object({
+  customerId: z.string().uuid(),
+  ...versementFields,
 });
 
-export const recordChargeSchema = z.object({
-  customerId: z.string().uuid(),
+const chargeFields = {
   label: z.string().min(1, "Le libellé est requis"),
   amount: moneyField,
   effectiveDate: z.string().min(1, "La date est requise"),
@@ -39,9 +45,16 @@ export const recordChargeSchema = z.object({
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined)),
   notes: z.string().optional(),
+};
+
+export const recordChargeBodySchema = z.object(chargeFields);
+
+export const recordChargeSchema = z.object({
+  customerId: z.string().uuid(),
+  ...chargeFields,
 });
 
 export type RecordVersementInput = z.infer<typeof recordVersementSchema>;
-export type RecordVersementFormValues = z.input<typeof recordVersementSchema>;
+export type RecordVersementBodyValues = z.input<typeof recordVersementBodySchema>;
 export type RecordChargeInput = z.infer<typeof recordChargeSchema>;
-export type RecordChargeFormValues = z.input<typeof recordChargeSchema>;
+export type RecordChargeBodyValues = z.input<typeof recordChargeBodySchema>;

@@ -70,6 +70,10 @@ export function EditDeclarationForm({
     });
   }, [formKey, initial.bonADelivrer, initial.containers, initial.containerCount]);
 
+  const containerCountShortfall =
+    containerPayload.containerCount > 0 &&
+    containerPayload.containers.length < containerPayload.containerCount;
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canEdit) return;
@@ -223,6 +227,18 @@ export function EditDeclarationForm({
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold">Conteneurs</h2>
+        {containerCountShortfall ? (
+          <FormAlert
+            variant="info"
+            className="border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+          >
+            {containerPayload.containers.length} numéro(s) renseigné(s) pour{" "}
+            {containerPayload.containerCount} conteneur
+            {containerPayload.containerCount > 1 ? "s" : ""} déclaré
+            {containerPayload.containerCount > 1 ? "s" : ""}. Vous pouvez enregistrer
+            ; le bon à délivrer exigera tous les numéros.
+          </FormAlert>
+        ) : null}
         <ContainerNumbersField
           formKey={formKey}
           initialContainers={initial.containers}

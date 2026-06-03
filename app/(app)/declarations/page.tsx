@@ -17,15 +17,15 @@ function DeclarationsListFallback() {
   );
 }
 
-async function DeclarationsListContent() {
+async function DeclarationsListContent({
+  canEdit,
+}: {
+  canEdit: boolean;
+}) {
   const auth = await requireAuthContext();
-  const ctx = toModuleContext(auth);
-  const [rows, canEdit] = await Promise.all([
-    listDeclarations(getDb(), ctx).then((items) =>
-      items.map(serializeDeclarationListItem),
-    ),
-    canMutateOperationalData(auth.userId, auth.organizationId),
-  ]);
+  const rows = await listDeclarations(getDb(), toModuleContext(auth)).then(
+    (items) => items.map(serializeDeclarationListItem),
+  );
 
   if (rows.length === 0) {
     return (
@@ -33,9 +33,11 @@ async function DeclarationsListContent() {
         <p className="text-sm text-muted-foreground">
           Créez votre première déclaration pour commencer.
         </p>
-        <div className="mt-4 flex justify-center">
-          <NewDeclarationButton />
-        </div>
+        {canEdit ? (
+          <div className="mt-4 flex justify-center">
+            <NewDeclarationButton />
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -43,16 +45,22 @@ async function DeclarationsListContent() {
   return <DeclarationsListView rows={rows} canEdit={canEdit} />;
 }
 
-export default function DeclarationsPage() {
+export default async function DeclarationsPage() {
+  const auth = await requireAuthContext();
+  const canEdit = await canMutateOperationalData(
+    auth.userId,
+    auth.organizationId,
+  );
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Déclarations"
         description="Une ligne par connaissement (BL) — cliquez une ligne pour ouvrir la fiche."
-        actions={<NewDeclarationButton />}
+        actions={canEdit ? <NewDeclarationButton /> : undefined}
       />
       <Suspense fallback={<DeclarationsListFallback />}>
-        <DeclarationsListContent />
+        <DeclarationsListContent canEdit={canEdit} />
       </Suspense>
     </div>
   );

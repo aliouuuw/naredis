@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { recordVersementAction } from "@/lib/actions/ledger";
@@ -22,6 +22,7 @@ export function RecordVersementForm({
   dossiers: DossierAllocationOption[];
 }) {
   const router = useRouter();
+  const submitLock = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -78,6 +79,9 @@ export function RecordVersementForm({
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitLock.current) return;
+
+    submitLock.current = true;
     setPending(true);
     setError(null);
     setSuccess(null);
@@ -90,27 +94,29 @@ export function RecordVersementForm({
         amount: a.amount.replace(/\s/g, ""),
       }));
 
-    const result = await recordVersementAction({
-      customerId,
-      label: String(form.get("label") ?? ""),
-      amount: amount.replace(/\s/g, ""),
-      effectiveDate: String(form.get("effectiveDate") ?? ""),
-      notes: String(form.get("notes") ?? "") || undefined,
-      allocations: lines,
-    });
+    try {
+      const result = await recordVersementAction(customerId, {
+        label: String(form.get("label") ?? ""),
+        amount: amount.replace(/\s/g, ""),
+        effectiveDate: String(form.get("effectiveDate") ?? ""),
+        notes: String(form.get("notes") ?? "") || undefined,
+        allocations: lines,
+      });
 
-    setPending(false);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
+      setSuccess("Versement enregistré.");
+      setAmount("");
+      setAllocations([]);
+      (event.target as HTMLFormElement).reset();
+      router.refresh();
+    } finally {
+      submitLock.current = false;
+      setPending(false);
     }
-
-    setSuccess("Versement enregistré.");
-    setAmount("");
-    setAllocations([]);
-    (event.target as HTMLFormElement).reset();
-    router.refresh();
   }
 
   return (

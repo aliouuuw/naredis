@@ -1,4 +1,10 @@
-import type { DeclarationEditLogEntry } from "./service";
+/** Client-safe edit log row (dates as ISO strings after server action JSON). */
+export type DeclarationEditLogEntrySerialized = {
+  id: string;
+  changes: Record<string, { from: string | null; to: string | null }>;
+  changedBy: string | null;
+  changedAt: string;
+};
 
 export type DeclarationFicheSerialized = {
   declarationId: string;
@@ -32,5 +38,5 @@ export type DeclarationFicheSerialized = {
     bureau: string;
     bonADelivrer: boolean;
   };
-  editLog: DeclarationEditLogEntry[];
+  editLog: DeclarationEditLogEntrySerialized[];
 };

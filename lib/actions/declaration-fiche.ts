@@ -66,7 +66,12 @@ export async function getDeclarationFicheAction(
       bureau: declaration.bureau ?? "",
       bonADelivrer: declaration.bonADelivrer,
     },
-    editLog,
+    editLog: editLog.map((entry) => ({
+      id: entry.id,
+      changes: entry.changes,
+      changedBy: entry.changedBy,
+      changedAt: entry.changedAt.toISOString(),
+    })),
   });
 }
 

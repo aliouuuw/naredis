@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
-import type { DeclarationEditLogEntry } from "@/lib/modules/declarations/service";
+import type { DeclarationEditLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
 import { DeclarationEditTimeline } from "./declaration-edit-timeline";
 import {
   EditDeclarationForm,
@@ -48,7 +48,7 @@ export function DeclarationFicheTabs({
   };
   editInitial: EditDeclarationInitial;
   agencies: AgencyOption[];
-  editLog: DeclarationEditLogEntry[];
+  editLog: DeclarationEditLogEntrySerialized[];
   canEdit: boolean;
   formKey: string;
   onSaved?: () => void;
@@ -146,9 +146,8 @@ export function DeclarationFicheTabs({
             {!canEdit ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Lecture seule — connectez-vous en{" "}
-                  <span className="font-mono">admin@demo-transit.sn</span> (seed)
-                  pour modifier.
+                  Lecture seule — seuls les profils opérateur, admin ou propriétaire
+                  peuvent modifier une déclaration.
                 </p>
                 <DeclarationReadOnlySummary
                   initial={editInitial}
