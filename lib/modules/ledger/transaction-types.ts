@@ -144,6 +144,27 @@ export async function listTransactionTypes(
   return rows.filter((r) => r.active).map(mapRow);
 }
 
+export async function getTransactionTypeBySystemKey(
+  db: DbLike,
+  organizationId: string,
+  systemKey: LedgerEntryType,
+): Promise<TransactionTypeRow | null> {
+  await ensureDefaultTransactionTypes(db, organizationId);
+
+  const [row] = await db
+    .select()
+    .from(ledgerTransactionTypes)
+    .where(
+      and(
+        eq(ledgerTransactionTypes.organizationId, organizationId),
+        eq(ledgerTransactionTypes.systemKey, systemKey),
+      ),
+    )
+    .limit(1);
+
+  return row ? mapRow(row) : null;
+}
+
 export async function getTransactionTypeById(
   db: DbLike,
   organizationId: string,

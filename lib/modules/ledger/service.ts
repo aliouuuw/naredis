@@ -69,6 +69,9 @@ export type LedgerEntryListItem = {
   dossierId: string | null;
   dossierNumber: string | null;
   declarationId: string | null;
+  reversesEntryId: string | null;
+  reversedByEntryId: string | null;
+  canReverse: boolean;
   createdAt: Date;
   allocations: LedgerAllocationRow[];
 };
@@ -168,11 +171,41 @@ type EntryRow = {
   entry: typeof ledgerEntries.$inferSelect;
 };
 
+async function loadReversalMeta(
+  db: DbLike,
+  entryIds: string[],
+): Promise<Map<string, string>> {
+  if (entryIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({
+      reversesEntryId: ledgerEntries.reversesEntryId,
+      id: ledgerEntries.id,
+    })
+    .from(ledgerEntries)
+    .where(inArray(ledgerEntries.reversesEntryId, entryIds));
+
+  const reversedBy = new Map<string, string>();
+  for (const row of rows) {
+    if (row.reversesEntryId) {
+      reversedBy.set(row.reversesEntryId, row.id);
+    }
+  }
+  return reversedBy;
+}
+
 function mapEntryRow(
   row: EntryRow,
   allocations: Map<string, LedgerAllocationRow[]>,
+  reversedBy: Map<string, string>,
 ): LedgerEntryListItem {
   const { entry } = row;
+  const reversedByEntryId = reversedBy.get(entry.id) ?? null;
+  const canReverse =
+    entry.entryType !== "reversal" &&
+    entry.reversesEntryId == null &&
+    reversedByEntryId == null;
+
   return {
     id: entry.id,
     customerId: row.customerId,
@@ -189,6 +222,9 @@ function mapEntryRow(
     dossierId: entry.dossierId,
     dossierNumber: row.dossierNumber ?? null,
     declarationId: entry.declarationId,
+    reversesEntryId: entry.reversesEntryId,
+    reversedByEntryId,
+    canReverse,
     createdAt: entry.createdAt,
     allocations: allocations.get(entry.id) ?? [],
   };
@@ -312,13 +348,12 @@ async function queryLedgerEntries(
     .orderBy(desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt));
 
   const entryIds = rows.map((r) => r.id);
-  const allocations = await loadAllocationsForEntries(
-    db,
-    ctx.organizationId,
-    entryIds,
-  );
+  const [allocations, reversedBy] = await Promise.all([
+    loadAllocationsForEntries(db, ctx.organizationId, entryIds),
+    loadReversalMeta(db, entryIds),
+  ]);
 
-  return rows.map((row) => mapEntryRow(row, allocations));
+  return rows.map((row) => mapEntryRow(row, allocations, reversedBy));
 }
 
 export async function listLedgerEntriesForCustomer(

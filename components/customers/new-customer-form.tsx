@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createCustomerAction } from "@/lib/actions/customers";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
 
 export function NewCustomerForm({
@@ -26,12 +27,20 @@ export function NewCustomerForm({
     setSuccess(null);
 
     const form = new FormData(event.currentTarget);
+    const obAmount = String(form.get("openingBalanceAmount") ?? "").trim();
+    const obSide = String(form.get("openingBalanceSide") ?? "").trim();
+
     const result = await createCustomerAction({
       name: String(form.get("name") ?? ""),
       phone: String(form.get("phone") ?? "") || undefined,
       email: String(form.get("email") ?? "") || undefined,
       taxId: String(form.get("taxId") ?? "") || undefined,
       notes: String(form.get("notes") ?? "") || undefined,
+      openingBalanceAmount: obAmount || undefined,
+      openingBalanceSide:
+        obSide === "debit" || obSide === "credit" ? obSide : undefined,
+      openingBalanceDate:
+        String(form.get("openingBalanceDate") ?? "") || undefined,
     });
 
     setPending(false);
@@ -83,6 +92,49 @@ export function NewCustomerForm({
         </label>
         <Input id="notes" name="notes" />
       </div>
+
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-dashed p-4">
+        <legend className="px-1 text-sm font-medium">
+          Solde d&apos;ouverture (optionnel)
+        </legend>
+        <p className="text-xs text-muted-foreground">
+          Point de départ du compte client. Une seule écriture d&apos;ouverture
+          par client.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="openingBalanceAmount" className="text-sm font-medium">
+              Montant (XOF)
+            </label>
+            <Input
+              id="openingBalanceAmount"
+              name="openingBalanceAmount"
+              inputMode="numeric"
+              placeholder="150000"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="openingBalanceSide" className="text-sm font-medium">
+              Sens
+            </label>
+            <FormSelect
+              id="openingBalanceSide"
+              name="openingBalanceSide"
+              emptyOption="—"
+              options={[
+                { value: "debit", label: "Débit (client doit)" },
+                { value: "credit", label: "Crédit (agence doit)" },
+              ]}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="openingBalanceDate" className="text-sm font-medium">
+            Date d&apos;effet
+          </label>
+          <Input id="openingBalanceDate" name="openingBalanceDate" type="date" />
+        </div>
+      </fieldset>
       {error ? <FormAlert variant="error">{error}</FormAlert> : null}
       {success ? <FormAlert variant="success">{success}</FormAlert> : null}
       <div className="flex gap-3">

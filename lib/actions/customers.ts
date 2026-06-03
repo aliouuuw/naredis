@@ -7,14 +7,14 @@ import { LEDGER_MUTATION_ROLES } from "@/lib/auth/permissions";
 import { requireRole } from "@/lib/auth/session";
 import {
   createCustomerSchema,
-  type CreateCustomerInput,
+  type CreateCustomerFormInput,
 } from "@/lib/modules/customers/schemas";
 import { createCustomer, updateCustomer } from "@/lib/modules/customers/service";
 import type { CustomerAccountStatus } from "@/lib/db/enums";
 import { actionError, actionOk, type ActionResult } from "./form-result";
 
 export async function createCustomerAction(
-  input: CreateCustomerInput,
+  input: CreateCustomerFormInput,
 ): Promise<ActionResult<{ id: string }>> {
   const auth = await requireRole(["owner", "admin", "operator"]);
   const parsed = createCustomerSchema.safeParse(input);

@@ -19,7 +19,9 @@ import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/s
 import { AccountStatusControl } from "./account-status-control";
 import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
+import { OpeningBalanceDialog } from "@/components/transactions/opening-balance-dialog";
 import { RecordTransactionDialog } from "@/components/transactions/record-transaction-dialog";
+import { ReverseEntryDialog } from "@/components/transactions/reverse-entry-dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +43,7 @@ export function CustomerFicheView({
   declarations,
   transactionTypes,
   canRecordLedger,
+  hasOpeningBalance,
   initialTab,
 }: {
   customer: {
@@ -59,6 +62,7 @@ export function CustomerFicheView({
   declarations: DeclarationListItemSerialized[];
   transactionTypes: TransactionTypeSerialized[];
   canRecordLedger: boolean;
+  hasOpeningBalance: boolean;
   initialTab?: TabId;
 }) {
   const router = useRouter();
@@ -66,6 +70,9 @@ export function CustomerFicheView({
 
   const openRecord = searchParams.get("record") === "1";
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const [openingDialogOpen, setOpeningDialogOpen] = useState(false);
+  const [reverseEntry, setReverseEntry] =
+    useState<LedgerEntrySerialized | null>(null);
   const tabFromUrl = searchParams.get("tab");
   const tab: TabId = isTabId(tabFromUrl)
     ? tabFromUrl
@@ -336,17 +343,36 @@ export function CustomerFicheView({
                 <p className="text-sm text-muted-foreground">
                   Historique des écritures pour ce compte.
                 </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => setRecordDialogOpen(true)}
-                >
-                  <Plus className="size-3.5" />
-                  Nouvelle transaction
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {!hasOpeningBalance ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setOpeningDialogOpen(true)}
+                    >
+                      Solde d&apos;ouverture
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setRecordDialogOpen(true)}
+                  >
+                    <Plus className="size-3.5" />
+                    Nouvelle transaction
+                  </Button>
+                </div>
               </div>
+              <OpeningBalanceDialog
+                open={openingDialogOpen}
+                onOpenChange={setOpeningDialogOpen}
+                customerId={customer.id}
+                customerName={customer.name}
+              />
               <RecordTransactionDialog
                 open={recordDialogOpen}
                 onOpenChange={setRecordDialogOpen}
@@ -355,6 +381,13 @@ export function CustomerFicheView({
                 dossiers={dossiers}
                 transactionTypes={transactionTypes}
               />
+              <ReverseEntryDialog
+                open={reverseEntry != null}
+                onOpenChange={(open) => {
+                  if (!open) setReverseEntry(null);
+                }}
+                entry={reverseEntry}
+              />
             </>
           ) : (
             <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
@@ -362,7 +395,11 @@ export function CustomerFicheView({
             </p>
           )}
           <section>
-            <LedgerEntriesTable rows={ledgerEntries} />
+            <LedgerEntriesTable
+              rows={ledgerEntries}
+              canReverse={canRecordLedger}
+              onReverse={(entry) => setReverseEntry(entry)}
+            />
           </section>
         </div>
       ) : null}

@@ -61,8 +61,12 @@ export function RecordTransactionForm({
   const selectedType = types.find((t) => t.id === transactionTypeId);
   const isCredit = selectedType?.balanceSide === "credit";
 
-  const creditTypes = types.filter((t) => t.balanceSide === "credit");
-  const debitTypes = types.filter((t) => t.balanceSide === "debit");
+  const operableTypes = types.filter(
+    (t) => t.systemKey !== "opening_balance" && t.systemKey !== "reversal",
+  );
+
+  const creditTypes = operableTypes.filter((t) => t.balanceSide === "credit");
+  const debitTypes = operableTypes.filter((t) => t.balanceSide === "debit");
 
   const allocationTotal = useMemo(() => {
     try {

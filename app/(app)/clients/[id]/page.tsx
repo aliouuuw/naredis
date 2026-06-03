@@ -15,6 +15,7 @@ import {
   listLedgerEntriesForCustomer,
 } from "@/lib/modules/ledger/service";
 import { serializeLedgerEntry } from "@/lib/modules/ledger/serialize";
+import { customerHasOpeningBalance } from "@/lib/modules/ledger/corrections";
 import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
 import { CustomerFicheView } from "@/components/clients/customer-fiche-view";
@@ -31,15 +32,23 @@ export default async function ClientFichePage({
   const auth = await requireAuthContext();
   const ctx = toModuleContext(auth);
 
-  const [fiche, ledgerRows, dossiers, declarationRows, transactionTypes, canRecordLedger] =
-    await Promise.all([
-      getCustomerFiche(getDb(), ctx, id),
-      listLedgerEntriesForCustomer(getDb(), ctx, id),
-      listDossiersForCustomer(getDb(), ctx, id),
-      listDeclarationsForCustomer(getDb(), ctx, id),
-      listTransactionTypes(getDb(), ctx),
-      memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
-    ]);
+  const [
+    fiche,
+    ledgerRows,
+    dossiers,
+    declarationRows,
+    transactionTypes,
+    canRecordLedger,
+    hasOpeningBalance,
+  ] = await Promise.all([
+    getCustomerFiche(getDb(), ctx, id),
+    listLedgerEntriesForCustomer(getDb(), ctx, id),
+    listDossiersForCustomer(getDb(), ctx, id),
+    listDeclarationsForCustomer(getDb(), ctx, id),
+    listTransactionTypes(getDb(), ctx),
+    memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
+    customerHasOpeningBalance(getDb(), ctx.organizationId, id),
+  ]);
 
   if (!fiche) {
     notFound();
@@ -87,6 +96,7 @@ export default async function ClientFichePage({
           declarations={declarationRows.map(serializeDeclarationListItem)}
           transactionTypes={transactionTypes}
           canRecordLedger={canRecordLedger}
+          hasOpeningBalance={hasOpeningBalance}
           initialTab={initialTab}
         />
       </Suspense>

@@ -20,6 +20,7 @@ import {
 } from "./balance";
 // `getCustomerBalance` is kept for the fiche page; list uses inline aggregates.
 void getCustomerBalance;
+import { recordOpeningBalance } from "@/lib/modules/ledger/corrections";
 import type { CreateCustomerInput, UpdateCustomerInput } from "./schemas";
 
 async function uniqueSlug(
@@ -192,29 +193,43 @@ export async function createCustomer(
 ) {
   const slug = await uniqueSlug(db, ctx.organizationId, input.name);
 
-  const [row] = await db
-    .insert(customers)
-    .values({
+  return db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(customers)
+      .values({
+        organizationId: ctx.organizationId,
+        name: input.name.trim(),
+        slug,
+        phone: input.phone?.trim() || null,
+        email: input.email?.trim() || null,
+        taxId: input.taxId?.trim() || null,
+        notes: input.notes?.trim() || null,
+      })
+      .returning();
+
+    await appendActivity(tx, {
       organizationId: ctx.organizationId,
-      name: input.name.trim(),
-      slug,
-      phone: input.phone?.trim() || null,
-      email: input.email?.trim() || null,
-      taxId: input.taxId?.trim() || null,
-      notes: input.notes?.trim() || null,
-    })
-    .returning();
+      entityType: "customer",
+      entityId: row.id,
+      action: "customer.created",
+      payload: { name: row.name, slug: row.slug },
+      actorId: ctx.userId,
+    });
 
-  await appendActivity(db, {
-    organizationId: ctx.organizationId,
-    entityType: "customer",
-    entityId: row.id,
-    action: "customer.created",
-    payload: { name: row.name, slug: row.slug },
-    actorId: ctx.userId,
+    if (
+      input.openingBalanceAmount != null &&
+      input.openingBalanceSide != null
+    ) {
+      await recordOpeningBalance(tx, ctx, {
+        customerId: row.id,
+        amount: input.openingBalanceAmount,
+        balanceSide: input.openingBalanceSide,
+        effectiveDate: input.openingBalanceDate,
+      });
+    }
+
+    return row;
   });
-
-  return row;
 }
 
 export async function updateCustomer(

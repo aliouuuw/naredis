@@ -50,6 +50,23 @@ export const updateTransactionTypeSchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(80),
 });
 
+export const openingBalanceBodySchema = z.object({
+  amount: moneyField,
+  balanceSide: z.enum(["debit", "credit"], {
+    message: "Choisissez débit ou crédit",
+  }),
+  effectiveDate: z.string().min(1, "La date est requise").optional(),
+  label: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const reverseLedgerEntryBodySchema = z.object({
+  reason: z
+    .string()
+    .min(3, "Indiquez le motif de la contre-passation (3 caractères min.)"),
+  effectiveDate: z.string().min(1, "La date est requise").optional(),
+});
+
 /** @deprecated Use recordTransactionBodySchema */
 export const recordVersementBodySchema = recordTransactionBodySchema;
 export const recordVersementSchema = recordTransactionSchema;
@@ -67,4 +84,8 @@ export type CreateTransactionTypeInput = z.infer<
 >;
 export type UpdateTransactionTypeInput = z.infer<
   typeof updateTransactionTypeSchema
+>;
+export type OpeningBalanceBodyValues = z.input<typeof openingBalanceBodySchema>;
+export type ReverseLedgerEntryBodyValues = z.input<
+  typeof reverseLedgerEntryBodySchema
 >;
