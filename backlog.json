@@ -488,10 +488,10 @@
       "docs": ["docs/10-information-architecture.md"],
       "acceptanceCriteria": [
         "List with solde column",
-        "Fiche tabs: Déclarations, Comptabilité, Activité",
+        "Fiche tabs: Déclarations, Transactions, Activité",
         "PageHeader CTA retained (UI-003)"
       ],
-      "notes": "Shipped: list + fiche tabs Résumé, Comptabilité, Déclarations. Missing: Activité tab."
+      "notes": "Shipped: list + fiche tabs Résumé, Transactions, Déclarations; global /transactions page. Missing: Activité tab."
     },
     {
       "id": "CLI-002",
@@ -506,7 +506,7 @@
         "Allocate to one or more dossiers",
         "Block save if allocation mismatch"
       ],
-      "notes": "Versement form on Comptabilité tab; multi-dossier allocations; server + client validation."
+      "notes": "Unified transaction form (credit/debit types) on Transactions tab + /transactions; multi-dossier allocations for credit types; extensible org transaction types."
     },
     {
       "id": "CLI-003",

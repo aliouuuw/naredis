@@ -17,7 +17,7 @@ See **[00-glossary.md](./00-glossary.md)** — UI says **Déclarations**; dossie
 | Row opens full page | **Fiche déclaration** |
 | Properties at top | Property strip (statut, n° douane, client, dossier, BL) |
 | Relation to client | Client link; client page shows related déclarations |
-| Transactions related DB | **Comptabilité** on client + **Finances** on dossier |
+| Transactions related DB | **Transactions** on client + **Finances** on dossier |
 | Formula “solde” | **Solde calculé** from ledger |
 | Filters / sorts | Presets on déclarations list |
 | ⌘K | Global search |

@@ -37,7 +37,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Create forms (client + déclaration) | Done |
 | Declaration edit + BAD toggle UI (`DECL-005`) | Done |
 | Ledger module + payment UI (`DOM-005`, `CLI-002`) | Done |
-| Client fiche tabs (`CLI-001` partial) | Résumé + Comptabilité + Déclarations |
+| Client fiche tabs (`CLI-001` partial) | Résumé + Transactions + Déclarations |
 
 ---
 

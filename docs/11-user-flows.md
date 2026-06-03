@@ -114,7 +114,7 @@ Notion: **Customers** table.
 ## Flow 6 — Payment & allocation
 
 Unchanged logic; allocations target **dossier_id** (job).  
-Entry: Client → Comptabilité.
+Entry: Client → Transactions.
 
 ---
 
@@ -179,7 +179,7 @@ flowchart TD
 2. **Declarations** table + fiche + status FSM  
 3. Auto-create dossier on new déclaration  
 4. Dossier hub (tabs: déclarations, documents, finances)  
-5. Clients + comptabilité  
+5. Clients + transactions  
 6. Rectificative flow  
 7. Search, PDF, dashboard  
 

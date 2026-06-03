@@ -54,7 +54,7 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 
 1. **Tableau de bord** — home, default after login
 2. **Déclarations** — primary operational database
-3. **Clients** — accounts + comptabilité
+3. **Clients** — accounts + transactions
 4. **Réglages** — org + members
 
 Active tab: `pathname === href` or `pathname.startsWith(href + '/')` (e.g. `/declarations/new` keeps Déclarations active).
@@ -236,7 +236,7 @@ Unchanged pattern; client fiche tabs:
 |-----|---------|
 | **Déclarations** | All declarations for client (Notion rollup) |
 | **Dossiers** | Optional grouped view by job |
-| **Comptabilité** | Ledger, payments, relevé PDF |
+| **Transactions** | Ledger, payments, relevé PDF |
 | **Activité** | Client-level log |
 
 ---
@@ -297,7 +297,7 @@ Actions
 | `add-declaration-to-dossier` | Rectification |
 | `upload-document` | On dossier |
 | `add-charge` | Dossier (+ optional déclaration) |
-| `record-payment` / `allocate` | Client comptabilité |
+| `record-payment` / `allocate` | Client transactions |
 | `reverse-entry` | Ledger |
 | `close-dossier` | Case status |
 
