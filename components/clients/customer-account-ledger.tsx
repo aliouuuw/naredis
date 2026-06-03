@@ -6,12 +6,17 @@ import {
 } from "@/lib/modules/customers/account-ledger";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import type { LedgerEntrySerialized } from "@/lib/modules/ledger/serialize";
+import {
+  balanceSideAmountClass,
+  creditAmountClass,
+  debitAmountClass,
+  ledgerSectionCopy,
+  ledgerTable,
+  mutedDashClass,
+} from "@/components/ledger/ledger-table-styles";
 import { cn } from "@/lib/utils";
 
-const thClass =
-  "px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const tdClass = "px-3 py-2.5 align-top text-sm";
-const amountClass = "tabular-nums text-right whitespace-nowrap";
+const copy = ledgerSectionCopy();
 
 export function CustomerAccountLedger({
   ledgerEntries,
@@ -31,29 +36,32 @@ export function CustomerAccountLedger({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] border-collapse text-sm">
+    <div className={ledgerTable.wrapper}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
+        <span>
+          <span className={debitAmountClass}>Débit</span> — {copy.legendDebit}
+        </span>
+        <span>
+          <span className={creditAmountClass}>Crédit</span> — {copy.legendCredit}
+        </span>
+      </div>
+      <div className={ledgerTable.scroll}>
+        <table className={cn(ledgerTable.table, "min-w-[880px]")}>
           <thead>
-            <tr className="border-b bg-muted/50">
-              <th className={thClass}>Date</th>
-              <th className={cn(thClass, "min-w-[12rem]")}>Libellé</th>
-              <th className={cn(thClass, "min-w-[10rem]")}>Liens</th>
-              <th className={cn(thClass, amountClass)}>Débit</th>
-              <th className={cn(thClass, amountClass)}>Crédit</th>
-              <th className={cn(thClass, amountClass)}>Solde</th>
+            <tr className={ledgerTable.theadRow}>
+              <th className={ledgerTable.th}>Date</th>
+              <th className={cn(ledgerTable.th, "min-w-[12rem]")}>Libellé</th>
+              <th className={cn(ledgerTable.th, "min-w-[10rem]")}>Liens</th>
+              <th className={ledgerTable.thRight}>Débit</th>
+              <th className={ledgerTable.thRight}>Crédit</th>
+              <th className={ledgerTable.thRight}>Solde</th>
             </tr>
           </thead>
           <tbody>
             {days.map((day) => (
               <Fragment key={day.dayKey}>
-                <tr
-                  className="border-b bg-muted/30"
-                >
-                  <td
-                    colSpan={6}
-                    className="px-3 py-2 text-xs font-semibold tracking-wide text-foreground capitalize"
-                  >
+                <tr className={ledgerTable.dayHeaderRow}>
+                  <td colSpan={6} className={ledgerTable.dayHeaderCell}>
                     {day.dayLabel}
                   </td>
                 </tr>
@@ -61,19 +69,17 @@ export function CustomerAccountLedger({
                   <tr
                     key={row.id}
                     className={cn(
-                      "border-b border-border/60 transition-colors hover:bg-muted/20",
-                      row.kind === "declaration" && "bg-muted/10",
+                      ledgerTable.bodyRow,
+                      row.kind === "declaration" && ledgerTable.declarationRow,
                     )}
                   >
-                    <td className={cn(tdClass, "tabular-nums text-muted-foreground")}>
-                      {row.dateDisplay}
-                    </td>
-                    <td className={tdClass}>
+                    <td className={ledgerTable.tdDate}>{row.dateDisplay}</td>
+                    <td className={ledgerTable.td}>
                       <div className="space-y-0.5">
                         <Link
                           href={row.href}
                           className={cn(
-                            "font-medium hover:underline",
+                            ledgerTable.labelLink,
                             row.kind === "declaration" &&
                               "text-muted-foreground",
                           )}
@@ -83,47 +89,51 @@ export function CustomerAccountLedger({
                             : `Décl. ${row.label}`}
                         </Link>
                         {row.detail ? (
-                          <p className="text-xs text-muted-foreground">
-                            {row.detail}
-                          </p>
+                          <p className={ledgerTable.detail}>{row.detail}</p>
                         ) : null}
                       </div>
                     </td>
-                    <td className={tdClass}>
+                    <td className={ledgerTable.td}>
                       {row.links.length > 0 ? (
                         <ul className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
                           {row.links.map((link) => (
                             <li key={`${row.id}-${link.href}`}>
-                              <Link
-                                href={link.href}
-                                className="font-medium text-primary hover:underline"
-                              >
+                              <Link href={link.href} className={ledgerTable.link}>
                                 {link.label}
                               </Link>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <span className="text-muted-foreground/50">—</span>
+                        <span className={mutedDashClass}>—</span>
                       )}
                     </td>
-                    <td className={cn(tdClass, amountClass, "text-foreground")}>
-                      {row.debitDisplay ?? (
-                        <span className="text-muted-foreground/50">—</span>
+                    <td className={ledgerTable.amountCell}>
+                      {row.debitDisplay ? (
+                        <span className={debitAmountClass}>
+                          {row.debitDisplay}
+                        </span>
+                      ) : (
+                        <span className={mutedDashClass}>—</span>
                       )}
                     </td>
-                    <td className={cn(tdClass, amountClass, "text-foreground")}>
-                      {row.creditDisplay ?? (
-                        <span className="text-muted-foreground/50">—</span>
+                    <td className={ledgerTable.amountCell}>
+                      {row.creditDisplay ? (
+                        <span className={creditAmountClass}>
+                          {row.creditDisplay}
+                        </span>
+                      ) : (
+                        <span className={mutedDashClass}>—</span>
                       )}
                     </td>
                     <td
                       className={cn(
-                        tdClass,
-                        amountClass,
-                        "font-medium",
+                        ledgerTable.amountCell,
                         row.affectsBalance
-                          ? "text-foreground"
+                          ? balanceSideAmountClass(
+                              row.runningBalance.side,
+                              BigInt(row.runningBalance.amount),
+                            )
                           : "text-muted-foreground",
                       )}
                     >
@@ -136,10 +146,7 @@ export function CustomerAccountLedger({
           </tbody>
         </table>
       </div>
-      <p className="border-t bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
-        Les lignes déclaration sont informatives (fiche BL) et ne mouvementent
-        pas le solde. Solde = cumul des écritures débit / crédit.
-      </p>
+      <p className={ledgerTable.footer}>{copy.footerResume}</p>
     </div>
   );
 }

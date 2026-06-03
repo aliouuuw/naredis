@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { formatBalanceLabel, formatXof } from "@/lib/domain/balance";
+import { formatXof } from "@/lib/domain/balance";
+import {
+  creditAmountClass,
+  debitAmountClass,
+  formatDebitCreditCells,
+  ledgerSectionCopy,
+  ledgerTable,
+  mutedDashClass,
+} from "@/components/ledger/ledger-table-styles";
 import type { LedgerEntrySerialized } from "@/lib/modules/ledger/serialize";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-const entrySideClass = {
-  debit: "text-amber-800 dark:text-amber-300",
-  credit: "text-emerald-800 dark:text-emerald-400",
-} as const;
+const copy = ledgerSectionCopy();
 
 export function LedgerEntriesTable({
   rows,
@@ -24,7 +30,7 @@ export function LedgerEntriesTable({
   if (rows.length === 0) {
     return (
       <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-        Aucune transaction pour ces filtres.
+        Aucune écriture pour ce compte.
       </p>
     );
   }
@@ -32,110 +38,152 @@ export function LedgerEntriesTable({
   const showActions = canReverse && onReverse;
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
-      <table className="w-full min-w-[720px] text-sm">
-        <thead>
-          <tr className="border-b bg-muted/40 text-left text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Date</th>
-            {showCustomer ? (
-              <th className="px-4 py-3 font-medium">Client</th>
-            ) : null}
-            <th className="px-4 py-3 font-medium">Type</th>
-            <th className="px-4 py-3 font-medium">Libellé</th>
-            <th className="px-4 py-3 font-medium text-right">Montant</th>
-            <th className="px-4 py-3 font-medium">Affectations</th>
-            {showActions ? (
-              <th className="px-4 py-3 font-medium text-right"> </th>
-            ) : null}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {rows.map((row) => (
-            <tr key={row.id} className="align-top">
-              <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                {row.effectiveDate}
-              </td>
+    <div className={ledgerTable.wrapper}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b bg-muted/20 px-4 py-2 text-[11px] text-muted-foreground">
+        <span>
+          <span className={debitAmountClass}>Débit</span> — {copy.legendDebit}
+        </span>
+        <span>
+          <span className={creditAmountClass}>Crédit</span> — {copy.legendCredit}
+        </span>
+      </div>
+      <div className={ledgerTable.scroll}>
+        <table
+          className={cn(
+            ledgerTable.table,
+            showCustomer ? "min-w-[960px]" : "min-w-[800px]",
+          )}
+        >
+          <thead>
+            <tr className={ledgerTable.theadRow}>
+              <th className={ledgerTable.th}>Date</th>
               {showCustomer ? (
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/clients/${row.customerId}?tab=transactions`}
-                    className="font-medium hover:underline"
-                  >
-                    {row.customerName}
-                  </Link>
-                </td>
+                <th className={ledgerTable.th}>Client</th>
               ) : null}
-              <td className="px-4 py-3 font-medium">
-                {row.transactionTypeName}
-                {row.reversesEntryId ? (
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                    Contre-passation
-                  </span>
-                ) : null}
-                {row.reversedByEntryId ? (
-                  <span className="mt-0.5 block text-xs font-normal text-amber-700 dark:text-amber-400">
-                    Contre-passée
-                  </span>
-                ) : null}
-              </td>
-              <td className="px-4 py-3">
-                <p>{row.label}</p>
-                {row.notes ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {row.notes}
-                  </p>
-                ) : null}
-              </td>
-              <td
-                className={`px-4 py-3 text-right tabular-nums ${entrySideClass[row.balanceSide]}`}
-              >
-                {formatXof(BigInt(row.amount))} XOF
-                <span className="ml-1 text-xs">
-                  {formatBalanceLabel(row.balanceSide)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-xs text-muted-foreground">
-                {row.allocations.length > 0 ? (
-                  <ul className="space-y-1">
-                    {row.allocations.map((a) => (
-                      <li key={a.id}>
-                        <Link
-                          href={`/dossiers/${a.dossierId}`}
-                          className="font-medium text-foreground hover:underline"
-                        >
-                          {a.dossierNumber}
-                        </Link>
-                        {a.blReference ? ` · BL ${a.blReference}` : null}
-                        {" — "}
-                        {formatXof(BigInt(a.amount))} XOF
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "—"
-                )}
-              </td>
+              <th className={cn(ledgerTable.th, "min-w-[12rem]")}>Libellé</th>
+              <th className={cn(ledgerTable.th, "min-w-[10rem]")}>Liens</th>
+              <th className={ledgerTable.thRight}>Débit</th>
+              <th className={ledgerTable.thRight}>Crédit</th>
               {showActions ? (
-                <td className="px-4 py-3 text-right">
-                  {row.canReverse ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => onReverse(row)}
-                    >
-                      Contre-passer
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
-                </td>
+                <th className={ledgerTable.thRight}>
+                  <span className="sr-only">Actions</span>
+                </th>
               ) : null}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const amount = BigInt(row.amount);
+              const { debit, credit } = formatDebitCreditCells(
+                amount,
+                row.balanceSide,
+              );
+
+              return (
+                <tr key={row.id} className={cn(ledgerTable.bodyRow, "align-top")}>
+                  <td className={ledgerTable.tdDate}>{row.effectiveDate}</td>
+                  {showCustomer ? (
+                    <td className={ledgerTable.td}>
+                      <Link
+                        href={`/clients/${row.customerId}?tab=transactions`}
+                        className={ledgerTable.labelLink}
+                      >
+                        {row.customerName}
+                      </Link>
+                    </td>
+                  ) : null}
+                  <td className={ledgerTable.td}>
+                    <div className="space-y-0.5">
+                      <p className="font-medium">{row.label}</p>
+                      <p className={ledgerTable.detail}>
+                        {row.transactionTypeName}
+                        {row.reversesEntryId ? " · Contre-passation" : null}
+                        {row.reversedByEntryId ? " · Contre-passée" : null}
+                      </p>
+                      {row.notes ? (
+                        <p className={ledgerTable.detail}>{row.notes}</p>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className={ledgerTable.td}>
+                    {row.allocations.length > 0 ? (
+                      <ul className="flex flex-col gap-1 text-xs">
+                        {row.allocations.map((a) => (
+                          <li key={a.id}>
+                            <Link
+                              href={`/dossiers/${a.dossierId}`}
+                              className={ledgerTable.link}
+                            >
+                              {a.dossierNumber}
+                            </Link>
+                            {a.blReference ? (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                · BL {a.blReference}
+                              </span>
+                            ) : null}
+                            <span
+                              className={
+                                row.balanceSide === "credit"
+                                  ? creditAmountClass
+                                  : debitAmountClass
+                              }
+                            >
+                              {" "}
+                              — {formatXof(BigInt(a.amount))} XOF
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : row.dossierId && row.dossierNumber ? (
+                      <Link
+                        href={`/dossiers/${row.dossierId}`}
+                        className={ledgerTable.link}
+                      >
+                        {row.dossierNumber}
+                      </Link>
+                    ) : (
+                      <span className={mutedDashClass}>—</span>
+                    )}
+                  </td>
+                  <td className={ledgerTable.amountCell}>
+                    {debit ? (
+                      <span className={debitAmountClass}>{debit}</span>
+                    ) : (
+                      <span className={mutedDashClass}>—</span>
+                    )}
+                  </td>
+                  <td className={ledgerTable.amountCell}>
+                    {credit ? (
+                      <span className={creditAmountClass}>{credit}</span>
+                    ) : (
+                      <span className={mutedDashClass}>—</span>
+                    )}
+                  </td>
+                  {showActions ? (
+                    <td className={ledgerTable.amountCell}>
+                      {row.canReverse ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => onReverse(row)}
+                        >
+                          Contre-passer
+                        </Button>
+                      ) : (
+                        <span className={mutedDashClass}>—</span>
+                      )}
+                    </td>
+                  ) : null}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className={ledgerTable.footer}>{copy.footerTransactions}</p>
     </div>
   );
 }

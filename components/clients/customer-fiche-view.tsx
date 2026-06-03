@@ -18,6 +18,9 @@ import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import type { ActivityLogEntrySerialized } from "@/lib/modules/declarations/serialize-fiche";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
 import { DashboardActivityFeed } from "@/components/dashboard/dashboard-activity-feed";
+import { ledgerSectionCopy } from "@/components/ledger/ledger-table-styles";
+
+const ledgerCopy = ledgerSectionCopy();
 import { AccountStatusControl } from "./account-status-control";
 import { CustomerAccountLedger } from "@/components/clients/customer-account-ledger";
 import { LedgerEntriesTable } from "@/components/transactions/ledger-entries-table";
@@ -325,11 +328,9 @@ export function CustomerFicheView({
 
           <section className="space-y-3">
             <div>
-              <h2 className="text-sm font-semibold">Relevé de compte</h2>
+              <h2 className="text-sm font-semibold">{ledgerCopy.title}</h2>
               <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-                Écritures comptables (débit / crédit) et références déclaration,
-                classées par date. Le solde cumulé ne tient compte que des
-                transactions.
+                {ledgerCopy.description}
               </p>
             </div>
             <CustomerAccountLedger
@@ -345,9 +346,14 @@ export function CustomerFicheView({
           {canRecordLedger ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-muted-foreground">
-                  Historique des écritures pour ce compte.
-                </p>
+                <div className="min-w-0 max-w-2xl">
+                  <p className="text-sm font-medium">
+                    {ledgerSectionCopy().title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {ledgerSectionCopy().transactionsDescription}
+                  </p>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {!hasOpeningBalance ? (
                     <Button
