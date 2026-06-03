@@ -33,7 +33,7 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ [NR] Naredis                     [ 🔍 Rechercher… ⌘K ]        [User ▾] │  ← row 1 (64px)
 ├──────────────────────────────────────────────────────────────────────────┤
-│  Tableau de bord │ Déclarations ● │ Clients │ Réglages                   │  ← row 2 (40px)
+│  Tableau de bord │ Déclarations ● │ Dossiers │ Clients │ Transactions │ …  │  ← row 2 (40px)
 ├──────────────────────────────────────────────────────────────────────────┤
 │  Page title                                    [ + action contextuelle ] │  ← PageHeader
 │  ─────────────────────────────────────────────────────────────────────── │
@@ -54,12 +54,12 @@ See **[00-glossary.md](./00-glossary.md)**. **UI = Déclarations** (Notion). **C
 
 1. **Tableau de bord** — home, default after login
 2. **Déclarations** — primary operational database
-3. **Clients** — accounts + transactions
-4. **Réglages** — org + members
+3. **Dossiers** — job hub list (`/dossiers`) and fiche (`/dossiers/[id]`)
+4. **Clients** — accounts + transactions
+5. **Transactions** — ledger workspace
+6. **Réglages** — org + members
 
-Active tab: `pathname === href` or `pathname.startsWith(href + '/')` (e.g. `/declarations/new` keeps Déclarations active).
-
-Dossiers are **not** top-level — reach via déclaration fiche, list column, or dashboard queue (`/dossiers/[id]`).
+Active tab: `pathname === href` or `pathname.startsWith(href + '/')` (e.g. `/declarations/new` keeps Déclarations active; `/dossiers/[id]` keeps Dossiers active).
 
 ### Contextual primary actions (page header)
 

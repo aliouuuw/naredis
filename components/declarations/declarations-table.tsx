@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
@@ -43,6 +44,7 @@ export function DeclarationsTable({
           <tr className="border-b bg-muted/40 text-left text-muted-foreground">
             <th className="px-4 py-3 font-medium">N° décl.</th>
             <th className="px-4 py-3 font-medium">Client</th>
+            <th className="px-4 py-3 font-medium">Dossier</th>
             <th className="px-4 py-3 font-medium">BL</th>
             <th className="px-4 py-3 font-medium">Zone</th>
             <th className="px-4 py-3 font-medium">Date</th>
@@ -79,7 +81,26 @@ export function DeclarationsTable({
                 {row.customerName}
               </td>
               <td className="px-4 py-3 font-mono text-xs">
-                {row.blReference ?? "—"}
+                <Link
+                  href={`/dossiers/${row.dossierId}`}
+                  className="font-medium hover:underline"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {row.dossierNumber}
+                </Link>
+              </td>
+              <td className="px-4 py-3 font-mono text-xs">
+                {row.blReference ? (
+                  <Link
+                    href={`/dossiers/${row.dossierId}`}
+                    className="hover:underline"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {row.blReference}
+                  </Link>
+                ) : (
+                  "—"
+                )}
               </td>
               <td className="px-4 py-3 tabular-nums">{row.zoneOrTerminal ?? "—"}</td>
               <td className="px-4 py-3 whitespace-nowrap tabular-nums">

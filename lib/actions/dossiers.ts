@@ -55,7 +55,7 @@ export async function closeDossierCaseAction(
 
   revalidatePath(`/dossiers/${parsed.data}`);
   revalidatePath("/dashboard");
-  revalidatePath("/dossiers");
+  revalidatePath("/dossiers", "layout");
 
   return actionOk();
 }

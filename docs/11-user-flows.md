@@ -10,7 +10,7 @@ See **[00-glossary.md](./00-glossary.md)**. Flows use **déclaration** language;
 Login → /dashboard (empty state)
   → Optional: theme toggle (top-right) before sign-in
   → Onboarding card: "Ajoutez un client" / "Créez votre première déclaration"
-  → Tabs: Tableau de bord (●), Déclarations, Clients, Réglages
+  → Tabs: Tableau de bord (●), Déclarations, Dossiers, Clients, Transactions, Réglages
   → Profile menu: Apparence (Clair / Sombre / Système), Se déconnecter
 ```
 

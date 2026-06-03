@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, FolderOpen } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import { formatXof } from "@/lib/domain/balance";
 import type {
   ActivityLogEntrySerialized,
@@ -97,6 +98,15 @@ export function DeclarationFicheTabs({
             <span className="text-muted-foreground">Bon à délivrer : non</span>
           )}
         </p>
+        <ButtonLink
+          href={`/dossiers/${dossier.id}`}
+          variant="outline"
+          size="sm"
+          className="mt-3 gap-1"
+        >
+          <FolderOpen className="size-3.5" aria-hidden />
+          Ouvrir le dossier
+        </ButtonLink>
       </aside>
 
       <div

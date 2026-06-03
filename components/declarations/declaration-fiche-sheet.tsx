@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Maximize2 } from "lucide-react";
+import { FolderOpen, Maximize2 } from "lucide-react";
 import {
   getDeclarationFicheAction,
   listAgenciesForFormAction,
@@ -9,7 +9,7 @@ import {
 import { DeclarationFicheBody } from "@/components/declarations/declaration-fiche-body";
 import type { AgencyOption } from "@/components/declarations/new-declaration-form";
 import type { DeclarationFicheSerialized } from "@/lib/modules/declarations/serialize-fiche";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import {
   Dialog,
   DialogBody,
@@ -103,16 +103,27 @@ export function DeclarationFicheSheet({
               {headerDescription}
             </SheetDescription>
             {fiche ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2 w-fit gap-1"
-                onClick={() => setModalOpen(true)}
-              >
-                <Maximize2 className="size-3.5" aria-hidden />
-                Agrandir
-              </Button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <ButtonLink
+                  href={`/dossiers/${fiche.dossier.id}`}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                >
+                  <FolderOpen className="size-3.5" aria-hidden />
+                  Ouvrir le dossier
+                </ButtonLink>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => setModalOpen(true)}
+                >
+                  <Maximize2 className="size-3.5" aria-hidden />
+                  Agrandir
+                </Button>
+              </div>
             ) : null}
           </SheetHeader>
 

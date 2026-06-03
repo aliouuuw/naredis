@@ -25,6 +25,7 @@ const tabs = [
   { title: "Déclarations", href: "/declarations" },
   { title: "Clients", href: "/clients" },
   { title: "Transactions", href: "/transactions" },
+  { title: "Dossiers", href: "/dossiers" },
   { title: "Réglages", href: "/settings" },
 ] as const;
 

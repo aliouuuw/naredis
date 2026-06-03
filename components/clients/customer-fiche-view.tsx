@@ -428,6 +428,7 @@ export function CustomerFicheView({
                 <thead>
                   <tr className="border-b bg-muted/40 text-left text-muted-foreground">
                     <th className="px-4 py-3 font-medium">N° décl.</th>
+                    <th className="px-4 py-3 font-medium">Dossier</th>
                     <th className="px-4 py-3 font-medium">BL</th>
                     <th className="px-4 py-3 font-medium">Date</th>
                     <th className="px-4 py-3 font-medium">BAD</th>
@@ -439,6 +440,14 @@ export function CustomerFicheView({
                     <tr key={row.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-mono text-xs">
                         {row.declarationNumber}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs">
+                        <Link
+                          href={`/dossiers/${row.dossierId}`}
+                          className="font-medium hover:underline"
+                        >
+                          {row.dossierNumber}
+                        </Link>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">
                         {row.blReference ?? "—"}
