@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Google_Sans_Flex } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { productBrand } from "@/lib/branding";
 import "./globals.css";
 
 const googleSansFlex = Google_Sans_Flex({
@@ -14,8 +15,8 @@ const googleSansFlex = Google_Sans_Flex({
 });
 
 export const metadata: Metadata = {
-  title: "Ndouckmane Transit",
-  description: "Gestion opérationnelle transit et dédouanement",
+  title: productBrand.name,
+  description: productBrand.description,
 };
 
 export default function RootLayout({

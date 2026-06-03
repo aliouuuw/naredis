@@ -132,3 +132,107 @@
     @apply tracking-[-0.04em];
   }
 }
+
+/* Login product panel — bottom decorative visual */
+.login-panel-decor {
+  color: var(--background);
+  padding: 1.5rem 3rem 0.5rem;
+}
+
+.login-panel-decor-draw {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: login-decor-draw 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+.login-panel-decor-scan {
+  animation: login-decor-scan 3s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite;
+}
+
+.login-panel-decor-slide {
+  animation: login-decor-slide 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-panel-decor-line-1 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both; }
+.login-panel-decor-line-2 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both; }
+.login-panel-decor-line-3 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.44s both; }
+.login-panel-decor-line-4 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.50s both; }
+.login-panel-decor-line-5 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.56s both; }
+.login-panel-decor-line-6 { animation: login-decor-line 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.62s both; }
+
+.login-panel-decor-mark {
+  animation: login-decor-fade 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+}
+
+.login-panel-decor-fade {
+  animation: login-decor-fade 1.2s ease 0.5s both;
+}
+
+.login-panel-decor-dot {
+  animation: login-decor-dot-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-panel-enter {
+  animation: login-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-panel-enter-1 { animation-delay: 0.05s; }
+.login-panel-enter-2 { animation-delay: 0.12s; }
+.login-panel-enter-3 { animation-delay: 0.2s; }
+.login-panel-enter-4 { animation-delay: 0.55s; }
+
+@keyframes login-decor-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes login-decor-scan {
+  0% { transform: translateX(0); opacity: 0; }
+  15% { opacity: 0.6; }
+  85% { opacity: 0.6; }
+  100% { transform: translateX(64px); opacity: 0; }
+}
+
+@keyframes login-decor-slide {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-decor-line {
+  from { opacity: 0; transform: scaleX(0.6); transform-origin: left; }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes login-decor-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes login-decor-dot-in {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes login-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-panel-decor-line-1,
+  .login-panel-decor-line-2,
+  .login-panel-decor-line-3,
+  .login-panel-decor-line-4,
+  .login-panel-decor-line-5,
+  .login-panel-decor-line-6,
+  .login-panel-decor-mark,
+  .login-panel-decor-fade,
+  .login-panel-decor-dot,
+  .login-panel-decor-draw,
+  .login-panel-decor-scan,
+  .login-panel-decor-slide,
+  .login-panel-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

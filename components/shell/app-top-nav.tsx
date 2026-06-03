@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { LogOut, Search } from "lucide-react";
+import { ProductMark } from "@/components/brand/product-mark";
 import { authClient } from "@/lib/auth/auth-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -65,17 +66,10 @@ export function AppTopNav({ userEmail }: AppTopNavProps) {
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Row 1 — chrome: logo, search, user (Vercel-style) */}
       <div className="flex h-16 items-center gap-3 px-4 md:gap-4 md:px-6">
-        <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
-          <span
-            aria-hidden
-            className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground"
-          >
-            NT
-          </span>
-          <span className="hidden text-sm font-semibold tracking-tight sm:inline">
-            Ndouckmane Transit
-          </span>
-        </Link>
+        <ProductMark
+          href="/dashboard"
+          className="shrink-0 [&_span:last-child]:hidden [&_span:last-child]:sm:inline"
+        />
 
         <div className="hidden min-w-0 flex-1 md:block" aria-hidden />
 

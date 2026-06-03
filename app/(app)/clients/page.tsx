@@ -18,7 +18,7 @@ export default async function ClientsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Clients"
-        description="Comptes clients, solde en débit/crédit et activité du jour (Dakar)."
+        description="Comptes clients, solde en débit/crédit et activité du jour."
         actions={<NewClientButton />}
       />
       <Suspense

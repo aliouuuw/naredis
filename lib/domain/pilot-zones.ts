@@ -1,4 +1,4 @@
-/** Zones / terminaux courants (pilot Dakar). Extensible via réglages plus tard. */
+/** Zones / terminaux (démo pilote). Extensible via réglages plus tard. */
 
 export type PilotZoneTerminal = {
   slug: string;
@@ -7,8 +7,8 @@ export type PilotZoneTerminal = {
 
 export const PILOT_ZONE_TERMINALS: PilotZoneTerminal[] = [
   { slug: "18N", label: "18N" },
-  { slug: "DPW", label: "DPW — Dakar port" },
-  { slug: "DKR", label: "DKR — Dakar" },
+  { slug: "DPW", label: "DPW — terminal port" },
+  { slug: "DKR", label: "DKR — zone urbaine" },
   { slug: "ABJ", label: "ABJ — Abidjan (transit)" },
   { slug: "RUF", label: "RUF — Rufisque" },
   { slug: "AIBD", label: "AIBD — Aéroport Blaise Diagne" },

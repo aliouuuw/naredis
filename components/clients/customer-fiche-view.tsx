@@ -283,7 +283,8 @@ export function CustomerFicheView({
                 {formatBalanceStatement(dayOpenBig)}
               </p>
               <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                Solde du compte avant les écritures du jour (fuseau Dakar).
+                Solde du compte avant les écritures du jour (fuseau de
+                l&apos;agence).
               </p>
             </div>
             <div className="rounded-lg border bg-card p-4">

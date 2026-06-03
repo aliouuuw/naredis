@@ -1,4 +1,4 @@
-/** Pilot default: agency calendar day in Dakar (GMT, no DST). */
+/** MVP default agency calendar (GMT, no DST). Override per org later. */
 export const AGENCY_TIMEZONE = "Africa/Dakar";
 
 /** `YYYY-MM-DD` in agency local calendar. */

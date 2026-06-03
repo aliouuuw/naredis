@@ -37,7 +37,7 @@ export async function createDemoOrg(db: Db): Promise<{
   const [org] = await db
     .insert(organizations)
     .values({
-      name: "Ndouckmane Transit — Pilote",
+      name: "Cabinet pilote (démo)",
       slug: DEMO_ORG_SLUG,
     })
     .returning();
@@ -64,12 +64,12 @@ export async function seedDemoTransitData(
     .values([
       {
         organizationId: orgId,
-        name: "Ndouckmane Transit Dakar",
+        name: "Agence principale",
         notes: "Carte GAINDE principale",
       },
       {
         organizationId: orgId,
-        name: "Ndouckmane Transit Rufisque",
+        name: "Agence secondaire",
       },
     ])
     .returning();

@@ -52,7 +52,7 @@ export async function getCustomerBalance(
   return balanceFromTotals(totals);
 }
 
-/** Report: net solde at start of today (entries before today's date in Dakar). */
+/** Report: net solde at start of today (entries before today's agency date). */
 export async function getCustomerDayOpenBalance(
   db: DbLike,
   organizationId: string,
