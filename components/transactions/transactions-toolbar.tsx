@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Plus, X } from "lucide-react";
 import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
@@ -388,7 +388,9 @@ export function TransactionsToolbar({
   )?.value;
 
   const summary = formatViewSummary(state, totalCount);
-  const defaultOpen = viewHasCustomizations(state);
+  const [filtersOpen, setFiltersOpen] = useState(() =>
+    viewHasCustomizations(state),
+  );
 
   const applyPreset = (preset: DatePreset) => {
     const range = agencyDateRangeForPreset(preset, today);
@@ -402,7 +404,7 @@ export function TransactionsToolbar({
 
   return (
     <section className="rounded-lg border bg-card">
-      <Collapsible defaultOpen={defaultOpen}>
+      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
         <div className="flex items-start gap-2 p-3">
           <CollapsibleTrigger
             className={cn(
