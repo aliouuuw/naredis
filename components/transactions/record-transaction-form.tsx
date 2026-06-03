@@ -34,6 +34,7 @@ export function RecordTransactionForm({
   transactionTypes: initialTypes,
   embedded = false,
   onSuccess,
+  customerLedgerLabels,
 }: {
   customerId: string;
   customerName: string;
@@ -43,11 +44,16 @@ export function RecordTransactionForm({
   /** Render inside a dialog (no card chrome or duplicate title). */
   embedded?: boolean;
   onSuccess?: () => void;
+  customerLedgerLabels?: string[];
 }) {
   const router = useRouter();
   const submitLock = useRef(false);
   const { suggestions: orgSuggestions } = useOrgFormSuggestions();
-  const customerSuggestions = useCustomerFormSuggestions(customerId);
+  const customerSuggestions = useCustomerFormSuggestions(
+    customerId,
+    true,
+    customerLedgerLabels,
+  );
   const [label, setLabel] = useState("");
   const [types, setTypes] = useState(initialTypes);
   const [pending, setPending] = useState(false);

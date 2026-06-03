@@ -187,6 +187,7 @@ export function DeclarationsView({
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         canEdit={canEdit}
+        agencies={agencies}
       />
 
       {canEdit ? (

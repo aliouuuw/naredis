@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { listDossiersForCustomerAction } from "@/lib/actions/transaction-types";
-import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
+import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/form-select";
 import { RecordTransactionDialog } from "./record-transaction-dialog";
@@ -15,12 +14,14 @@ export function RecordTransactionLauncher({
   customers,
   transactionTypes,
   initialCustomerId,
+  initialDossiers = [],
   recordIntent = false,
   variant = "header",
 }: {
   customers: CustomerOption[];
   transactionTypes: TransactionTypeSerialized[];
   initialCustomerId?: string;
+  initialDossiers?: DossierAllocationOption[];
   recordIntent?: boolean;
   /** header = primary CTA; inline = toolbar on transactions list */
   variant?: "header" | "inline";
@@ -29,27 +30,45 @@ export function RecordTransactionLauncher({
   const [pickCustomerId, setPickCustomerId] = useState(
     initialCustomerId ?? "",
   );
-  const [dossiers, setDossiers] = useState<DossierAllocationOption[]>([]);
+  const [dossiers, setDossiers] = useState<DossierAllocationOption[]>(
+    initialCustomerId ? initialDossiers : [],
+  );
   const [dossiersLoading, setDossiersLoading] = useState(false);
 
   const resolvedCustomerId = initialCustomerId ?? pickCustomerId;
   const selectedCustomer = customers.find((c) => c.id === resolvedCustomerId);
 
-  const loadDossiers = useCallback(async (customerId: string) => {
-    setDossiersLoading(true);
-    const result = await listDossiersForCustomerAction(customerId);
-    setDossiersLoading(false);
-    if (result.ok && result.data) {
-      setDossiers(result.data);
-    } else {
-      setDossiers([]);
+  const loadDossiers = useCallback(
+    async (customerId: string, prefetched?: DossierAllocationOption[]) => {
+      if (prefetched && initialCustomerId === customerId) {
+        setDossiers(prefetched);
+        return;
+      }
+      const { listDossiersForCustomerAction } = await import(
+        "@/lib/actions/transaction-types"
+      );
+      setDossiersLoading(true);
+      const result = await listDossiersForCustomerAction(customerId);
+      setDossiersLoading(false);
+      if (result.ok && result.data) {
+        setDossiers(result.data);
+      } else {
+        setDossiers([]);
+      }
+    },
+    [initialCustomerId],
+  );
+
+  useEffect(() => {
+    if (initialCustomerId) {
+      setDossiers(initialDossiers);
     }
-  }, []);
+  }, [initialCustomerId, initialDossiers]);
 
   useEffect(() => {
     if (!open) return;
     if (initialCustomerId) {
-      void loadDossiers(initialCustomerId);
+      void loadDossiers(initialCustomerId, initialDossiers);
       return;
     }
     if (pickCustomerId) {
@@ -57,7 +76,7 @@ export function RecordTransactionLauncher({
     } else {
       setDossiers([]);
     }
-  }, [open, initialCustomerId, pickCustomerId, loadDossiers]);
+  }, [open, initialCustomerId, initialDossiers, pickCustomerId, loadDossiers]);
 
   useEffect(() => {
     if (recordIntent) {

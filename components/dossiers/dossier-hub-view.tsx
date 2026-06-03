@@ -146,8 +146,10 @@ export function DossierHubView({
                 <tbody>
                   {hub.declarations.map((row) => {
                     const reste = computeDeclarationReste(
-                      row.clientAmountPaid,
-                      row.costPrice,
+                      row.clientAmountPaid != null
+                        ? BigInt(row.clientAmountPaid)
+                        : null,
+                      row.costPrice != null ? BigInt(row.costPrice) : null,
                     );
                     return (
                       <tr key={row.id} className="border-b last:border-0">
@@ -163,9 +165,7 @@ export function DossierHubView({
                           {row.declarationDate ?? "—"}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums">
-                          {formatMoney(
-                            row.clientAmountPaid?.toString() ?? null,
-                          )}
+                          {formatMoney(row.clientAmountPaid)}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums">
                           {reste != null ? formatMoney(reste.toString()) : "—"}

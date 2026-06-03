@@ -13,7 +13,7 @@ import {
   TRANSACTION_LIST_TABLE_ID,
   type TransactionListColumnId,
 } from "@/lib/ui/list-table-columns";
-import { paginateSlice } from "@/lib/ui/table-pagination";
+import { clampTablePage } from "@/lib/ui/table-pagination";
 import type {
   LedgerEntrySerialized,
   TransactionTypeSerialized,
@@ -21,7 +21,6 @@ import type {
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import {
   buildGroupTree,
-  sortLedgerRows,
   type TransactionsViewState,
 } from "@/lib/modules/ledger/transactions-query";
 import { GroupedLedgerList } from "./grouped-ledger-list";
@@ -31,6 +30,7 @@ type CustomerOption = { id: string; name: string };
 
 export function TransactionsView({
   rows,
+  totalCount,
   customers,
   transactionTypes,
   dossiers,
@@ -40,6 +40,7 @@ export function TransactionsView({
   recordIntent = false,
 }: {
   rows: LedgerEntrySerialized[];
+  totalCount: number;
   customers: CustomerOption[];
   transactionTypes: TransactionTypeSerialized[];
   dossiers: DossierAllocationOption[];
@@ -50,24 +51,15 @@ export function TransactionsView({
 }) {
   const searchParams = useSearchParams();
   const { page, setPage } = useTablePage();
+  const safePage = clampTablePage(page, totalCount);
   const tableColumns = useTableColumns(
     TRANSACTION_LIST_TABLE_ID,
     TRANSACTION_LIST_COLUMNS,
   );
 
-  const sorted = useMemo(
-    () => sortLedgerRows(rows, viewState.sort),
-    [rows, viewState.sort],
-  );
-
-  const { items: pagedRows, page: safePage } = useMemo(
-    () => paginateSlice(sorted, page),
-    [sorted, page],
-  );
-
   const tree = useMemo(
-    () => buildGroupTree(pagedRows, viewState.groupBy),
-    [pagedRows, viewState.groupBy],
+    () => buildGroupTree(rows, viewState.groupBy),
+    [rows, viewState.groupBy],
   );
 
   const transactionsExportUrl = useMemo(
@@ -79,7 +71,7 @@ export function TransactionsView({
     <div className="space-y-6">
       <TransactionsToolbar
         state={viewState}
-        totalCount={sorted.length}
+        totalCount={totalCount}
         customers={customers}
         transactionTypes={transactionTypes}
         dossiers={dossiers}
@@ -100,7 +92,7 @@ export function TransactionsView({
         }
       />
 
-      {sorted.length === 0 ? (
+      {totalCount === 0 ? (
         <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">
             Aucune écriture ne correspond à ces filtres.
@@ -117,7 +109,7 @@ export function TransactionsView({
             }
           />
           <TablePagination
-            totalItems={sorted.length}
+            totalItems={totalCount}
             page={safePage}
             onPageChange={setPage}
             itemLabel="écriture"

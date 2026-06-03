@@ -29,16 +29,16 @@ export default async function DossierFichePage({
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const hub = await getDossierHub(db, ctx, id);
-  if (!hub) {
-    notFound();
-  }
-
-  const [canClose, canRecordLedger, transactionTypes] = await Promise.all([
+  const [hub, canClose, canRecordLedger, transactionTypes] = await Promise.all([
+    getDossierHub(db, ctx, id),
     canMutateOperationalData(auth.userId, auth.organizationId),
     memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
     listTransactionTypes(db, ctx),
   ]);
+
+  if (!hub) {
+    notFound();
+  }
 
   const serialized = serializeDossierHub(hub);
   const statusLabel =

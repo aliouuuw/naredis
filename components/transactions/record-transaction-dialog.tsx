@@ -27,6 +27,7 @@ export function RecordTransactionDialog({
   customers = [],
   pickCustomerId = "",
   onPickCustomerChange,
+  customerLedgerLabels,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,6 +40,7 @@ export function RecordTransactionDialog({
   customers?: CustomerOption[];
   pickCustomerId?: string;
   onPickCustomerChange?: (customerId: string) => void;
+  customerLedgerLabels?: string[];
 }) {
   const canSubmit = Boolean(customerId && customerName);
 
@@ -80,6 +82,7 @@ export function RecordTransactionDialog({
               dossiers={dossiers}
               dossiersLoading={dossiersLoading}
               transactionTypes={transactionTypes}
+              customerLedgerLabels={customerLedgerLabels}
               onSuccess={() => onOpenChange(false)}
             />
           ) : needsCustomerPick ? (

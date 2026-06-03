@@ -2,7 +2,7 @@
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-06-03
+**Last updated:** 2026-06-03 (checkpoint)
 
 ---
 
@@ -42,6 +42,7 @@ Shell is tab-based (`UI-004`); dashboard is default landing.
 | CLI-001 client fiche (Activité tab) | Done |
 | Review fixes (audit log, N+1, sequences, BL unique, roles) | Done |
 | Dev seed data | Done — pilot-shaped; `bun run db:reseed` |
+| Vercel + Neon deploy path | Done — `db:migrate:deploy`, [docs/04-deploy-vercel-neon.md](./docs/04-deploy-vercel-neon.md) |
 | Better Auth | Done |
 | Tenancy helpers (`requireAuthContext`) | Done |
 | shadcn + app shell (PLAT-008) | Done |
@@ -120,6 +121,8 @@ After the 2026-06-03 alignment pass:
 
 | ID | Title | Date |
 |----|-------|------|
+| — | Vercel + Neon: migration deploy script, pooled/unpooled URLs, deploy doc | 2026-06-03 |
+| — | Réglages CRUD: agences, zones, types de transaction (`/settings`, migration 0006) | 2026-06-03 |
 | — | Excel export: client relevé + déclarations/transactions list APIs + toolbar buttons | 2026-06-03 |
 | UI-006 | Editable list columns (localStorage) on déclarations, clients, transactions | 2026-06-03 |
 | CLI-004 | Relevé de compte Excel from client fiche | 2026-06-03 |
@@ -162,6 +165,10 @@ _None._
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-06-03 — Vercel + Neon deploy path
+
+`scripts/migrate-deploy.ts`, `lib/db/migration-url.ts` (pooled vs direct URL). `vercel-build` runs migrations before `next build`. Full checklist in [docs/04-deploy-vercel-neon.md](./docs/04-deploy-vercel-neon.md). POL-004 still **deferred** until external pilot — infra is ready.
 
 ### 2026-06-03 — Réglages CRUD
 

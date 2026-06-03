@@ -52,6 +52,7 @@ export function CustomerFicheView({
   canRecordLedger,
   hasOpeningBalance,
   initialTab,
+  customerLedgerLabels,
 }: {
   customer: {
     id: string;
@@ -72,6 +73,7 @@ export function CustomerFicheView({
   canRecordLedger: boolean;
   hasOpeningBalance: boolean;
   initialTab?: TabId;
+  customerLedgerLabels?: string[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -401,6 +403,7 @@ export function CustomerFicheView({
                 customerName={customer.name}
                 dossiers={dossiers}
                 transactionTypes={transactionTypes}
+                customerLedgerLabels={customerLedgerLabels}
               />
               <ReverseEntryDialog
                 open={reverseEntry != null}

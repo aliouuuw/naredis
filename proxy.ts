@@ -11,6 +11,7 @@ const protectedPrefixes = [
   "/dossiers",
   "/dashboard",
   "/settings",
+  "/transactions",
 ];
 
 export function proxy(request: NextRequest) {
@@ -37,5 +38,6 @@ export const config = {
     "/dossiers/:path*",
     "/dashboard/:path*",
     "/settings/:path*",
+    "/transactions/:path*",
   ],
 };

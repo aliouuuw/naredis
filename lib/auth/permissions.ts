@@ -1,7 +1,5 @@
-import { and, eq } from "drizzle-orm";
-import { getDb } from "@/lib/db";
 import type { MemberRole } from "@/lib/db/enums";
-import { organizationMembers } from "@/lib/db/schema";
+import { getMemberRoleCached } from "./session";
 
 export const MUTATION_ROLES: MemberRole[] = ["owner", "admin", "operator"];
 
@@ -17,19 +15,8 @@ export async function memberHasRole(
   organizationId: string,
   allowed: MemberRole[],
 ): Promise<boolean> {
-  const db = getDb();
-  const [member] = await db
-    .select({ role: organizationMembers.role })
-    .from(organizationMembers)
-    .where(
-      and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.organizationId, organizationId),
-      ),
-    )
-    .limit(1);
-
-  return Boolean(member && allowed.includes(member.role));
+  const role = await getMemberRoleCached(userId, organizationId);
+  return Boolean(role && allowed.includes(role));
 }
 
 export async function canMutateOperationalData(

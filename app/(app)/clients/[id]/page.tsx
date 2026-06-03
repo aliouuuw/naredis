@@ -11,6 +11,10 @@ import { requireAuthContext } from "@/lib/auth/session";
 import { listDeclarationsForCustomer } from "@/lib/modules/declarations/service";
 import { serializeDeclarationListItem } from "@/lib/modules/declarations/serialize-list";
 import {
+  getCustomerFormSuggestions,
+  getOrgFormSuggestions,
+} from "@/lib/modules/form-suggestions/service";
+import {
   listDossiersForCustomer,
   listLedgerEntriesForCustomer,
 } from "@/lib/modules/ledger/service";
@@ -20,6 +24,7 @@ import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { listActivityForCustomer } from "@/lib/modules/activity/service";
 import { getCustomerFiche } from "@/lib/modules/customers/service";
 import { serializeActivityLog } from "@/lib/modules/dossiers/serialize-hub";
+import { OrgFormSuggestionsProvider } from "@/components/providers/org-form-suggestions-provider";
 import { CustomerFicheView } from "@/components/clients/customer-fiche-view";
 
 export default async function ClientFichePage({
@@ -45,6 +50,8 @@ export default async function ClientFichePage({
     canRecordLedger,
     hasOpeningBalance,
     activityLog,
+    formSuggestions,
+    customerSuggestions,
   ] = await Promise.all([
     getCustomerFiche(db, ctx, id),
     listLedgerEntriesForCustomer(db, ctx, id),
@@ -54,6 +61,8 @@ export default async function ClientFichePage({
     memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
     customerHasOpeningBalance(db, ctx.organizationId, id),
     listActivityForCustomer(db, ctx, id),
+    getOrgFormSuggestions(db, ctx),
+    getCustomerFormSuggestions(db, ctx, id),
   ]);
 
   if (!fiche) {
@@ -73,42 +82,45 @@ export default async function ClientFichePage({
           : undefined;
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
-        <Link href="/clients" className="hover:underline">
-          ← Clients
-        </Link>
-      </p>
+    <OrgFormSuggestionsProvider suggestions={formSuggestions}>
+      <div className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          <Link href="/clients" className="hover:underline">
+            ← Clients
+          </Link>
+        </p>
 
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Chargement…</p>}>
-        <CustomerFicheView
-          customer={{
-            id: customer.id,
-            name: customer.name,
-            slug: customer.slug,
-            phone: customer.phone,
-            accountStatus: customer.accountStatus,
-          }}
-          balance={{
-            amount: balance.amount.toString(),
-            side: balance.side,
-          }}
-          dayOpenBalance={{
-            amount: dayOpenBalance.amount.toString(),
-            side: dayOpenBalance.side,
-          }}
-          feesAllTime={feesAllTime.toString()}
-          transactionsToday={transactionsToday.toString()}
-          ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
-          dossiers={dossiers}
-          declarations={declarationRows.map(serializeDeclarationListItem)}
-          transactionTypes={transactionTypes}
-          canRecordLedger={canRecordLedger}
-          hasOpeningBalance={hasOpeningBalance}
-          activityLog={serializeActivityLog(activityLog)}
-          initialTab={initialTab}
-        />
-      </Suspense>
-    </div>
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Chargement…</p>}>
+          <CustomerFicheView
+            customer={{
+              id: customer.id,
+              name: customer.name,
+              slug: customer.slug,
+              phone: customer.phone,
+              accountStatus: customer.accountStatus,
+            }}
+            balance={{
+              amount: balance.amount.toString(),
+              side: balance.side,
+            }}
+            dayOpenBalance={{
+              amount: dayOpenBalance.amount.toString(),
+              side: dayOpenBalance.side,
+            }}
+            feesAllTime={feesAllTime.toString()}
+            transactionsToday={transactionsToday.toString()}
+            ledgerEntries={ledgerRows.map(serializeLedgerEntry)}
+            dossiers={dossiers}
+            declarations={declarationRows.map(serializeDeclarationListItem)}
+            transactionTypes={transactionTypes}
+            canRecordLedger={canRecordLedger}
+            hasOpeningBalance={hasOpeningBalance}
+            activityLog={serializeActivityLog(activityLog)}
+            initialTab={initialTab}
+            customerLedgerLabels={customerSuggestions.ledgerLabels}
+          />
+        </Suspense>
+      </div>
+    </OrgFormSuggestionsProvider>
   );
 }

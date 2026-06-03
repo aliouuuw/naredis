@@ -1,5 +1,6 @@
 import {
   and,
+  asc,
   desc,
   eq,
   exists,
@@ -12,6 +13,7 @@ import {
   not,
   or,
   sql,
+  type SQL,
 } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import type { BalanceSide } from "@/lib/db/enums";
@@ -90,6 +92,20 @@ export type LedgerListFilters = {
   amountMax?: bigint;
   dateFrom?: string;
   dateTo?: string;
+};
+
+export type LedgerListSort =
+  | "date-desc"
+  | "date-asc"
+  | "amount-desc"
+  | "amount-asc"
+  | "client-asc"
+  | "client-desc";
+
+export type LedgerListQueryOptions = {
+  limit?: number;
+  offset?: number;
+  sort?: LedgerListSort;
 };
 
 export type DossierAllocationOption = {
@@ -230,14 +246,12 @@ function mapEntryRow(
   };
 }
 
-async function queryLedgerEntries(
+function buildLedgerFilterConditions(
   db: DbLike,
-  ctx: ModuleContext,
+  organizationId: string,
   filters: LedgerListFilters,
-): Promise<LedgerEntryListItem[]> {
-  await ensureDefaultTransactionTypes(db, ctx.organizationId);
-
-  const conditions = [eq(ledgerEntries.organizationId, ctx.organizationId)];
+): SQL[] {
+  const conditions: SQL[] = [eq(ledgerEntries.organizationId, organizationId)];
 
   if (filters.customerId) {
     conditions.push(eq(ledgerEntries.customerId, filters.customerId));
@@ -327,7 +341,41 @@ async function queryLedgerEntries(
     conditions.push(lte(ledgerEntries.effectiveDate, filters.dateTo));
   }
 
-  const rows = await db
+  return conditions;
+}
+
+function ledgerOrderBy(sort: LedgerListSort = "date-desc") {
+  switch (sort) {
+    case "date-asc":
+      return [asc(ledgerEntries.effectiveDate), asc(ledgerEntries.createdAt)];
+    case "amount-desc":
+      return [desc(ledgerEntries.amount), desc(ledgerEntries.createdAt)];
+    case "amount-asc":
+      return [asc(ledgerEntries.amount), asc(ledgerEntries.createdAt)];
+    case "client-asc":
+      return [asc(customers.name), desc(ledgerEntries.effectiveDate)];
+    case "client-desc":
+      return [desc(customers.name), desc(ledgerEntries.effectiveDate)];
+    case "date-desc":
+    default:
+      return [desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt)];
+  }
+}
+
+async function queryLedgerEntries(
+  db: DbLike,
+  ctx: ModuleContext,
+  filters: LedgerListFilters,
+  options: LedgerListQueryOptions = {},
+): Promise<LedgerEntryListItem[]> {
+  const conditions = buildLedgerFilterConditions(
+    db,
+    ctx.organizationId,
+    filters,
+  );
+  const orderBy = ledgerOrderBy(options.sort);
+
+  let query = db
     .select({
       id: ledgerEntries.id,
       customerId: ledgerEntries.customerId,
@@ -345,7 +393,16 @@ async function queryLedgerEntries(
     )
     .leftJoin(dossiers, eq(ledgerEntries.dossierId, dossiers.id))
     .where(and(...conditions))
-    .orderBy(desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt));
+    .orderBy(...orderBy);
+
+  if (options.limit !== undefined) {
+    query = query.limit(options.limit) as typeof query;
+  }
+  if (options.offset !== undefined && options.offset > 0) {
+    query = query.offset(options.offset) as typeof query;
+  }
+
+  const rows = await query;
 
   const entryIds = rows.map((r) => r.id);
   const [allocations, reversedBy] = await Promise.all([
@@ -365,12 +422,32 @@ export async function listLedgerEntriesForCustomer(
   return queryLedgerEntries(db, ctx, { customerId });
 }
 
+export async function countLedgerEntriesForOrganization(
+  db: DbLike,
+  ctx: ModuleContext,
+  filters: LedgerListFilters = {},
+): Promise<number> {
+  const conditions = buildLedgerFilterConditions(
+    db,
+    ctx.organizationId,
+    filters,
+  );
+
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(ledgerEntries)
+    .where(and(...conditions));
+
+  return row?.count ?? 0;
+}
+
 export async function listLedgerEntriesForOrganization(
   db: DbLike,
   ctx: ModuleContext,
   filters: LedgerListFilters = {},
+  options: LedgerListQueryOptions = {},
 ): Promise<LedgerEntryListItem[]> {
-  return queryLedgerEntries(db, ctx, filters);
+  return queryLedgerEntries(db, ctx, filters, options);
 }
 
 export async function recordTransaction(

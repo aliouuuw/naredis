@@ -17,16 +17,14 @@ export default async function SettingsPage() {
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const [canEditOrg, canEditLedger] = await Promise.all([
-    canMutateOperationalData(auth.userId, auth.organizationId),
-    memberHasRole(auth.userId, auth.organizationId, [...LEDGER_MUTATION_ROLES]),
-  ]);
-
-  const [agencies, zones, transactionTypes] = await Promise.all([
-    listAgencies(db, ctx, false),
-    listZones(db, ctx, false),
-    listTransactionTypes(db, ctx, { activeOnly: false }),
-  ]);
+  const [canEditOrg, canEditLedger, agencies, zones, transactionTypes] =
+    await Promise.all([
+      canMutateOperationalData(auth.userId, auth.organizationId),
+      memberHasRole(auth.userId, auth.organizationId, [...LEDGER_MUTATION_ROLES]),
+      listAgencies(db, ctx, false),
+      listZones(db, ctx, false),
+      listTransactionTypes(db, ctx, { activeOnly: false }),
+    ]);
 
   return (
     <div className="space-y-8">

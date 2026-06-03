@@ -6,7 +6,14 @@ import type { DossierHubData } from "./hub";
 
 export type DossierHubSerialized = {
   dossier: DossierHubData["dossier"];
-  declarations: DossierHubData["declarations"];
+  declarations: Array<{
+    id: string;
+    declarationNumber: string;
+    declarationDate: string | null;
+    bonADelivrer: boolean;
+    clientAmountPaid: string | null;
+    costPrice: string | null;
+  }>;
   documents: Array<{
     id: string;
     fileName: string;
@@ -52,7 +59,14 @@ export function serializeDossierHub(
 ): DossierHubSerialized {
   return {
     dossier: hub.dossier,
-    declarations: hub.declarations,
+    declarations: hub.declarations.map((d) => ({
+      id: d.id,
+      declarationNumber: d.declarationNumber,
+      declarationDate: d.declarationDate,
+      bonADelivrer: d.bonADelivrer,
+      clientAmountPaid: d.clientAmountPaid?.toString() ?? null,
+      costPrice: d.costPrice?.toString() ?? null,
+    })),
     documents: hub.documents.map((d) => ({
       id: d.id,
       fileName: d.fileName,

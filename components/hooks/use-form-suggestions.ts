@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useOrgFormSuggestionsContext } from "@/components/providers/org-form-suggestions-provider";
 import {
   getCustomerFormSuggestionsAction,
   getOrgFormSuggestionsAction,
@@ -8,11 +9,12 @@ import {
 import type { FormSuggestions } from "@/lib/modules/form-suggestions/service";
 
 export function useOrgFormSuggestions(enabled = true) {
+  const fromContext = useOrgFormSuggestionsContext();
   const [suggestions, setSuggestions] = useState<FormSuggestions | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || fromContext) return;
     let cancelled = false;
     setLoading(true);
     void getOrgFormSuggestionsAction().then((result) => {
@@ -25,20 +27,30 @@ export function useOrgFormSuggestions(enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, fromContext]);
 
-  return { suggestions, loading };
+  return {
+    suggestions: fromContext ?? suggestions,
+    loading: fromContext ? false : loading,
+  };
 }
 
 export function useCustomerFormSuggestions(
   customerId: string | undefined,
   enabled = true,
+  initialLabels?: string[],
 ) {
   const [customerSuggestions, setCustomerSuggestions] = useState<{
     ledgerLabels: string[];
-  } | null>(null);
+  } | null>(
+    initialLabels ? { ledgerLabels: initialLabels } : null,
+  );
 
   useEffect(() => {
+    if (initialLabels) {
+      setCustomerSuggestions({ ledgerLabels: initialLabels });
+      return;
+    }
     if (!enabled || !customerId) {
       setCustomerSuggestions(null);
       return;
@@ -53,7 +65,7 @@ export function useCustomerFormSuggestions(
     return () => {
       cancelled = true;
     };
-  }, [customerId, enabled]);
+  }, [customerId, enabled, initialLabels]);
 
   return customerSuggestions;
 }

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { FolderOpen, Maximize2 } from "lucide-react";
 import {
   getDeclarationFicheAction,
-  listAgenciesForFormAction,
 } from "@/lib/actions/declaration-fiche";
 import { DeclarationFicheBody } from "@/components/declarations/declaration-fiche-body";
 import type { AgencyOption } from "@/components/declarations/new-declaration-form";
@@ -31,14 +30,15 @@ export function DeclarationFicheSheet({
   open,
   onOpenChange,
   canEdit,
+  agencies: agenciesProp,
 }: {
   declarationId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canEdit: boolean;
+  agencies: AgencyOption[];
 }) {
   const [fiche, setFiche] = useState<DeclarationFicheSerialized | null>(null);
-  const [agencies, setAgencies] = useState<AgencyOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -47,10 +47,7 @@ export function DeclarationFicheSheet({
     setLoading(true);
     setError(null);
 
-    const [ficheResult, agenciesResult] = await Promise.all([
-      getDeclarationFicheAction(id),
-      listAgenciesForFormAction(),
-    ]);
+    const ficheResult = await getDeclarationFicheAction(id);
 
     setLoading(false);
 
@@ -61,9 +58,6 @@ export function DeclarationFicheSheet({
     }
 
     setFiche(ficheResult.data);
-    if (agenciesResult.ok && agenciesResult.data) {
-      setAgencies(agenciesResult.data);
-    }
   }, []);
 
   useEffect(() => {
@@ -132,7 +126,7 @@ export function DeclarationFicheSheet({
               loading={loading}
               error={error}
               fiche={fiche}
-              agencies={agencies}
+              agencies={agenciesProp}
               canEdit={canEdit}
               variant="sheet"
               onSaved={handleSaved}
@@ -152,7 +146,7 @@ export function DeclarationFicheSheet({
               loading={loading}
               error={error}
               fiche={fiche}
-              agencies={agencies}
+              agencies={agenciesProp}
               canEdit={canEdit}
               variant="page"
               onSaved={handleSaved}
