@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { ChevronDown, Plus, X } from "lucide-react";
 import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import {
@@ -18,9 +18,32 @@ import {
   type TransactionsSort,
   type TransactionsViewState,
   agencyDateRangeForPreset,
+  formatPeriodSummary,
+  formatViewSummary,
   serializeTransactionsSearchParams,
+  viewHasCustomizations,
 } from "@/lib/modules/ledger/transactions-query";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PeriodDateRange } from "./period-date-range";
+import { cn } from "@/lib/utils";
 
 type CustomerOption = { id: string; name: string };
 
@@ -134,6 +157,33 @@ function ruleLabel(
   return `${field} : ${rule.value}`;
 }
 
+function FilterValueSelect({
+  value,
+  placeholder,
+  onValueChange,
+  options,
+}: {
+  value: string;
+  placeholder: string;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <Select value={value || null} onValueChange={(v) => onValueChange(v ?? "")}>
+      <SelectTrigger size="sm" className="min-w-[140px] flex-1">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function RuleValueEditor({
   rule,
   onChange,
@@ -149,121 +199,105 @@ function RuleValueEditor({
 }) {
   if (rule.field === "customer") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="">Choisir…</option>
-        {customers.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+        placeholder="Choisir un client"
+        onValueChange={(value) => onChange({ value })}
+        options={customers.map((c) => ({ value: c.id, label: c.name }))}
+      />
     );
   }
   if (rule.field === "type") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="">Choisir…</option>
-        {types.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
-      </select>
+        placeholder="Choisir un type"
+        onValueChange={(value) => onChange({ value })}
+        options={transactionTypesToOptions(types)}
+      />
     );
   }
   if (rule.field === "side") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="credit">Crédit</option>
-        <option value="debit">Débit</option>
-      </select>
+        placeholder="Sens"
+        onValueChange={(value) => onChange({ value })}
+        options={[
+          { value: "credit", label: "Crédit" },
+          { value: "debit", label: "Débit" },
+        ]}
+      />
     );
   }
   if (rule.field === "entryType") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="">Choisir…</option>
-        {ENTRY_TYPE_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        placeholder="Nature"
+        onValueChange={(value) => onChange({ value })}
+        options={ENTRY_TYPE_OPTIONS.map((o) => ({
+          value: o.value,
+          label: o.label,
+        }))}
+      />
     );
   }
   if (rule.field === "category") {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <Select
           value={rule.operator}
-          onChange={(e) =>
-            onChange({ operator: e.target.value as FilterOperator })
+          onValueChange={(v) =>
+            onChange({ operator: (v ?? "eq") as FilterOperator })
           }
-          className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
         >
-          <option value="eq">est</option>
-          <option value="empty">est vide</option>
-        </select>
+          <SelectTrigger size="sm" className="w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="eq">est</SelectItem>
+            <SelectItem value="empty">est vide</SelectItem>
+          </SelectContent>
+        </Select>
         {rule.operator !== "empty" ? (
-          <select
+          <FilterValueSelect
             value={rule.value}
-            onChange={(e) => onChange({ value: e.target.value })}
-            className="h-8 min-w-[120px] flex-1 rounded-lg border border-input bg-background px-2 text-sm"
-          >
-            <option value="">Choisir…</option>
-            {CATEGORY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            placeholder="Catégorie"
+            onValueChange={(value) => onChange({ value })}
+            options={CATEGORY_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.label,
+            }))}
+          />
         ) : null}
       </div>
     );
   }
   if (rule.field === "dossier") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="">Choisir…</option>
-        {dossiers.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.dossierNumber}
-            {d.blReference ? ` · BL ${d.blReference}` : ""}
-          </option>
-        ))}
-      </select>
+        placeholder="Dossier"
+        onValueChange={(value) => onChange({ value })}
+        options={dossiers.map((d) => ({
+          value: d.id,
+          label: `${d.dossierNumber}${d.blReference ? ` · BL ${d.blReference}` : ""}`,
+        }))}
+      />
     );
   }
   if (rule.field === "hasDossier") {
     return (
-      <select
+      <FilterValueSelect
         value={rule.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-      >
-        <option value="true">Oui</option>
-        <option value="false">Non</option>
-      </select>
+        placeholder="Dossier lié"
+        onValueChange={(value) => onChange({ value })}
+        options={[
+          { value: "true", label: "Oui" },
+          { value: "false", label: "Non" },
+        ]}
+      />
     );
   }
   if (rule.field === "q") {
@@ -287,6 +321,13 @@ function RuleValueEditor({
       className="h-8 w-36 rounded-lg border border-input bg-background px-2 text-sm tabular-nums"
     />
   );
+}
+
+function transactionTypesToOptions(types: TransactionTypeSerialized[]) {
+  return types.map((t) => ({
+    value: t.id,
+    label: `${t.name} (${t.balanceSide === "credit" ? "Crédit" : "Débit"})`,
+  }));
 }
 
 export function TransactionsToolbar({
@@ -338,7 +379,6 @@ export function TransactionsToolbar({
   );
 
   const usedGroupDims = useMemo(() => new Set(state.groupBy), [state.groupBy]);
-
   const availableGroupDims = GROUP_DIMENSIONS.filter(
     (d) => !usedGroupDims.has(d),
   );
@@ -347,323 +387,385 @@ export function TransactionsToolbar({
     (r) => r.field === "customer" && r.operator === "eq",
   )?.value;
 
+  const summary = formatViewSummary(state, totalCount);
+  const defaultOpen = viewHasCustomizations(state);
+
+  const applyPreset = (preset: DatePreset) => {
+    const range = agencyDateRangeForPreset(preset, today);
+    pushState({
+      ...state,
+      datePreset: preset,
+      dateFrom: range.dateFrom,
+      dateTo: range.dateTo,
+    });
+  };
+
   return (
-    <section className="space-y-4 rounded-lg border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">Vue transactions</h2>
-        <p className="text-xs text-muted-foreground">
-          {pending ? "Mise à jour…" : null}
-          {totalCount} résultat{totalCount !== 1 ? "s" : ""}
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">Période</p>
-        <div className="flex flex-wrap gap-1.5">
-          {DATE_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => {
-                const range = agencyDateRangeForPreset(p.id, today);
-                pushState({
-                  ...state,
-                  datePreset: p.id,
-                  dateFrom: range.dateFrom,
-                  dateTo: range.dateTo,
-                });
-              }}
-              className={
-                state.datePreset === p.id
-                  ? "rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
-                  : "rounded-full border px-3 py-1 text-xs text-muted-foreground hover:bg-muted"
-              }
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        {state.datePreset === "all" ? (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <label className="flex items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">Du</span>
-              <input
-                type="date"
-                value={state.dateFrom}
-                onChange={(e) =>
-                  pushState({ ...state, dateFrom: e.target.value })
-                }
-                className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">Au</span>
-              <input
-                type="date"
-                value={state.dateTo}
-                onChange={(e) =>
-                  pushState({ ...state, dateTo: e.target.value })
-                }
-                className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-              />
-            </label>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground tabular-nums">
-            {state.dateFrom || "—"} → {state.dateTo || "—"}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-medium text-muted-foreground">Filtres</p>
-          <div>
-            <select
-              aria-label="Ajouter un filtre"
-              className="h-8 appearance-none rounded-lg border border-dashed border-input bg-background pl-2 pr-8 text-xs font-medium"
-              defaultValue=""
-              onChange={(e) => {
-                const field = e.target.value as FilterField;
-                if (!field) return;
-                pushRules(
-                  [
-                    ...state.rules,
-                    {
-                      id: newRuleId(),
-                      field,
-                      operator: defaultOperator(field),
-                      value: defaultValue(field),
-                    },
-                  ],
-                  false,
-                );
-                e.target.value = "";
-              }}
-            >
-              <option value="">+ Filtre</option>
-              {FILTERABLE_FIELDS.filter(
-                (f) =>
-                  f !== "dossier" ||
-                  Boolean(customerFromRules) ||
-                  dossiers.length > 0,
-              ).map((f) => (
-                <option key={f} value={f}>
-                  {FILTER_FIELD_LABELS[f]}
-                </option>
-              ))}
-            </select>
-          </div>
+    <section className="rounded-lg border bg-card">
+      <Collapsible defaultOpen={defaultOpen}>
+        <div className="flex items-start gap-2 p-3">
+          <CollapsibleTrigger
+            className={cn(
+              "group/trigger flex flex-1 items-start gap-2 rounded-md text-left outline-none",
+              "focus-visible:ring-3 focus-visible:ring-ring/50",
+            )}
+          >
+            <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-data-panel-open/trigger:rotate-180" />
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-semibold">Filtres et vue</h2>
+                {pending ? (
+                  <span className="text-xs text-muted-foreground">
+                    Mise à jour…
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">{summary}</p>
+            </div>
+          </CollapsibleTrigger>
         </div>
 
-        {state.rules.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            Aucun filtre actif — toutes les écritures de la période sont
-            incluses.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {state.rules.map((rule) => (
-              <li
-                key={rule.id}
-                className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-2 py-1.5"
-              >
-                <span className="text-xs font-medium text-muted-foreground">
-                  {FILTER_FIELD_LABELS[rule.field]}
-                </span>
-                <RuleValueEditor
-                  rule={rule}
-                  customers={customers}
-                  types={transactionTypes}
-                  dossiers={dossiers}
-                  onChange={(patch) => {
-                    const rules = state.rules.map((r) =>
-                      r.id === rule.id ? { ...r, ...patch } : r,
-                    );
-                    const debounce =
-                      rule.field === "q" ||
-                      rule.field === "amountMin" ||
-                      rule.field === "amountMax";
-                    pushRules(rules, debounce);
+        <CollapsibleContent className="border-t px-3 pb-3 pt-2">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Période
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value={state.datePreset}
+                  onValueChange={(v) => {
+                    if (v) applyPreset(v as DatePreset);
                   }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0"
-                  aria-label="Retirer le filtre"
-                  onClick={() =>
-                    pushState({
-                      ...state,
-                      rules: state.rules.filter((r) => r.id !== rule.id),
-                    })
-                  }
                 >
-                  <X className="size-3.5" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <SelectTrigger size="sm" className="w-[200px]">
+                    <SelectValue placeholder="Période" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_PRESETS.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {state.datePreset !== "all" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() =>
+                      pushState({
+                        ...state,
+                        datePreset: "all",
+                        dateFrom: state.dateFrom,
+                        dateTo: state.dateTo,
+                      })
+                    }
+                  >
+                    Plage personnalisée
+                  </Button>
+                ) : null}
+              </div>
+              {state.datePreset === "all" ? (
+                <div className="space-y-1.5">
+                  <PeriodDateRange
+                    dateFrom={state.dateFrom}
+                    dateTo={state.dateTo}
+                    onChange={(dateFrom, dateTo) =>
+                      pushState({ ...state, dateFrom, dateTo })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Sans dates sélectionnées : toutes les écritures de
+                    l&apos;organisation sont incluses.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {formatPeriodSummary(state)}
+                </p>
+              )}
+            </div>
 
-        {state.rules.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {state.rules.map((rule) => (
-              <span
-                key={`chip-${rule.id}`}
-                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
-              >
-                {ruleLabel(rule, customers, transactionTypes, dossiers)}
-                <button
-                  type="button"
-                  className="rounded p-0.5 hover:bg-background"
-                  aria-label="Retirer"
-                  onClick={() =>
-                    pushState({
-                      ...state,
-                      rules: state.rules.filter((r) => r.id !== rule.id),
-                    })
-                  }
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Filtres
+                </p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1 text-xs"
+                      />
+                    }
+                  >
+                    <Plus className="size-3.5" />
+                    Filtre
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {FILTERABLE_FIELDS.filter(
+                      (f) =>
+                        f !== "dossier" ||
+                        Boolean(customerFromRules) ||
+                        dossiers.length > 0,
+                    ).map((f) => (
+                      <DropdownMenuItem
+                        key={f}
+                        onClick={() =>
+                          pushRules(
+                            [
+                              ...state.rules,
+                              {
+                                id: newRuleId(),
+                                field: f,
+                                operator: defaultOperator(f),
+                                value: defaultValue(f),
+                              },
+                            ],
+                            false,
+                          )
+                        }
+                      >
+                        {FILTER_FIELD_LABELS[f]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {state.rules.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Aucun filtre actif.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {state.rules.map((rule) => (
+                    <li
+                      key={rule.id}
+                      className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-2 py-1.5"
+                    >
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {FILTER_FIELD_LABELS[rule.field]}
+                      </span>
+                      <RuleValueEditor
+                        rule={rule}
+                        customers={customers}
+                        types={transactionTypes}
+                        dossiers={dossiers}
+                        onChange={(patch) => {
+                          const rules = state.rules.map((r) =>
+                            r.id === rule.id ? { ...r, ...patch } : r,
+                          );
+                          const debounce =
+                            rule.field === "q" ||
+                            rule.field === "amountMin" ||
+                            rule.field === "amountMax";
+                          pushRules(rules, debounce);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 shrink-0"
+                        aria-label="Retirer le filtre"
+                        onClick={() =>
+                          pushState({
+                            ...state,
+                            rules: state.rules.filter((r) => r.id !== rule.id),
+                          })
+                        }
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {state.rules.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {state.rules.map((rule) => (
+                    <span
+                      key={`chip-${rule.id}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+                    >
+                      {ruleLabel(
+                        rule,
+                        customers,
+                        transactionTypes,
+                        dossiers,
+                      )}
+                      <button
+                        type="button"
+                        className="rounded p-0.5 hover:bg-background"
+                        aria-label="Retirer"
+                        onClick={() =>
+                          pushState({
+                            ...state,
+                            rules: state.rules.filter((r) => r.id !== rule.id),
+                          })
+                        }
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Regroupement (ordre = niveaux imbriqués)
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {state.groupBy.map((dim, index) => (
+                  <div
+                    key={`${dim}-${index}`}
+                    className="flex items-center gap-1 rounded-full border bg-muted/30 pl-2 pr-1 py-0.5 text-xs"
+                  >
+                    <span className="font-medium">
+                      {GROUP_DIMENSION_LABELS[dim]}
+                    </span>
+                    <button
+                      type="button"
+                      className="rounded p-0.5 hover:bg-background disabled:opacity-30"
+                      disabled={index === 0}
+                      aria-label="Monter"
+                      onClick={() => {
+                        const groupBy = [...state.groupBy];
+                        [groupBy[index - 1], groupBy[index]] = [
+                          groupBy[index],
+                          groupBy[index - 1],
+                        ];
+                        pushState({ ...state, groupBy });
+                      }}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded p-0.5 hover:bg-background disabled:opacity-30"
+                      disabled={index === state.groupBy.length - 1}
+                      aria-label="Descendre"
+                      onClick={() => {
+                        const groupBy = [...state.groupBy];
+                        [groupBy[index], groupBy[index + 1]] = [
+                          groupBy[index + 1],
+                          groupBy[index],
+                        ];
+                        pushState({ ...state, groupBy });
+                      }}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded p-0.5 hover:bg-background"
+                      aria-label="Retirer"
+                      onClick={() =>
+                        pushState({
+                          ...state,
+                          groupBy: state.groupBy.filter((_, i) => i !== index),
+                        })
+                      }
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+                {availableGroupDims.length > 0 ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 rounded-full px-2 text-xs"
+                        />
+                      }
+                    >
+                      + Regroupement
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {availableGroupDims.map((d) => (
+                        <DropdownMenuItem
+                          key={d}
+                          onClick={() =>
+                            pushState({
+                              ...state,
+                              groupBy: [...state.groupBy, d],
+                            })
+                          }
+                        >
+                          {GROUP_DIMENSION_LABELS[d]}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+                {state.groupBy.length > 0 ? (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground underline"
+                    onClick={() => pushState({ ...state, groupBy: [] })}
+                  >
+                    Liste plate
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 border-t pt-3">
+              <label className="flex items-center gap-2 text-xs">
+                <span className="font-medium text-muted-foreground">Tri</span>
+                <Select
+                  value={state.sort}
+                  onValueChange={(v) => {
+                    if (v) pushState({ ...state, sort: v as TransactionsSort });
+                  }}
                 >
-                  <X className="size-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">
-          Regroupement (ordre = niveaux imbriqués)
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          {state.groupBy.map((dim, index) => (
-            <div
-              key={`${dim}-${index}`}
-              className="flex items-center gap-1 rounded-full border bg-muted/30 pl-2 pr-1 py-0.5 text-xs"
-            >
-              <span className="font-medium">{GROUP_DIMENSION_LABELS[dim]}</span>
-              <button
+                  <SelectTrigger size="sm" className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {SORT_LABELS[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <Button
                 type="button"
-                className="rounded p-0.5 hover:bg-background disabled:opacity-30"
-                disabled={index === 0}
-                aria-label="Monter"
-                onClick={() => {
-                  const groupBy = [...state.groupBy];
-                  [groupBy[index - 1], groupBy[index]] = [
-                    groupBy[index],
-                    groupBy[index - 1],
-                  ];
-                  pushState({ ...state, groupBy });
-                }}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="rounded p-0.5 hover:bg-background disabled:opacity-30"
-                disabled={index === state.groupBy.length - 1}
-                aria-label="Descendre"
-                onClick={() => {
-                  const groupBy = [...state.groupBy];
-                  [groupBy[index], groupBy[index + 1]] = [
-                    groupBy[index + 1],
-                    groupBy[index],
-                  ];
-                  pushState({ ...state, groupBy });
-                }}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                className="rounded p-0.5 hover:bg-background"
-                aria-label="Retirer"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
                 onClick={() =>
                   pushState({
-                    ...state,
-                    groupBy: state.groupBy.filter((_, i) => i !== index),
+                    rules: [],
+                    groupBy: ["day"],
+                    sort: "date-desc",
+                    datePreset: "today",
+                    ...agencyDateRangeForPreset("today", today),
                   })
                 }
               >
-                <X className="size-3" />
-              </button>
+                Réinitialiser la vue
+              </Button>
             </div>
-          ))}
-          {availableGroupDims.length > 0 ? (
-            <select
-              className="h-7 rounded-full border border-dashed border-input bg-background px-2 text-xs"
-              defaultValue=""
-              onChange={(e) => {
-                const dim = e.target.value as GroupDimension;
-                if (!dim) return;
-                pushState({
-                  ...state,
-                  groupBy: [...state.groupBy, dim],
-                });
-                e.target.value = "";
-              }}
-            >
-              <option value="">+ Regroupement</option>
-              {availableGroupDims.map((d) => (
-                <option key={d} value={d}>
-                  {GROUP_DIMENSION_LABELS[d]}
-                </option>
-              ))}
-            </select>
-          ) : null}
-          {state.groupBy.length > 0 ? (
-            <button
-              type="button"
-              className="text-xs text-muted-foreground underline"
-              onClick={() => pushState({ ...state, groupBy: [] })}
-            >
-              Liste plate
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 border-t pt-3">
-        <label className="flex items-center gap-2 text-xs">
-          <span className="font-medium text-muted-foreground">Tri</span>
-          <select
-            value={state.sort}
-            onChange={(e) =>
-              pushState({
-                ...state,
-                sort: e.target.value as TransactionsSort,
-              })
-            }
-            className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-          >
-            {SORT_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {SORT_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs"
-          onClick={() =>
-            pushState({
-              rules: [],
-              groupBy: ["day"],
-              sort: "date-desc",
-              datePreset: "today",
-              ...agencyDateRangeForPreset("today", today),
-            })
-          }
-        >
-          Réinitialiser la vue
-        </Button>
-      </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </section>
   );
 }

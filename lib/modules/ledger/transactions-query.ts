@@ -382,15 +382,72 @@ export function serializeTransactionsSearchParams(
   }
 
   sp.set("sort", state.sort);
+  sp.set("preset", state.datePreset);
 
-  if (state.datePreset !== "all") {
-    sp.set("preset", state.datePreset);
-  } else {
+  if (state.datePreset === "all") {
     if (state.dateFrom) sp.set("from", state.dateFrom);
     if (state.dateTo) sp.set("to", state.dateTo);
   }
 
   return sp;
+}
+
+const DATE_PRESET_LABELS: Record<DatePreset, string> = {
+  today: "Aujourd'hui",
+  yesterday: "Hier",
+  week: "Cette semaine",
+  month: "Ce mois",
+  last30: "30 derniers jours",
+  all: "Tout",
+};
+
+export function formatPeriodSummary(state: TransactionsViewState): string {
+  if (state.datePreset === "all") {
+    if (state.dateFrom && state.dateTo) {
+      return `${state.dateFrom} → ${state.dateTo}`;
+    }
+    if (state.dateFrom) return `À partir du ${state.dateFrom}`;
+    if (state.dateTo) return `Jusqu'au ${state.dateTo}`;
+    return "Toutes les dates";
+  }
+  const label = DATE_PRESET_LABELS[state.datePreset];
+  if (state.dateFrom && state.dateTo) {
+    return `${label} (${state.dateFrom} → ${state.dateTo})`;
+  }
+  return label;
+}
+
+export function formatViewSummary(
+  state: TransactionsViewState,
+  totalCount: number,
+): string {
+  const parts: string[] = [formatPeriodSummary(state)];
+  const activeRules = activeFilterRules(state.rules);
+  if (activeRules.length > 0) {
+    parts.push(
+      `${activeRules.length} filtre${activeRules.length > 1 ? "s" : ""}`,
+    );
+  }
+  if (state.groupBy.length > 0) {
+    parts.push(
+      `Regroupement : ${state.groupBy.map((d) => GROUP_DIMENSION_LABELS[d]).join(" › ")}`,
+    );
+  } else {
+    parts.push("Liste plate");
+  }
+  parts.push(`${totalCount} résultat${totalCount !== 1 ? "s" : ""}`);
+  return parts.join(" · ");
+}
+
+export function viewHasCustomizations(
+  state: TransactionsViewState,
+): boolean {
+  return (
+    state.datePreset !== "today" ||
+    state.rules.length > 0 ||
+    state.groupBy.join(",") !== "day" ||
+    state.sort !== "date-desc"
+  );
 }
 
 function isoWeekKey(dateStr: string): { key: string; label: string } {

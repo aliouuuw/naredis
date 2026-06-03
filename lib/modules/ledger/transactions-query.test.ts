@@ -96,6 +96,24 @@ describe("serializeTransactionsSearchParams", () => {
     expect(qs).toContain("f=side%3Aeq%3Adebit");
     expect(qs).toContain("preset=today");
   });
+
+  test("preset=all is preserved (no implicit fallback to today)", () => {
+    const today = "2026-06-03";
+    const initial = parseTransactionsViewState({ preset: "all", group: "client" }, today);
+    expect(initial.datePreset).toBe("all");
+    expect(initial.dateFrom).toBe("");
+    expect(initial.dateTo).toBe("");
+
+    const qs = serializeTransactionsSearchParams(initial).toString();
+    expect(qs).toContain("preset=all");
+
+    const roundTrip = parseTransactionsViewState(
+      Object.fromEntries(new URLSearchParams(qs)),
+      today,
+    );
+    expect(roundTrip.datePreset).toBe("all");
+    expect(roundTrip.groupBy).toEqual(["client"]);
+  });
 });
 
 describe("agencyDateRangeForPreset", () => {
