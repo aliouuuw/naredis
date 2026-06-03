@@ -37,8 +37,8 @@ export function NewTransactionButton({
   customerId?: string;
 }) {
   const href = customerId
-    ? `/transactions?customer=${customerId}`
-    : "/transactions";
+    ? `/transactions?f=customer%3Aeq%3A${encodeURIComponent(customerId)}&preset=today`
+    : "/transactions?preset=today";
   return (
     <ButtonLink href={href} className="rounded-full px-4">
       <Plus className="size-4" />

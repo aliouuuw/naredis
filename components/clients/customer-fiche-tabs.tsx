@@ -139,7 +139,7 @@ export function CustomerFicheTabs({
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
             <Link
-              href={`/transactions?customer=${customer.id}`}
+              href={`/transactions?f=customer%3Aeq%3A${customer.id}&preset=last30`}
               className="font-medium text-foreground hover:underline"
             >
               Vue globale des transactions

@@ -1,4 +1,18 @@
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  not,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import type { BalanceSide } from "@/lib/db/enums";
 import {
@@ -53,6 +67,7 @@ export type LedgerEntryListItem = {
   effectiveDate: string;
   category: (typeof ledgerEntries.$inferSelect)["category"];
   dossierId: string | null;
+  dossierNumber: string | null;
   declarationId: string | null;
   createdAt: Date;
   allocations: LedgerAllocationRow[];
@@ -62,6 +77,14 @@ export type LedgerListFilters = {
   customerId?: string;
   transactionTypeId?: string;
   balanceSide?: BalanceSide;
+  entryType?: (typeof ledgerEntries.$inferSelect)["entryType"];
+  category?: NonNullable<(typeof ledgerEntries.$inferSelect)["category"]>;
+  categoryIsNull?: boolean;
+  dossierId?: string;
+  hasDossier?: boolean;
+  search?: string;
+  amountMin?: bigint;
+  amountMax?: bigint;
   dateFrom?: string;
   dateTo?: string;
 };
@@ -141,6 +164,7 @@ type EntryRow = {
   customerName: string;
   transactionTypeId: string | null;
   transactionTypeName: string | null;
+  dossierNumber: string | null;
   entry: typeof ledgerEntries.$inferSelect;
 };
 
@@ -163,6 +187,7 @@ function mapEntryRow(
     effectiveDate: entry.effectiveDate,
     category: entry.category,
     dossierId: entry.dossierId,
+    dossierNumber: row.dossierNumber ?? null,
     declarationId: entry.declarationId,
     createdAt: entry.createdAt,
     allocations: allocations.get(entry.id) ?? [],
@@ -189,6 +214,76 @@ async function queryLedgerEntries(
   if (filters.balanceSide) {
     conditions.push(eq(ledgerEntries.balanceSide, filters.balanceSide));
   }
+  if (filters.entryType) {
+    conditions.push(eq(ledgerEntries.entryType, filters.entryType));
+  }
+  if (filters.category) {
+    conditions.push(eq(ledgerEntries.category, filters.category));
+  }
+  if (filters.categoryIsNull) {
+    conditions.push(isNull(ledgerEntries.category));
+  }
+  if (filters.amountMin !== undefined) {
+    conditions.push(gte(ledgerEntries.amount, filters.amountMin));
+  }
+  if (filters.amountMax !== undefined) {
+    conditions.push(lte(ledgerEntries.amount, filters.amountMax));
+  }
+  if (filters.search?.trim()) {
+    const term = `%${filters.search.trim().replace(/[%_]/g, "")}%`;
+    conditions.push(
+      or(
+        ilike(ledgerEntries.label, term),
+        ilike(ledgerEntries.notes, term),
+      )!,
+    );
+  }
+  if (filters.dossierId) {
+    conditions.push(
+      or(
+        eq(ledgerEntries.dossierId, filters.dossierId),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(paymentAllocations)
+            .where(
+              and(
+                eq(paymentAllocations.ledgerEntryId, ledgerEntries.id),
+                eq(paymentAllocations.dossierId, filters.dossierId),
+              ),
+            ),
+        ),
+      )!,
+    );
+  }
+  if (filters.hasDossier === true) {
+    conditions.push(
+      or(
+        isNotNull(ledgerEntries.dossierId),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(paymentAllocations)
+            .where(eq(paymentAllocations.ledgerEntryId, ledgerEntries.id)),
+        ),
+      )!,
+    );
+  }
+  if (filters.hasDossier === false) {
+    conditions.push(
+      and(
+        isNull(ledgerEntries.dossierId),
+        not(
+          exists(
+            db
+              .select({ one: sql`1` })
+              .from(paymentAllocations)
+              .where(eq(paymentAllocations.ledgerEntryId, ledgerEntries.id)),
+          ),
+        ),
+      )!,
+    );
+  }
   if (filters.dateFrom) {
     conditions.push(gte(ledgerEntries.effectiveDate, filters.dateFrom));
   }
@@ -203,6 +298,7 @@ async function queryLedgerEntries(
       customerName: customers.name,
       transactionTypeId: ledgerEntries.transactionTypeId,
       transactionTypeName: ledgerTransactionTypes.name,
+      dossierNumber: dossiers.dossierNumber,
       entry: ledgerEntries,
     })
     .from(ledgerEntries)
@@ -211,6 +307,7 @@ async function queryLedgerEntries(
       ledgerTransactionTypes,
       eq(ledgerEntries.transactionTypeId, ledgerTransactionTypes.id),
     )
+    .leftJoin(dossiers, eq(ledgerEntries.dossierId, dossiers.id))
     .where(and(...conditions))
     .orderBy(desc(ledgerEntries.effectiveDate), desc(ledgerEntries.createdAt));
 
