@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createDeclarationAction } from "@/lib/actions/declarations";
+import { ContainerNumbersField } from "@/components/declarations/container-numbers-field";
 import { Button } from "@/components/ui/button";
+import { FormAlert } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 
 export type CustomerOption = { id: string; name: string; slug: string };
@@ -13,13 +15,6 @@ function parseMoney(value: string): string | undefined {
   const trimmed = value.replace(/\s/g, "");
   if (!trimmed) return undefined;
   return trimmed;
-}
-
-function parseContainers(text: string): string[] {
-  return text
-    .split(/[\n,;]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
 }
 
 export function NewDeclarationForm({
@@ -32,30 +27,29 @@ export function NewDeclarationForm({
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [containerCount, setContainerCount] = useState(1);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [containerPayload, setContainerPayload] = useState({
+    containers: [] as string[],
+    containerCount: 1,
+  });
 
   const hasCustomers = customers.length > 0;
-
-  const containerHint = useMemo(() => {
-    if (containerCount <= 0) return "Indiquez le nombre de conteneurs.";
-    return `${containerCount} numéro(s) attendu(s), un par ligne.`;
-  }, [containerCount]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
+    setSuccess(null);
 
     const form = new FormData(event.currentTarget);
-    const containers = parseContainers(String(form.get("containers") ?? ""));
 
     const result = await createDeclarationAction({
       customerId: String(form.get("customerId") ?? ""),
       blReference: String(form.get("blReference") ?? ""),
       zoneOrTerminal: String(form.get("zoneOrTerminal") ?? "") || undefined,
       declarationDate: String(form.get("declarationDate") ?? "") || undefined,
-      containerCount: Number(form.get("containerCount") ?? 0),
-      containers,
+      containerCount: containerPayload.containerCount,
+      containers: containerPayload.containers,
       clientAmountPaid: parseMoney(String(form.get("clientAmountPaid") ?? "")),
       gaindeDutyAmount: parseMoney(String(form.get("gaindeDutyAmount") ?? "")),
       costPrice: parseMoney(String(form.get("costPrice") ?? "")),
@@ -72,7 +66,7 @@ export function NewDeclarationForm({
       return;
     }
 
-    router.push(`/declarations/${result.data!.id}`);
+    router.push(`/declarations?open=${result.data!.id}`);
     router.refresh();
   }
 
@@ -90,6 +84,8 @@ export function NewDeclarationForm({
 
   return (
     <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
+      {error ? <FormAlert variant="error">{error}</FormAlert> : null}
+      {success ? <FormAlert variant="success">{success}</FormAlert> : null}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold">Client & BL</h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -158,34 +154,11 @@ export function NewDeclarationForm({
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold">Conteneurs</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="containerCount" className="text-sm font-medium">
-              Nombre de conteneurs
-            </label>
-            <Input
-              id="containerCount"
-              name="containerCount"
-              type="number"
-              min={0}
-              value={containerCount}
-              onChange={(e) => setContainerCount(Number(e.target.value) || 0)}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="containers" className="text-sm font-medium">
-            Numéros de conteneurs
-          </label>
-          <textarea
-            id="containers"
-            name="containers"
-            rows={Math.max(2, Math.min(containerCount, 6))}
-            placeholder="MSCU1234567&#10;MSCU7654321"
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-sm"
-          />
-          <p className="text-xs text-muted-foreground">{containerHint}</p>
-        </div>
+        <ContainerNumbersField
+          initialContainers={[]}
+          initialCount={1}
+          onChange={setContainerPayload}
+        />
       </section>
 
       <section className="space-y-4">
@@ -252,12 +225,7 @@ export function NewDeclarationForm({
         </div>
       </section>
 
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-
+      <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:-mx-0 md:rounded-lg md:border">
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Création…" : "Créer la déclaration"}
@@ -265,6 +233,7 @@ export function NewDeclarationForm({
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Annuler
         </Button>
+      </div>
       </div>
     </form>
   );

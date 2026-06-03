@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const showDevHint = isDevelopment();
-  const { email } = getDevAdminCredentials();
+  const { email, password } = getDevAdminCredentials();
 
   return (
     <div className="relative flex min-h-full flex-col items-center justify-center bg-muted/30 px-4 py-12">
@@ -53,11 +53,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <LoginForm />
         </Suspense>
         {showDevHint ? (
-          <p className="rounded-md border bg-card px-3 py-2 text-center text-xs text-muted-foreground">
-            Dev — après <code className="font-mono">bun run db:seed</code>
-            <br />
-            <span className="font-mono">{email}</span>
-          </p>
+          <div className="rounded-md border bg-card px-3 py-3 text-xs text-muted-foreground space-y-2">
+            <p className="text-center">
+              Dev — après <code className="font-mono">bun run db:seed</code>
+            </p>
+            <dl className="space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between gap-2">
+                <dt>Email</dt>
+                <dd className="text-foreground">{email}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt>Mot de passe</dt>
+                <dd className="text-foreground">{password}</dd>
+              </div>
+            </dl>
+          </div>
         ) : null}
       </div>
     </div>

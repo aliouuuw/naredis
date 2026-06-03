@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import { toModuleContext } from "@/lib/auth/module-context";
 import { requireAuthContext } from "@/lib/auth/session";
+import { serializeCustomerListItem } from "@/lib/modules/customers/serialize-list";
 import { listCustomers } from "@/lib/modules/customers/service";
 import { PageHeader } from "@/components/shell/page-header";
 import { NewClientButton } from "@/components/shell/page-actions";
@@ -8,7 +9,9 @@ import { ClientsTable } from "@/components/clients/clients-table";
 
 export default async function ClientsPage() {
   const auth = await requireAuthContext();
-  const rows = await listCustomers(getDb(), toModuleContext(auth));
+  const rows = (await listCustomers(getDb(), toModuleContext(auth))).map(
+    serializeCustomerListItem,
+  );
 
   return (
     <div className="space-y-8">

@@ -10,7 +10,7 @@ Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update
 
 **Domain + read/create UI** — pilot schema (0003–0004), module services, list/fiche pages, create forms. Code review fixes committed (`82968d3`).
 
-**Next up:** `DECL-005` (edit + audit timeline) and `DOM-005` / `CLI-002` (ledger + versements). Finish `DECL-003`, `CLI-001`, `DOS-001` (in progress).
+**Next up:** `DOM-005` / `CLI-002` (ledger + versements). Finish `DECL-003` (Activité tab), `CLI-001`, `DOS-001`.
 
 Shell is now tab-based (`UI-004`); dashboard is default landing.
 
@@ -35,7 +35,7 @@ Shell is now tab-based (`UI-004`); dashboard is default landing.
 | Theme switcher (UI-005) | Done |
 | Domain modules (DOM-002–004, 008) | Done — list/fiche read UI wired |
 | Create forms (client + déclaration) | Done |
-| Declaration edit + BAD toggle UI (`DECL-005`) | Not started |
+| Declaration edit + BAD toggle UI (`DECL-005`) | Done |
 | Ledger module + payment UI (`DOM-005`, `CLI-002`) | Not started |
 
 ---
@@ -86,7 +86,7 @@ Matches backlog dependencies:
 
 | ID | Title |
 |----|-------|
-| DECL-003 | Declaration fiche (read-only baseline; tabs/stepper pending) |
+| DECL-003 | Declaration fiche (Résumé/Historique; Activité + FSM pending) |
 | CLI-001 | Clients list + fiche (tabs pending) |
 | DOS-001 | Dossier hub (minimal page; full tabs pending) |
 
@@ -112,6 +112,7 @@ Matches backlog dependencies:
 | DOM-002–004, 008 | Module services + list/fiche pages | 2026-05-23 |
 | — | Review fixes: migration 0004, aggregates, audit, tests | 2026-05-23 |
 | DECL-001 | Declarations list page | 2026-06-03 |
+| DECL-005 | Edit declaration + audit timeline UI | 2026-06-03 |
 | — | Project planning docs | 2026-05-19 |
 | — | Dossier vs déclaration glossary + doc refresh | 2026-05-19 |
 | — | UX IA + flows | 2026-05-19 |

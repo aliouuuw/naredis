@@ -11,6 +11,11 @@ import {
 } from "@/lib/db/schema";
 import { appendActivity } from "@/lib/modules/activity/append-activity";
 import {
+  assertAgencyInOrg,
+  assertCustomerInOrg,
+  isUniqueViolation,
+} from "@/lib/modules/shared/org-refs";
+import {
   createDossier,
   getDossierById,
   updateDossierBlReference,
@@ -203,16 +208,50 @@ export async function getDeclarationById(
   return { ...row, containers };
 }
 
+export type DeclarationEditLogEntry = {
+  id: string;
+  changes: Record<string, { from: string | null; to: string | null }>;
+  changedBy: string | null;
+  changedAt: Date;
+};
+
+export async function listDeclarationEditLog(
+  db: DbLike,
+  ctx: ModuleContext,
+  declarationId: string,
+): Promise<DeclarationEditLogEntry[]> {
+  const rows = await db
+    .select({
+      id: declarationEditLog.id,
+      changes: declarationEditLog.changes,
+      changedBy: declarationEditLog.changedBy,
+      changedAt: declarationEditLog.changedAt,
+    })
+    .from(declarationEditLog)
+    .where(
+      and(
+        eq(declarationEditLog.declarationId, declarationId),
+        eq(declarationEditLog.organizationId, ctx.organizationId),
+      ),
+    )
+    .orderBy(desc(declarationEditLog.changedAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    changes: row.changes as DeclarationEditLogEntry["changes"],
+    changedBy: row.changedBy,
+    changedAt: row.changedAt,
+  }));
+}
+
 export async function createDeclaration(
   db: DbLike,
   ctx: ModuleContext,
   input: CreateDeclarationInput,
 ) {
-  // Idempotency: 1 BL per org → reuse existing dossier if any.
-  const existing = await findDossierByBl(db, ctx, input.blReference.trim());
-  if (existing) {
-    throw new DuplicateBlError(input.blReference.trim());
-  }
+  const bl = input.blReference.trim();
+  await assertCustomerInOrg(db, ctx.organizationId, input.customerId);
+  await assertAgencyInOrg(db, ctx.organizationId, input.payingAgencyId);
 
   const containers = (input.containers ?? [])
     .map((c) => c.trim())
@@ -220,54 +259,67 @@ export async function createDeclaration(
   const containerCount =
     input.containerCount != null ? input.containerCount : containers.length;
 
-  return db.transaction(async (tx) => {
-    const dossier = await createDossier(tx, ctx, {
-      customerId: input.customerId,
-      dossierType: input.dossierType,
-      blReference: input.blReference.trim(),
-      title: input.title,
-    });
+  try {
+    return await db.transaction(async (tx) => {
+      const existing = await findDossierByBl(tx, ctx, bl);
+      if (existing) {
+        throw new DuplicateBlError(bl);
+      }
 
-    const declarationNumber = await nextDeclarationNumber(
-      tx,
-      ctx.organizationId,
-    );
+      const dossier = await createDossier(tx, ctx, {
+        customerId: input.customerId,
+        dossierType: input.dossierType,
+        blReference: bl,
+        title: input.title,
+      });
 
-    const [declaration] = await tx
-      .insert(declarations)
-      .values({
+      const declarationNumber = await nextDeclarationNumber(
+        tx,
+        ctx.organizationId,
+      );
+
+      const [declaration] = await tx
+        .insert(declarations)
+        .values({
+          organizationId: ctx.organizationId,
+          dossierId: dossier.id,
+          declarationNumber,
+          zoneOrTerminal: input.zoneOrTerminal?.trim() || null,
+          declarationDate: input.declarationDate || null,
+          containerCount,
+          clientAmountPaid: input.clientAmountPaid ?? null,
+          gaindeDutyAmount: input.gaindeDutyAmount ?? null,
+          costPrice: input.costPrice ?? null,
+          payingAgencyId: input.payingAgencyId ?? null,
+        })
+        .returning();
+
+      await syncContainers(tx, ctx, declaration.id, containers);
+
+      await appendActivity(tx, {
         organizationId: ctx.organizationId,
-        dossierId: dossier.id,
-        declarationNumber,
-        zoneOrTerminal: input.zoneOrTerminal?.trim() || null,
-        declarationDate: input.declarationDate || null,
-        containerCount,
-        clientAmountPaid: input.clientAmountPaid ?? null,
-        gaindeDutyAmount: input.gaindeDutyAmount ?? null,
-        costPrice: input.costPrice ?? null,
-        payingAgencyId: input.payingAgencyId ?? null,
-      })
-      .returning();
+        entityType: "declaration",
+        entityId: declaration.id,
+        action: "declaration.created",
+        payload: {
+          declarationNumber,
+          dossierId: dossier.id,
+          blReference: bl,
+          containerCount,
+          containers,
+        },
+        actorId: ctx.userId,
+      });
 
-    await syncContainers(tx, ctx, declaration.id, containers);
-
-    await appendActivity(tx, {
-      organizationId: ctx.organizationId,
-      entityType: "declaration",
-      entityId: declaration.id,
-      action: "declaration.created",
-      payload: {
-        declarationNumber,
-        dossierId: dossier.id,
-        blReference: input.blReference.trim(),
-        containerCount,
-        containers,
-      },
-      actorId: ctx.userId,
+      return { declaration, dossier };
     });
-
-    return { declaration, dossier };
-  });
+  } catch (err) {
+    if (err instanceof DuplicateBlError) throw err;
+    if (isUniqueViolation(err)) {
+      throw new DuplicateBlError(bl);
+    }
+    throw err;
+  }
 }
 
 export async function updateDeclaration(
@@ -345,6 +397,8 @@ export async function updateDeclaration(
       input.bonADelivrer !== undefined
         ? input.bonADelivrer
         : locked.bonADelivrer;
+
+    await assertAgencyInOrg(tx, ctx.organizationId, nextAgencyId);
 
     if (nextBad) {
       const missing = getBonADelivrerMissingFields({

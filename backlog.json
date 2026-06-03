@@ -405,7 +405,7 @@
         "Dossier context card with link to dossier hub",
         "Résumé + Activité tabs"
       ],
-      "notes": "Read-only fiche: logistics + money grid, BAD display. Missing: FSM stepper, dossier hub card, Résumé/Activité tabs. Edit in DECL-005."
+      "notes": "Résumé + Historique tabs, dossier card, inline edit form. Missing: customs FSM stepper (DECL-004), Activité feed from activity_log."
     },
     {
       "id": "DECL-004",
@@ -426,14 +426,15 @@
       "epic": "declarations",
       "title": "Edit declaration + rectificative audit log UI",
       "priority": "p0",
-      "status": "todo",
+      "status": "done",
       "dependsOn": ["DECL-003", "DOM-003"],
       "docs": ["docs/11-user-flows.md", "docs/13-pilot-operations.md"],
       "acceptanceCriteria": [
         "Edit filing fields in place (montant, GAINDE, prix de revient, containers, …)",
         "Timeline shows declaration_edit_log entries",
         "No second row for rectificative"
-      ]
+      ],
+      "notes": "EditDeclarationForm + Historique timeline + setBonADelivrer; org-scoped refs validated in service."
     },
     {
       "id": "DOS-001",
