@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Use FormSelect for every value/label dropdown (entity ids, enums, filters).
+ * Do not use raw Select + SelectValue — Base UI shows the raw value (UUID) in the trigger.
+ */
+
 import * as React from "react";
 import {
   Select,
@@ -10,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { resolveSelectDisplayText } from "@/lib/ui/resolve-select-label";
 import { cn } from "@/lib/utils";
 
 export type FormSelectOption = { value: string; label: string };
@@ -82,7 +88,10 @@ export function FormSelect({
     return options;
   }, [groups, options]);
 
-  const selectedLabel = flatOptions.find((o) => o.value === value)?.label;
+  const displayText = resolveSelectDisplayText(value, flatOptions, {
+    placeholder,
+    emptyOption,
+  });
 
   return (
     <div className={cn("w-full min-w-0", className)}>
@@ -101,7 +110,7 @@ export function FormSelect({
           aria-label={ariaLabel}
         >
           <SelectValue placeholder={placeholder}>
-            {selectedLabel ?? null}
+            {displayText ?? null}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>

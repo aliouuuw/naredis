@@ -11,14 +11,8 @@ import {
   viewHasCustomizations,
 } from "@/lib/modules/customers/clients-query";
 import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = [
@@ -113,7 +107,7 @@ export function ClientsToolbar({
         <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[320px]">
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Statut compte</span>
-            <Select
+            <FormSelect
               value={state.accountStatus || "all"}
               onValueChange={(v) =>
                 patch({
@@ -121,36 +115,26 @@ export function ClientsToolbar({
                     v === "all" ? "" : (v as ClientsViewState["accountStatus"]),
                 })
               }
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value || "all"} value={o.value || "all"}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={STATUS_OPTIONS.map((o) => ({
+                value: o.value || "all",
+                label: o.label,
+              }))}
+              triggerClassName="h-9"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Tri</span>
-            <Select
+            <FormSelect
               value={state.sort}
               onValueChange={(v) => patch({ sort: v as ClientSort })}
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(CLIENT_SORT_LABELS) as ClientSort[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {CLIENT_SORT_LABELS[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={(Object.keys(CLIENT_SORT_LABELS) as ClientSort[]).map(
+                (key) => ({
+                  value: key,
+                  label: CLIENT_SORT_LABELS[key],
+                }),
+              )}
+              triggerClassName="h-9"
+            />
           </div>
         </div>
       </div>

@@ -35,13 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormSelect } from "@/components/ui/form-select";
 import { PeriodDateRange } from "./period-date-range";
 import { cn } from "@/lib/utils";
 
@@ -157,33 +151,6 @@ function ruleLabel(
   return `${field} : ${rule.value}`;
 }
 
-function FilterValueSelect({
-  value,
-  placeholder,
-  onValueChange,
-  options,
-}: {
-  value: string;
-  placeholder: string;
-  onValueChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <Select value={value || null} onValueChange={(v) => onValueChange(v ?? "")}>
-      <SelectTrigger size="sm" className="min-w-[140px] flex-1">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
-            {o.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
 function RuleValueEditor({
   rule,
   onChange,
@@ -199,27 +166,32 @@ function RuleValueEditor({
 }) {
   if (rule.field === "customer") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Choisir un client"
         onValueChange={(value) => onChange({ value })}
         options={customers.map((c) => ({ value: c.id, label: c.name }))}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
   if (rule.field === "type") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Choisir un type"
         onValueChange={(value) => onChange({ value })}
         options={transactionTypesToOptions(types)}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
   if (rule.field === "side") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Sens"
         onValueChange={(value) => onChange({ value })}
@@ -227,12 +199,14 @@ function RuleValueEditor({
           { value: "credit", label: "Crédit" },
           { value: "debit", label: "Débit" },
         ]}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
   if (rule.field === "entryType") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Nature"
         onValueChange={(value) => onChange({ value })}
@@ -240,28 +214,28 @@ function RuleValueEditor({
           value: o.value,
           label: o.label,
         }))}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
   if (rule.field === "category") {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <Select
+        <FormSelect
+          size="sm"
           value={rule.operator}
           onValueChange={(v) =>
-            onChange({ operator: (v ?? "eq") as FilterOperator })
+            onChange({ operator: (v || "eq") as FilterOperator })
           }
-        >
-          <SelectTrigger size="sm" className="w-[100px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="eq">est</SelectItem>
-            <SelectItem value="empty">est vide</SelectItem>
-          </SelectContent>
-        </Select>
+          options={[
+            { value: "eq", label: "est" },
+            { value: "empty", label: "est vide" },
+          ]}
+          triggerClassName="w-[100px]"
+        />
         {rule.operator !== "empty" ? (
-          <FilterValueSelect
+          <FormSelect
+            size="sm"
             value={rule.value}
             placeholder="Catégorie"
             onValueChange={(value) => onChange({ value })}
@@ -269,6 +243,7 @@ function RuleValueEditor({
               value: o.value,
               label: o.label,
             }))}
+            triggerClassName="min-w-[140px] flex-1"
           />
         ) : null}
       </div>
@@ -276,7 +251,8 @@ function RuleValueEditor({
   }
   if (rule.field === "dossier") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Dossier"
         onValueChange={(value) => onChange({ value })}
@@ -284,12 +260,14 @@ function RuleValueEditor({
           value: d.id,
           label: `${d.dossierNumber}${d.blReference ? ` · BL ${d.blReference}` : ""}`,
         }))}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
   if (rule.field === "hasDossier") {
     return (
-      <FilterValueSelect
+      <FormSelect
+        size="sm"
         value={rule.value}
         placeholder="Dossier lié"
         onValueChange={(value) => onChange({ value })}
@@ -297,6 +275,7 @@ function RuleValueEditor({
           { value: "true", label: "Oui" },
           { value: "false", label: "Non" },
         ]}
+        triggerClassName="min-w-[140px] flex-1"
       />
     );
   }
@@ -438,23 +417,19 @@ export function TransactionsToolbar({
                 Période
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <Select
+                <FormSelect
+                  size="sm"
                   value={state.datePreset}
                   onValueChange={(v) => {
                     if (v) applyPreset(v as DatePreset);
                   }}
-                >
-                  <SelectTrigger size="sm" className="w-[200px]">
-                    <SelectValue placeholder="Période" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DATE_PRESETS.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={DATE_PRESETS.map((p) => ({
+                    value: p.id,
+                    label: p.label,
+                  }))}
+                  placeholder="Période"
+                  triggerClassName="w-[200px]"
+                />
                 {state.datePreset !== "all" ? (
                   <Button
                     type="button"
@@ -733,23 +708,18 @@ export function TransactionsToolbar({
             <div className="flex flex-wrap items-center gap-3 border-t pt-3">
               <label className="flex items-center gap-2 text-xs">
                 <span className="font-medium text-muted-foreground">Tri</span>
-                <Select
+                <FormSelect
+                  size="sm"
                   value={state.sort}
                   onValueChange={(v) => {
                     if (v) pushState({ ...state, sort: v as TransactionsSort });
                   }}
-                >
-                  <SelectTrigger size="sm" className="w-[200px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {SORT_LABELS[s]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={SORT_OPTIONS.map((s) => ({
+                    value: s,
+                    label: SORT_LABELS[s],
+                  }))}
+                  triggerClassName="w-[200px]"
+                />
               </label>
               <Button
                 type="button"

@@ -15,8 +15,8 @@ import { serializeDeclarationListItem } from "@/lib/modules/declarations/seriali
 import { listDeclarations } from "@/lib/modules/declarations/service";
 import { listAgencies } from "@/lib/modules/agencies/service";
 import { PageHeader } from "@/components/shell/page-header";
-import { ListCrossLinks } from "@/components/shell/list-cross-links";
 import { NewDeclarationButton } from "@/components/shell/page-actions";
+import { ButtonLink } from "@/components/ui/button";
 
 export default async function DeclarationsPage({
   searchParams,
@@ -56,12 +56,9 @@ export default async function DeclarationsPage({
         description="Une ligne par connaissement (BL) — montants et BAD. Filtres et tri dans l'URL."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <ListCrossLinks
-              links={[
-                { href: "/dossiers", label: "Dossiers" },
-                { href: "/clients", label: "Clients" },
-              ]}
-            />
+            <ButtonLink href="/dossiers" variant="outline" className="rounded-full px-4">
+              Dossiers
+            </ButtonLink>
             {canEdit ? <NewDeclarationButton /> : null}
           </div>
         }

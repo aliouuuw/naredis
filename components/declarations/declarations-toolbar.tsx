@@ -20,13 +20,6 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/form-select";
 import { FormSuggestInput } from "@/components/ui/form-suggest-input";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 type CustomerOption = { id: string; name: string };
@@ -173,7 +166,7 @@ export function DeclarationsToolbar({
           </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Période</span>
-            <Select
+            <FormSelect
               value={state.datePreset}
               onValueChange={(v) =>
                 patch({
@@ -182,36 +175,26 @@ export function DeclarationsToolbar({
                   dateTo: "",
                 })
               }
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PERIOD_OPTIONS.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={PERIOD_OPTIONS.map((p) => ({
+                value: p.id,
+                label: p.label,
+              }))}
+              triggerClassName="h-9"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Tri</span>
-            <Select
+            <FormSelect
               value={state.sort}
               onValueChange={(v) => patch({ sort: v as DeclarationSort })}
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(SORT_LABELS) as DeclarationSort[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {SORT_LABELS[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={(Object.keys(SORT_LABELS) as DeclarationSort[]).map(
+                (key) => ({
+                  value: key,
+                  label: SORT_LABELS[key],
+                }),
+              )}
+              triggerClassName="h-9"
+            />
           </div>
         </div>
       </div>

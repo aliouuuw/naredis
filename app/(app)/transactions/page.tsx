@@ -20,7 +20,6 @@ import {
 } from "@/lib/modules/ledger/transactions-query";
 import { TransactionsView } from "@/components/transactions/transactions-view";
 import { PageHeader } from "@/components/shell/page-header";
-import { ListCrossLinks } from "@/components/shell/list-cross-links";
 import { RecordTransactionLauncher } from "@/components/transactions/record-transaction-launcher";
 
 export default async function TransactionsPage({
@@ -67,22 +66,14 @@ export default async function TransactionsPage({
         title="Transactions"
         description="Grand livre — écritures en débit/crédit, filtres combinables et regroupements. Vue synchronisée dans l'URL."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <ListCrossLinks
-              links={[
-                { href: "/clients", label: "Clients" },
-                { href: "/declarations", label: "Déclarations" },
-              ]}
+          canRecord ? (
+            <RecordTransactionLauncher
+              customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+              transactionTypes={transactionTypes}
+              initialCustomerId={customerId}
+              recordIntent={recordIntent}
             />
-            {canRecord ? (
-              <RecordTransactionLauncher
-                customers={customers.map((c) => ({ id: c.id, name: c.name }))}
-                transactionTypes={transactionTypes}
-                initialCustomerId={customerId}
-                recordIntent={recordIntent}
-              />
-            ) : null}
-          </div>
+          ) : undefined
         }
       />
 

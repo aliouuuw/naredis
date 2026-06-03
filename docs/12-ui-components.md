@@ -18,6 +18,7 @@ See **[00-glossary.md](./00-glossary.md)** and [10-information-architecture.md](
 | `ThemeProvider` | Root layout wrapper (`attribute="class"`, default light, system allowed) |
 | `FormSuggestInput` | Text field with Notion-style dropdown of existing values (BL, libellés, conteneurs, …) |
 | `FormEntityPicker` | Searchable picker for entities (client, etc.) with hidden `name` for forms |
+| `FormSelect` | **Required** for value/label dropdowns (enums, entity ids, filters). Never use raw `Select` + `SelectValue` — Base UI shows the stored value (UUID) in the trigger. Uses `resolveSelectDisplayText` so opaque ids never leak. |
 
 ---
 
