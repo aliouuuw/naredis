@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import {
@@ -39,17 +39,21 @@ export function DeclarationsToolbar({
   customers,
   columnSettings,
   exportExcel,
+  searchDraft,
+  onSearchDraftChange,
 }: {
   state: DeclarationsViewState;
   totalCount: number;
   customers: CustomerOption[];
   columnSettings?: ReactNode;
   exportExcel?: ReactNode;
+  searchDraft: string;
+  onSearchDraftChange: (value: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
-  const [searchDraft, setSearchDraft] = useState(state.search);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pushState = useCallback(
     (next: DeclarationsViewState, preserveOpen = true) => {
@@ -70,7 +74,7 @@ export function DeclarationsToolbar({
   }
 
   function resetFilters() {
-    setSearchDraft("");
+    onSearchDraftChange("");
     pushState({
       viewPreset: "all",
       sort: "date-desc",
@@ -80,12 +84,22 @@ export function DeclarationsToolbar({
       customerId: "",
       zone: "",
       search: "",
-    });
+    }, false);
   }
 
-  function submitSearch() {
-    patch({ search: searchDraft.trim() });
-  }
+  // Debounce URL push when the user types in the search box
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (searchDraft.trim() !== state.search.trim()) {
+        patch({ search: searchDraft.trim() });
+      }
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchDraft]);
 
   const { suggestions } = useOrgFormSuggestions();
   const zoneSuggestions = useMemo(
@@ -96,7 +110,7 @@ export function DeclarationsToolbar({
       ),
     [suggestions?.zoneCatalog, suggestions?.zoneOrTerminals],
   );
-  const customized = viewHasCustomizations(state);
+  const customized = viewHasCustomizations({ ...state, search: searchDraft });
 
   return (
     <div
@@ -134,24 +148,13 @@ export function DeclarationsToolbar({
           <label htmlFor="decl-search" className="text-xs font-medium text-muted-foreground">
             Recherche
           </label>
-          <div className="flex gap-2">
-            <Input
-              id="decl-search"
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submitSearch();
-                }
-              }}
-              placeholder="N° décl., BL, client…"
-              className="h-9"
-            />
-            <Button type="button" size="sm" variant="secondary" onClick={submitSearch}>
-              Filtrer
-            </Button>
-          </div>
+          <Input
+            id="decl-search"
+            value={searchDraft}
+            onChange={(e) => onSearchDraftChange(e.target.value)}
+            placeholder="N° décl., BL, client…"
+            className="h-9"
+          />
         </div>
 
         <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[420px] lg:grid-cols-4">

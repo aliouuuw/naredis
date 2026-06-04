@@ -22,9 +22,11 @@ import type {
 import { NewCustomerDialog } from "@/components/customers/new-customer-dialog";
 import { DeclarationFicheSheet } from "@/components/declarations/declaration-fiche-sheet";
 import { DeclarationsTable } from "@/components/declarations/declarations-table";
+import { DeleteDeclarationDialog } from "@/components/declarations/delete-declaration-dialog";
 import { DeclarationsToolbar } from "@/components/declarations/declarations-toolbar";
 import { NewDeclarationDialog } from "@/components/declarations/new-declaration-dialog";
 import {
+  filterDeclarationRows,
   sortDeclarationRows,
   type DeclarationsViewState,
 } from "@/lib/modules/declarations/declarations-query";
@@ -51,6 +53,13 @@ export function DeclarationsView({
   const [presetCustomerId, setPresetCustomerId] = useState<string | undefined>();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeclarationListItemSerialized | null>(null);
+  const [searchDraft, setSearchDraft] = useState(viewState.search);
+
+  // Sync when URL search param changes (back-navigation, external link)
+  useEffect(() => {
+    setSearchDraft(viewState.search);
+  }, [viewState.search]);
 
   const { page, setPage } = useTablePage();
   const tableColumns = useTableColumns(
@@ -58,10 +67,10 @@ export function DeclarationsView({
     DECLARATION_LIST_COLUMNS,
   );
 
-  const sortedRows = useMemo(
-    () => sortDeclarationRows(rows, viewState.sort),
-    [rows, viewState.sort],
-  );
+  const sortedRows = useMemo(() => {
+    const filtered = filterDeclarationRows(rows, searchDraft);
+    return sortDeclarationRows(filtered, viewState.sort);
+  }, [rows, viewState.sort, searchDraft]);
 
   const { items: pagedRows, page: safePage } = useMemo(
     () => paginateSlice(sortedRows, page),
@@ -130,6 +139,8 @@ export function DeclarationsView({
         state={viewState}
         totalCount={sortedRows.length}
         customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+        searchDraft={searchDraft}
+        onSearchDraftChange={setSearchDraft}
         exportExcel={
           <DownloadExcelButton exportUrl={declarationsExportUrl} />
         }
@@ -172,6 +183,8 @@ export function DeclarationsView({
               tableColumns.visibleIds as DeclarationListColumnId[]
             }
             onOpenRow={(id) => openDeclaration(id)}
+            canDelete={canEdit}
+            onDelete={setDeleteTarget}
           />
           <TablePagination
             totalItems={sortedRows.length}
@@ -188,6 +201,15 @@ export function DeclarationsView({
         onOpenChange={handleSheetOpenChange}
         canEdit={canEdit}
       />
+
+      {deleteTarget ? (
+        <DeleteDeclarationDialog
+          declaration={deleteTarget}
+          open={deleteTarget !== null}
+          onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+          onDeleted={() => router.refresh()}
+        />
+      ) : null}
 
       {canEdit ? (
         <>

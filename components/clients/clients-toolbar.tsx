@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import {
@@ -26,14 +26,17 @@ export function ClientsToolbar({
   state,
   totalCount,
   columnSettings,
+  searchDraft,
+  onSearchDraftChange,
 }: {
   state: ClientsViewState;
   totalCount: number;
   columnSettings?: ReactNode;
+  searchDraft: string;
+  onSearchDraftChange: (value: string) => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [searchDraft, setSearchDraft] = useState(state.search);
 
   const pushState = useCallback(
     (next: ClientsViewState) => {
@@ -52,19 +55,11 @@ export function ClientsToolbar({
   }
 
   function resetFilters() {
-    setSearchDraft("");
-    pushState({
-      search: "",
-      sort: "name-asc",
-      accountStatus: "",
-    });
+    onSearchDraftChange("");
+    pushState({ search: "", sort: "name-asc", accountStatus: "" });
   }
 
-  function submitSearch() {
-    patch({ search: searchDraft.trim() });
-  }
-
-  const customized = viewHasCustomizations(state);
+  const customized = viewHasCustomizations({ ...state, search: searchDraft });
 
   return (
     <div
@@ -90,24 +85,13 @@ export function ClientsToolbar({
           <label htmlFor="client-search" className="text-xs font-medium text-muted-foreground">
             Recherche
           </label>
-          <div className="flex gap-2">
-            <Input
-              id="client-search"
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submitSearch();
-                }
-              }}
-              placeholder="Nom, slug, téléphone…"
-              className="h-9"
-            />
-            <Button type="button" size="sm" variant="secondary" onClick={submitSearch}>
-              Filtrer
-            </Button>
-          </div>
+          <Input
+            id="client-search"
+            value={searchDraft}
+            onChange={(e) => onSearchDraftChange(e.target.value)}
+            placeholder="Nom, slug, téléphone…"
+            className="h-9"
+          />
         </div>
 
         <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[320px]">
