@@ -21,6 +21,8 @@ import { paginateSlice } from "@/lib/ui/table-pagination";
 import { ClientsTable } from "./clients-table";
 import { ClientsToolbar } from "./clients-toolbar";
 import { NewCustomerDialog } from "@/components/customers/new-customer-dialog";
+import { EditCustomerDialog } from "@/components/customers/edit-customer-dialog";
+import { DeleteCustomerDialog } from "@/components/customers/delete-customer-dialog";
 import { Button } from "@/components/ui/button";
 
 export function ClientsPageView({
@@ -33,12 +35,25 @@ export function ClientsPageView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<CustomerListItemSerialized | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CustomerListItemSerialized | null>(null);
+  const [searchDraft, setSearchDraft] = useState(viewState.search);
   const { page, setPage } = useTablePage();
   const tableColumns = useTableColumns(CLIENT_LIST_TABLE_ID, CLIENT_LIST_COLUMNS);
 
+  // Reset local search when the URL search param changes (e.g. back-navigation)
+  useEffect(() => {
+    setSearchDraft(viewState.search);
+  }, [viewState.search]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchDraft, setPage]);
+
   const filteredRows = useMemo(
-    () => filterAndSortClients(rows, viewState),
-    [rows, viewState],
+    () => filterAndSortClients(rows, { ...viewState, search: searchDraft }),
+    [rows, viewState, searchDraft],
   );
 
   const { items: pagedRows, page: safePage } = useMemo(
@@ -60,6 +75,8 @@ export function ClientsPageView({
       <ClientsToolbar
         state={viewState}
         totalCount={filteredRows.length}
+        searchDraft={searchDraft}
+        onSearchDraftChange={setSearchDraft}
         columnSettings={
           tableColumns.ready ? (
             <TableColumnSettings
@@ -98,6 +115,8 @@ export function ClientsPageView({
             rows={pagedRows}
             bare
             visibleColumnIds={tableColumns.visibleIds as ClientListColumnId[]}
+            onEdit={setEditTarget}
+            onDelete={setDeleteTarget}
           />
           <TablePagination
             totalItems={filteredRows.length}
@@ -116,6 +135,24 @@ export function ClientsPageView({
           router.refresh();
         }}
       />
+
+      {editTarget ? (
+        <EditCustomerDialog
+          customer={editTarget}
+          open={editTarget !== null}
+          onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+          onUpdated={() => router.refresh()}
+        />
+      ) : null}
+
+      {deleteTarget ? (
+        <DeleteCustomerDialog
+          customer={deleteTarget}
+          open={deleteTarget !== null}
+          onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+          onDeleted={() => router.refresh()}
+        />
+      ) : null}
     </div>
   );
 }

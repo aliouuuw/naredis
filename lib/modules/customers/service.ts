@@ -121,7 +121,9 @@ export async function listCustomers(
     .from(customers)
     .leftJoin(ledgerAgg, eq(ledgerAgg.customerId, customers.id))
     .leftJoin(feesAgg, eq(feesAgg.customerId, customers.id))
-    .where(eq(customers.organizationId, ctx.organizationId))
+    .where(
+      and(eq(customers.organizationId, ctx.organizationId), eq(customers.isActive, true)),
+    )
     .orderBy(customers.name);
 
   return rows.map((row) => {
@@ -278,6 +280,39 @@ export async function updateCustomer(
       entityId: customerId,
       action: "customer.updated",
       payload: { fields: Object.keys(input) },
+      actorId: ctx.userId,
+    });
+  }
+
+  return row ?? null;
+}
+
+export async function deleteCustomer(
+  db: DbLike,
+  ctx: ModuleContext,
+  customerId: string,
+) {
+  const existing = await getCustomerById(db, ctx, customerId);
+  if (!existing) return null;
+
+  const [row] = await db
+    .update(customers)
+    .set({ isActive: false })
+    .where(
+      and(
+        eq(customers.id, customerId),
+        eq(customers.organizationId, ctx.organizationId),
+      ),
+    )
+    .returning();
+
+  if (row) {
+    await appendActivity(db, {
+      organizationId: ctx.organizationId,
+      entityType: "customer",
+      entityId: customerId,
+      action: "customer.deleted",
+      payload: { name: existing.name },
       actorId: ctx.userId,
     });
   }

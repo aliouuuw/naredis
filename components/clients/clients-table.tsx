@@ -3,12 +3,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import type { ClientListColumnId } from "@/lib/ui/list-table-columns";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CustomerListItemSerialized } from "@/lib/modules/customers/serialize-list";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const accountStatusLabel = {
   a_jour: "À jour",
@@ -35,10 +42,14 @@ export function ClientsTable({
   rows,
   bare = false,
   visibleColumnIds,
+  onEdit,
+  onDelete,
 }: {
   rows: CustomerListItemSerialized[];
   bare?: boolean;
   visibleColumnIds: ClientListColumnId[];
+  onEdit?: (row: CustomerListItemSerialized) => void;
+  onDelete?: (row: CustomerListItemSerialized) => void;
 }) {
   const router = useRouter();
 
@@ -97,18 +108,52 @@ export function ClientsTable({
         );
       case "actions":
         return (
-          <td key={columnId} className="px-4 py-3 text-right">
-            <Link
-              href={href}
-              onClick={(event) => event.stopPropagation()}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "inline-flex gap-1",
-              )}
-            >
-              Ouvrir
-              <ChevronRight className="size-4" aria-hidden />
-            </Link>
+          <td
+            key={columnId}
+            className="px-4 py-3 text-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="inline-flex items-center gap-1">
+              <Link
+                href={href}
+                onClick={(e) => e.stopPropagation()}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "inline-flex gap-1",
+                )}
+              >
+                Ouvrir
+                <ChevronRight className="size-4" aria-hidden />
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "px-2",
+                  )}
+                  aria-label="Plus d'options"
+                >
+                  <MoreHorizontal className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => onEdit?.(row)}
+                  >
+                    <Pencil className="size-4" />
+                    Modifier
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={() => onDelete?.(row)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </td>
         );
       default:
