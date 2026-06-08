@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import {
   LEDGER_MUTATION_ROLES,
+  canMutateOperationalData,
   memberHasRole,
 } from "@/lib/auth/permissions";
 import { toModuleContext } from "@/lib/auth/module-context";
@@ -24,7 +25,10 @@ import { OrgFormSuggestionsProvider } from "@/components/providers/org-form-sugg
 import { TransactionsView } from "@/components/transactions/transactions-view";
 import { PageHeader } from "@/components/shell/page-header";
 import { RecordTransactionLauncher } from "@/components/transactions/record-transaction-launcher";
+import { listOrganizationListViews } from "@/lib/modules/list-views/service";
+import { serializeOrganizationListView } from "@/lib/modules/list-views/serialize";
 import { parseTablePage, TABLE_PAGE_SIZE } from "@/lib/ui/table-pagination";
+import { redirect } from "next/navigation";
 
 export default async function TransactionsPage({
   searchParams,
@@ -41,6 +45,23 @@ export default async function TransactionsPage({
     const v = params.record;
     return (Array.isArray(v) ? v[0] : v) === "1";
   })();
+
+  const orgViews = (
+    await listOrganizationListViews(db, ctx, "transactions")
+  ).map(serializeOrganizationListView);
+
+  const tabRaw = Array.isArray(params.tab) ? params.tab[0] : params.tab;
+  if (tabRaw?.startsWith("saved:")) {
+    const id = tabRaw.slice("saved:".length);
+    const saved = orgViews.find((v) => v.id === id);
+    const hasFilters =
+      Object.keys(params).some(
+        (k) => k !== "tab" && k !== "page" && k !== "record",
+      ) || (Array.isArray(params.f) ? params.f.length > 0 : Boolean(params.f));
+    if (saved && !hasFilters) {
+      redirect(`/transactions?${saved.query}`);
+    }
+  }
 
   const viewState = parseTransactionsViewState(params, today);
   const ledgerFilters = rulesToLedgerFilters(
@@ -65,6 +86,7 @@ export default async function TransactionsPage({
     customers,
     transactionTypes,
     canRecord,
+    canManageViews,
     dossiers,
     formSuggestions,
   ] = await Promise.all([
@@ -77,6 +99,7 @@ export default async function TransactionsPage({
     listCustomers(db, ctx),
     listTransactionTypes(db, ctx),
     memberHasRole(auth.userId, auth.organizationId, LEDGER_MUTATION_ROLES),
+    canMutateOperationalData(auth.userId, auth.organizationId),
     customerId
       ? listDossiersForCustomer(db, ctx, customerId)
       : Promise.resolve([]),
@@ -109,6 +132,8 @@ export default async function TransactionsPage({
           transactionTypes={transactionTypes}
           dossiers={dossiers}
           canRecord={canRecord}
+          canManageViews={canManageViews}
+          orgViews={orgViews}
           viewState={viewState}
           today={today}
           recordIntent={recordIntent}

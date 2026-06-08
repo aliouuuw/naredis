@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/permissions";
 import { requireAuthContext } from "@/lib/auth/session";
 import { listAgencies } from "@/lib/modules/agencies/service";
+import { listGaindeCardDebitTypes } from "@/lib/modules/gainde-cards/debit-types";
 import { listTransactionTypes } from "@/lib/modules/ledger/transaction-types";
 import { listZones } from "@/lib/modules/zones/service";
 import { SettingsView } from "@/components/settings/settings-view";
@@ -17,12 +18,13 @@ export default async function SettingsPage() {
   const ctx = toModuleContext(auth);
   const db = getDb();
 
-  const [canEditOrg, canEditLedger, agencies, zones, transactionTypes] =
+  const [canEditOrg, canEditLedger, agencies, zones, gaindeCardDebitTypes, transactionTypes] =
     await Promise.all([
       canMutateOperationalData(auth.userId, auth.organizationId),
       memberHasRole(auth.userId, auth.organizationId, [...LEDGER_MUTATION_ROLES]),
       listAgencies(db, ctx, false),
       listZones(db, ctx, false),
+      listGaindeCardDebitTypes(db, ctx, { activeOnly: false }),
       listTransactionTypes(db, ctx, { activeOnly: false }),
     ]);
 
@@ -30,7 +32,7 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Réglages"
-        description="Données réutilisables du cabinet : agences payeur, zones de déclaration et types d'écriture."
+        description="Catalogue du cabinet : cartes GAINDE, zones, types de débit carte et journal."
       />
 
       <SettingsView
@@ -41,6 +43,7 @@ export default async function SettingsPage() {
           isActive: a.isActive,
         }))}
         zones={zones}
+        gaindeCardDebitTypes={gaindeCardDebitTypes}
         transactionTypes={transactionTypes}
         canEditOrg={canEditOrg}
         canEditLedger={canEditLedger}

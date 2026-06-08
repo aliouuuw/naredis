@@ -9,6 +9,7 @@ import {
   declarationsExportToBuffer,
 } from "@/lib/modules/declarations/declarations-export";
 import {
+  applyDeclarationClientFilters,
   formatDeclarationsFilterSummary,
   parseDeclarationsViewState,
   sortDeclarationRows,
@@ -41,7 +42,8 @@ export async function GET(request: Request) {
     getOrganizationName(db, ctx.organizationId),
   ]);
 
-  const sorted = sortDeclarationRows(rows, viewState.sort);
+  const filtered = applyDeclarationClientFilters(rows, viewState.rules);
+  const sorted = sortDeclarationRows(filtered, viewState.sort);
   const meta = buildDeclarationsExportMeta({
     organizationName,
     filterSummary: formatDeclarationsFilterSummary(viewState),

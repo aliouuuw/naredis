@@ -50,6 +50,34 @@
       "when": 1780509994484,
       "tag": "0006_lowly_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780525541445,
+      "tag": "0007_tired_the_captain",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780527062380,
+      "tag": "0008_serious_jasper_sitwell",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780528017188,
+      "tag": "0009_lumpy_machine_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1780528857005,
+      "tag": "0010_wakeful_mentallo",
+      "breakpoints": true
     }
   ]
 }

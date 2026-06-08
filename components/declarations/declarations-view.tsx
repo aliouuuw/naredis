@@ -24,8 +24,14 @@ import { DeclarationFicheSheet } from "@/components/declarations/declaration-fic
 import { DeclarationsTable } from "@/components/declarations/declarations-table";
 import { DeclarationsToolbar } from "@/components/declarations/declarations-toolbar";
 import { NewDeclarationDialog } from "@/components/declarations/new-declaration-dialog";
+import { DeclarationSavedViewsBar } from "@/components/declarations/declaration-saved-views-bar";
+import type { OrganizationListViewSerialized } from "@/lib/modules/list-views/serialize";
+import { GroupedDeclarationsList } from "@/components/declarations/grouped-declarations-list";
 import {
+  applyDeclarationClientFilters,
+  buildDeclarationGroupTree,
   sortDeclarationRows,
+  sumDeclarationLedgerTotals,
   type DeclarationsViewState,
 } from "@/lib/modules/declarations/declarations-query";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
@@ -37,12 +43,18 @@ export function DeclarationsView({
   customers,
   agencies,
   canEdit,
+  orgViews,
+  zoneSlugs,
+  today,
 }: {
   rows: DeclarationListItemSerialized[];
   viewState: DeclarationsViewState;
   customers: CustomerOption[];
   agencies: AgencyOption[];
   canEdit: boolean;
+  orgViews: OrganizationListViewSerialized[];
+  zoneSlugs: string[];
+  today: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,9 +70,40 @@ export function DeclarationsView({
     DECLARATION_LIST_COLUMNS,
   );
 
+  const applyQuery = useCallback(
+    (query: string) => {
+      router.replace(
+        query ? `/declarations?${query}` : "/declarations",
+        { scroll: false },
+      );
+    },
+    [router],
+  );
+
+  const filteredRows = useMemo(
+    () => applyDeclarationClientFilters(rows, viewState.rules),
+    [rows, viewState.rules],
+  );
+
   const sortedRows = useMemo(
-    () => sortDeclarationRows(rows, viewState.sort),
-    [rows, viewState.sort],
+    () => sortDeclarationRows(filteredRows, viewState.sort),
+    [filteredRows, viewState.sort],
+  );
+
+  const ledgerTotals = useMemo(
+    () =>
+      viewState.showLedgerTotals
+        ? sumDeclarationLedgerTotals(sortedRows)
+        : null,
+    [sortedRows, viewState.showLedgerTotals],
+  );
+
+  const groupTree = useMemo(
+    () =>
+      viewState.groupBy.length > 0
+        ? buildDeclarationGroupTree(sortedRows, viewState.groupBy)
+        : null,
+    [sortedRows, viewState.groupBy],
   );
 
   const { items: pagedRows, page: safePage } = useMemo(
@@ -126,10 +169,20 @@ export function DeclarationsView({
 
   return (
     <div className="space-y-6">
+      <DeclarationSavedViewsBar
+        orgViews={orgViews}
+        canManage={canEdit}
+        viewState={viewState}
+        zoneSlugs={zoneSlugs}
+        onApplyQuery={applyQuery}
+      />
+
       <DeclarationsToolbar
         state={viewState}
         totalCount={sortedRows.length}
         customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+        agencies={agencies}
+        today={today}
         exportExcel={
           <DownloadExcelButton exportUrl={declarationsExportUrl} />
         }
@@ -163,11 +216,14 @@ export function DeclarationsView({
             </div>
           ) : null}
         </div>
+      ) : groupTree ? (
+        <GroupedDeclarationsList nodes={groupTree} />
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
           <DeclarationsTable
             rows={pagedRows}
             bare
+            ledgerTotals={ledgerTotals}
             visibleColumnIds={
               tableColumns.visibleIds as DeclarationListColumnId[]
             }

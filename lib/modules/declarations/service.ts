@@ -40,6 +40,7 @@ export type DeclarationListItem = {
   gaindeDutyAmount: bigint | null;
   costPrice: bigint | null;
   bonADelivrer: boolean;
+  payingAgencyId: string | null;
   payingAgencyName: string | null;
   dossierId: string;
   dossierNumber: string;
@@ -50,6 +51,7 @@ export type DeclarationListItem = {
 export type DeclarationListFilters = {
   customerId?: string;
   zoneOrTerminal?: string;
+  payingAgencyId?: string;
   bonADelivrer?: boolean;
   search?: string;
   dateFrom?: string;
@@ -196,6 +198,9 @@ export async function listDeclarations(
   if (filters.zoneOrTerminal) {
     conditions.push(eq(declarations.zoneOrTerminal, filters.zoneOrTerminal));
   }
+  if (filters.payingAgencyId) {
+    conditions.push(eq(declarations.payingAgencyId, filters.payingAgencyId));
+  }
   if (filters.bonADelivrer !== undefined) {
     conditions.push(eq(declarations.bonADelivrer, filters.bonADelivrer));
   }
@@ -235,6 +240,7 @@ export async function listDeclarations(
       blReference: dossiers.blReference,
       customerName: customers.name,
       customerSlug: customers.slug,
+      payingAgencyId: declarations.payingAgencyId,
       payingAgencyName: organizationAgencies.name,
     })
     .from(declarations)
@@ -283,6 +289,7 @@ export async function listDeclarationsForCustomer(
       blReference: dossiers.blReference,
       customerName: customers.name,
       customerSlug: customers.slug,
+      payingAgencyId: declarations.payingAgencyId,
       payingAgencyName: organizationAgencies.name,
     })
     .from(declarations)

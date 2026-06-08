@@ -8,6 +8,11 @@ import {
   updateAgencyAction,
 } from "@/lib/actions/agencies";
 import {
+  createGaindeCardDebitTypeAction,
+  setGaindeCardDebitTypeActiveAction,
+  updateGaindeCardDebitTypeAction,
+} from "@/lib/actions/gainde-card-debit-types";
+import {
   createTransactionTypeAction,
   setTransactionTypeActiveAction,
   updateTransactionTypeAction,
@@ -15,6 +20,7 @@ import {
 import { createZoneAction, updateZoneAction } from "@/lib/actions/zones";
 import type { BalanceSide } from "@/lib/db/enums";
 import type { OrganizationZoneRow } from "@/lib/modules/zones/service";
+import type { GaindeCardDebitTypeRow } from "@/lib/modules/gainde-cards/debit-types";
 import type { TransactionTypeRow } from "@/lib/modules/ledger/transaction-types";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-feedback";
@@ -72,12 +78,14 @@ function balanceSideLabel(side: BalanceSide) {
 export function SettingsView({
   agencies: initialAgencies,
   zones: initialZones,
+  gaindeCardDebitTypes: initialDebitTypes,
   transactionTypes: initialTypes,
   canEditOrg,
   canEditLedger,
 }: {
   agencies: AgencyRow[];
   zones: OrganizationZoneRow[];
+  gaindeCardDebitTypes: GaindeCardDebitTypeRow[];
   transactionTypes: TransactionTypeRow[];
   canEditOrg: boolean;
   canEditLedger: boolean;
@@ -85,6 +93,7 @@ export function SettingsView({
   const router = useRouter();
   const [agencies, setAgencies] = useState(initialAgencies);
   const [zones, setZones] = useState(initialZones);
+  const [debitTypes, setDebitTypes] = useState(initialDebitTypes);
   const [types, setTypes] = useState(initialTypes);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -101,6 +110,12 @@ export function SettingsView({
 
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeSide, setNewTypeSide] = useState<BalanceSide>("debit");
+  const [newDebitTypeName, setNewDebitTypeName] = useState("");
+  const [editingDebitTypeId, setEditingDebitTypeId] = useState<string | null>(
+    null,
+  );
+  const [editingDebitTypeName, setEditingDebitTypeName] = useState("");
+
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
   const [editingTypeName, setEditingTypeName] = useState("");
 
@@ -230,6 +245,69 @@ export function SettingsView({
     refresh();
   }
 
+  async function handleCreateDebitType(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canEditOrg || !newDebitTypeName.trim()) return;
+    setPending(true);
+    setError(null);
+    const result = await createGaindeCardDebitTypeAction({
+      name: newDebitTypeName.trim(),
+    });
+    setPending(false);
+    if (!result.ok || !result.data) {
+      setError(result.ok ? "Réponse invalide." : result.error);
+      return;
+    }
+    setDebitTypes((prev) =>
+      [...prev, result.data!].sort((a, b) => a.sortOrder - b.sortOrder),
+    );
+    setNewDebitTypeName("");
+    refresh();
+  }
+
+  async function handleSaveDebitType(debitTypeId: string) {
+    const name = editingDebitTypeName.trim();
+    if (!canEditOrg || !name) return;
+    setPending(true);
+    setError(null);
+    const result = await updateGaindeCardDebitTypeAction({
+      debitTypeId,
+      name,
+    });
+    setPending(false);
+    if (!result.ok || !result.data) {
+      setError(result.ok ? "Réponse invalide." : result.error);
+      return;
+    }
+    setDebitTypes((prev) =>
+      prev.map((t) => (t.id === debitTypeId ? result.data! : t)),
+    );
+    setEditingDebitTypeId(null);
+    refresh();
+  }
+
+  async function handleToggleDebitType(
+    type: GaindeCardDebitTypeRow,
+    active: boolean,
+  ) {
+    if (!canEditOrg) return;
+    setPending(true);
+    setError(null);
+    const result = await setGaindeCardDebitTypeActiveAction({
+      debitTypeId: type.id,
+      active,
+    });
+    setPending(false);
+    if (!result.ok || !result.data) {
+      setError(result.ok ? "Réponse invalide." : result.error);
+      return;
+    }
+    setDebitTypes((prev) =>
+      prev.map((t) => (t.id === type.id ? result.data! : t)),
+    );
+    refresh();
+  }
+
   async function handleCreateType(event: React.FormEvent) {
     event.preventDefault();
     if (!canEditLedger || !newTypeName.trim()) return;
@@ -302,8 +380,8 @@ export function SettingsView({
       {error ? <FormAlert variant="error">{error}</FormAlert> : null}
 
       <SettingsSection
-        title="Agences (maison-mère)"
-        description="Utilisées comme agence payeur GAINDE sur les déclarations."
+        title="Maison-mère / cartes GAINDE"
+        description="Porteur de la carte GAINDE. Les zones sont liées à une carte via les déclarations (zone + maison-mère)."
       >
         <ConfigList
           empty={
@@ -430,7 +508,7 @@ export function SettingsView({
 
       <SettingsSection
         title="Zones / terminaux"
-        description="Codes utilisés dans les numéros de déclaration (ex. 18N, DPW)."
+        description="Codes pour les numéros de déclaration et onglets par zone sur la liste des déclarations."
       >
         <ConfigList
           empty={
@@ -487,7 +565,7 @@ export function SettingsView({
                   </p>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
                 {canEditOrg && editingZoneId !== zone.id ? (
                   <Button
                     type="button"
@@ -544,6 +622,109 @@ export function SettingsView({
                 value={newZoneLabel}
                 onChange={(e) => setNewZoneLabel(e.target.value)}
                 placeholder="18N — zone portuaire"
+                disabled={pending}
+                required
+              />
+            </div>
+            <Button type="submit" size="sm" className="gap-1" disabled={pending}>
+              <Plus className="size-3.5" aria-hidden />
+              Ajouter
+            </Button>
+          </form>
+        ) : null}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Types de débit carte"
+        description="Catégories pour les débits manuels sur une carte (taxe intérieur, etc.). Les droits de douane viennent des déclarations."
+      >
+        <ConfigList>
+          {debitTypes.map((type) => (
+            <li
+              key={type.id}
+              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0 flex-1">
+                {editingDebitTypeId === type.id ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      value={editingDebitTypeName}
+                      onChange={(e) => setEditingDebitTypeName(e.target.value)}
+                      className="h-8 max-w-xs"
+                      disabled={pending}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() => void handleSaveDebitType(type.id)}
+                    >
+                      Enregistrer
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setEditingDebitTypeId(null)}
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                ) : (
+                  <p
+                    className={cn(
+                      "font-medium",
+                      !type.active && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {type.name}
+                  </p>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {canEditOrg && editingDebitTypeId !== type.id ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 gap-1"
+                    onClick={() => {
+                      setEditingDebitTypeId(type.id);
+                      setEditingDebitTypeName(type.name);
+                    }}
+                  >
+                    <Pencil className="size-3.5" aria-hidden />
+                    Renommer
+                  </Button>
+                ) : null}
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Switch
+                    checked={type.active}
+                    disabled={!canEditOrg || pending}
+                    onCheckedChange={(checked) =>
+                      void handleToggleDebitType(type, checked)
+                    }
+                  />
+                  Active
+                </label>
+              </div>
+            </li>
+          ))}
+        </ConfigList>
+
+        {canEditOrg ? (
+          <form
+            onSubmit={(e) => void handleCreateDebitType(e)}
+            className="flex flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-end"
+          >
+            <div className="min-w-[12rem] flex-1 space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                Nouveau type de débit
+              </label>
+              <Input
+                value={newDebitTypeName}
+                onChange={(e) => setNewDebitTypeName(e.target.value)}
+                placeholder="Taxe intérieur"
                 disabled={pending}
                 required
               />

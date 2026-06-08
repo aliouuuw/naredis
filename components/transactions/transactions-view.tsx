@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { TransactionsSavedViewsBar } from "@/components/transactions/transactions-saved-views-bar";
+import type { OrganizationListViewSerialized } from "@/lib/modules/list-views/serialize";
 import { useTableColumns } from "@/components/hooks/use-table-columns";
 import { useTablePage } from "@/components/hooks/use-table-page";
 import { TableColumnSettings } from "@/components/ui/table-column-settings";
@@ -35,6 +37,8 @@ export function TransactionsView({
   transactionTypes,
   dossiers,
   canRecord,
+  canManageViews,
+  orgViews,
   viewState,
   today,
   recordIntent = false,
@@ -45,11 +49,24 @@ export function TransactionsView({
   transactionTypes: TransactionTypeSerialized[];
   dossiers: DossierAllocationOption[];
   canRecord: boolean;
+  canManageViews: boolean;
+  orgViews: OrganizationListViewSerialized[];
   viewState: TransactionsViewState;
   today: string;
   recordIntent?: boolean;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  const applyQuery = useCallback(
+    (query: string) => {
+      router.replace(
+        query ? `/transactions?${query}` : "/transactions",
+        { scroll: false },
+      );
+    },
+    [router],
+  );
   const { page, setPage } = useTablePage();
   const safePage = clampTablePage(page, totalCount);
   const tableColumns = useTableColumns(
@@ -69,6 +86,13 @@ export function TransactionsView({
 
   return (
     <div className="space-y-6">
+      <TransactionsSavedViewsBar
+        orgViews={orgViews}
+        canManage={canManageViews}
+        viewState={viewState}
+        onApplyQuery={applyQuery}
+      />
+
       <TransactionsToolbar
         state={viewState}
         totalCount={totalCount}

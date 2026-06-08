@@ -33,22 +33,27 @@ const sample: CustomerListItemSerialized[] = [
 ];
 
 describe("clients-query", () => {
-  test("parseClientsViewState", () => {
+  test("parseClientsViewState from rules", () => {
     const state = parseClientsViewState({
-      q: "alpha",
+      f: ["q:contains:alpha", "accountStatus:eq:pas_a_jour"],
       sort: "balance-desc",
-      status: "pas_a_jour",
     });
-    expect(state.search).toBe("alpha");
+    expect(state.rules).toHaveLength(2);
     expect(state.sort).toBe("balance-desc");
-    expect(state.accountStatus).toBe("pas_a_jour");
   });
 
   test("filterAndSortClients", () => {
     const filtered = filterAndSortClients(sample, {
-      search: "alpha",
+      rules: [
+        {
+          id: "1",
+          field: "q",
+          operator: "contains",
+          value: "alpha",
+        },
+      ],
+      groupBy: [],
       sort: "name-asc",
-      accountStatus: "",
     });
     expect(filtered).toHaveLength(1);
     expect(filtered[0]?.name).toBe("Alpha");

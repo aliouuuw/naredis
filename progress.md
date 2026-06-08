@@ -2,17 +2,17 @@
 
 Living status for the MVP. **Backlog:** [`backlog.json`](./backlog.json) (update `status` as work completes).
 
-**Last updated:** 2026-06-03 (checkpoint)
+**Last updated:** 2026-06-08 (checkpoint)
 
 ---
 
 ## Current phase
 
-**Pilot desk + reporting** — alignment pass shipped (declaration #, Résumé journal, reste, transaction UX). **Excel exports** on client relevé, déclarations list, and transactions list (filters match URL; pilot format is `.xlsx`, not PDF). See [docs/13-pilot-operations.md](./docs/13-pilot-operations.md).
+**Pilot desk + reporting** — alignment pass shipped. **Large WIP in working tree (uncommitted):** org **saved list views**, **advanced filter rules** on déclarations/clients, **grouped déclarations** view, and **Cartes GAINDE** ledger (`/cartes`). Migrations **0007–0010** applied locally.
 
-**Next up:** `DOS-002` document upload, `POL-001` Cmd+K search. Réglages CRUD for agencies, zones, transaction types is live.
+**Next up (finish WIP):** commit + QA saved views / Cartes GAINDE; wire debit types in Réglages if incomplete; then `DOS-002` document upload, `POL-001` Cmd+K search.
 
-Shell is tab-based (`UI-004`); dashboard is default landing.
+Shell is tab-based (`UI-004`); dashboard is default landing. Nav now includes **Transactions**, **Cartes GAINDE**, **Dossiers**.
 
 ---
 
@@ -25,7 +25,7 @@ Shell is tab-based (`UI-004`); dashboard is default landing.
 | `backlog.json` / `progress.md` | Done |
 | Local PostgreSQL 17 | Done |
 | Drizzle + schema (pilot 0003, review 0004) | Done |
-| Unit tests (`bun test`, domain + slug + ledger) | Done (54) |
+| Unit tests (`bun test`, domain + slug + ledger) | Done (59) |
 | Product branding (Naredis) + login panel | Done |
 | CLI-003 opening balance + contre-passation | Done |
 | DECL-001 list filters + presets + URL sync | Done |
@@ -56,6 +56,11 @@ Shell is tab-based (`UI-004`); dashboard is default landing.
 | Pilot declaration # + reste | Operator format `1-18N-D001`; reste computed; zones from pilot list |
 | Transaction UX fixes | Type label in selects; `/transactions` Nouvelle transaction with client picker; types rename |
 | Transactions module | Types extensibles, filtres URL, regroupement imbriqué |
+| Org saved list views (migration 0007) | **WIP** — `organization_list_views`; bars on déclarations, clients, transactions |
+| Advanced filter rules (URL tokens) | **WIP** — `lib/ui/filter-rules.ts`; expanded `declarations-query` / `clients-query` |
+| Grouped déclarations list | **WIP** — nested group nodes with montant/GAINDE totals |
+| Cartes GAINDE (migrations 0009–0010) | **WIP** — loads/debits per paying agency; `/cartes` page + nav tab |
+| Zone default paying agency (migration 0008) | **WIP** — `organization_zones.default_paying_agency_id` |
 
 ---
 
@@ -162,9 +167,31 @@ _None._
 
 ---
 
+## In progress (uncommitted, 2026-06-08)
+
+| Area | Files / migrations | Notes |
+|------|-------------------|--------|
+| Saved list views | `0007`, `lib/modules/list-views/*`, `*-saved-views-bar.tsx` | Org-scoped named filters (URL query persisted); shared `entity-view-toolbar-shell` |
+| Filter rules | `lib/ui/filter-rules.ts`, query modules | `field:operator:value` tokens in URL; tests extended |
+| Cartes GAINDE | `0009`–`0010`, `lib/modules/gainde-cards/*`, `/cartes` | Card loads + debits by paying agency; debit types CRUD; zone ledger table |
+| Zones | `0008`, `lib/modules/zones/*`, settings | Default paying agency per zone/terminal |
+| Déclarations UX | `grouped-declarations-list.tsx`, toolbar refactor | Grouped view + richer toolbar filters |
+
+**Git:** branch `dev`, 1 commit ahead of `origin/dev` (`475535b`). ~2.2k LOC changed, 39 untracked files — not staged.
+
+---
+
 ## Context log
 
 Short decisions and notes for future sessions (newest first).
+
+### 2026-06-08 — Checkpoint (list views + Cartes GAINDE WIP)
+
+Uncommitted work spans four migrations (0007–0010): org list views, zone default paying agency, gainde card loads/debits + debit types. UI: saved-view bars on three list pages, advanced filter toolbars, grouped déclarations, new `/cartes` nav tab. `bun test` **59** pass. Migrations applied locally. **Not yet committed** — finish QA and commit before starting `DOS-002` / `POL-001`.
+
+### 2026-06-03 — Form suggestions + transaction context (committed `475535b`)
+
+`OrgFormSuggestionsProvider` shared across déclarations, clients, transactions pages. Customer-specific ledger labels in transaction forms. Pagination/sort improvements on transactions list.
 
 ### 2026-06-03 — Vercel + Neon deploy path
 

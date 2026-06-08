@@ -12,6 +12,8 @@ export const updateZoneSchema = z.object({
   zoneId: z.string().uuid(),
   label: z.string().min(1, "Le libellé est requis").max(120).optional(),
   isActive: z.boolean().optional(),
+  /** Empty string clears the default carte. */
+  defaultPayingAgencyId: z.string().uuid().or(z.literal("")).optional(),
 });
 
 export type CreateZoneInput = z.infer<typeof createZoneSchema>;

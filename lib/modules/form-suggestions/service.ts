@@ -7,14 +7,18 @@ import {
   ledgerEntries,
 } from "@/lib/db/schema";
 import { parseDeclarationNumberParts } from "@/lib/domain/declaration-number";
-import type { PilotZoneTerminal } from "@/lib/domain/pilot-zones";
 import { listZones } from "@/lib/modules/zones/service";
 import type { ModuleContext } from "@/lib/modules/shared/types";
+
+export type ZoneCatalogEntry = {
+  slug: string;
+  label: string;
+};
 
 export type FormSuggestions = {
   declarationPrefixes: string[];
   declarationSuffixes: string[];
-  zoneCatalog: PilotZoneTerminal[];
+  zoneCatalog: ZoneCatalogEntry[];
   zoneOrTerminals: string[];
   containerNumbers: string[];
   ledgerLabels: string[];
@@ -98,7 +102,10 @@ export async function getOrgFormSuggestions(
   return {
     declarationPrefixes: uniqueNonEmpty(prefixes),
     declarationSuffixes: uniqueNonEmpty(suffixes),
-    zoneCatalog: zones.map((z) => ({ slug: z.slug, label: z.label })),
+    zoneCatalog: zones.map((z) => ({
+      slug: z.slug,
+      label: z.label,
+    })),
     zoneOrTerminals: uniqueNonEmpty(zoneRows.map((r) => r.zone)),
     containerNumbers: uniqueNonEmpty(containerRows.map((r) => r.num)),
     ledgerLabels: uniqueNonEmpty(labelRows.map((r) => r.label)),

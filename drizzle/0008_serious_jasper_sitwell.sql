@@ -1,0 +1,2 @@
+ALTER TABLE "organization_zones" ADD COLUMN "default_paying_agency_id" uuid;--> statement-breakpoint
+ALTER TABLE "organization_zones" ADD CONSTRAINT "organization_zones_default_paying_agency_id_organization_agencies_id_fk" FOREIGN KEY ("default_paying_agency_id") REFERENCES "public"."organization_agencies"("id") ON DELETE set null ON UPDATE no action;

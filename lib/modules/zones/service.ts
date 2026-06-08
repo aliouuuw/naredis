@@ -10,6 +10,7 @@ export type OrganizationZoneRow = {
   label: string;
   isActive: boolean;
   sortOrder: number;
+  defaultPayingAgencyId: string | null;
 };
 
 export function normalizeZoneSlug(input: string): string {
@@ -23,6 +24,7 @@ function mapRow(row: typeof organizationZones.$inferSelect): OrganizationZoneRow
     label: row.label,
     isActive: row.isActive,
     sortOrder: row.sortOrder,
+    defaultPayingAgencyId: row.defaultPayingAgencyId ?? null,
   };
 }
 
@@ -73,7 +75,7 @@ export async function listZones(
 export async function createZone(
   db: DbLike,
   ctx: ModuleContext,
-  input: { slug: string; label: string },
+  input: { slug: string; label: string; defaultPayingAgencyId?: string | null },
 ): Promise<OrganizationZoneRow> {
   await ensureDefaultZones(db, ctx.organizationId);
 
@@ -99,6 +101,7 @@ export async function createZone(
       label: input.label.trim(),
       sortOrder: nextSort,
       isActive: true,
+      defaultPayingAgencyId: input.defaultPayingAgencyId ?? null,
     })
     .returning();
 
@@ -109,11 +112,22 @@ export async function updateZone(
   db: DbLike,
   ctx: ModuleContext,
   zoneId: string,
-  input: { label?: string; isActive?: boolean },
+  input: {
+    label?: string;
+    isActive?: boolean;
+    defaultPayingAgencyId?: string | null;
+  },
 ): Promise<OrganizationZoneRow | null> {
-  const patch: { label?: string; isActive?: boolean } = {};
+  const patch: {
+    label?: string;
+    isActive?: boolean;
+    defaultPayingAgencyId?: string | null;
+  } = {};
   if (input.label !== undefined) patch.label = input.label.trim();
   if (input.isActive !== undefined) patch.isActive = input.isActive;
+  if (input.defaultPayingAgencyId !== undefined) {
+    patch.defaultPayingAgencyId = input.defaultPayingAgencyId;
+  }
 
   const [row] = await db
     .update(organizationZones)

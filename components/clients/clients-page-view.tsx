@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ClientsSavedViewsBar } from "@/components/clients/clients-saved-views-bar";
+import type { OrganizationListViewSerialized } from "@/lib/modules/list-views/serialize";
 import { Plus } from "lucide-react";
 import type { CustomerListItemSerialized } from "@/lib/modules/customers/serialize-list";
 import {
+  buildClientGroupTree,
   filterAndSortClients,
   type ClientsViewState,
 } from "@/lib/modules/customers/clients-query";
@@ -26,12 +29,23 @@ import { Button } from "@/components/ui/button";
 export function ClientsPageView({
   rows,
   viewState,
+  orgViews,
+  canManage,
 }: {
   rows: CustomerListItemSerialized[];
   viewState: ClientsViewState;
+  orgViews: OrganizationListViewSerialized[];
+  canManage: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const applyQuery = useCallback(
+    (query: string) => {
+      router.replace(query ? `/clients?${query}` : "/clients", { scroll: false });
+    },
+    [router],
+  );
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const { page, setPage } = useTablePage();
   const tableColumns = useTableColumns(CLIENT_LIST_TABLE_ID, CLIENT_LIST_COLUMNS);
@@ -39,6 +53,14 @@ export function ClientsPageView({
   const filteredRows = useMemo(
     () => filterAndSortClients(rows, viewState),
     [rows, viewState],
+  );
+
+  const groupTree = useMemo(
+    () =>
+      viewState.groupBy.length > 0
+        ? buildClientGroupTree(filteredRows, viewState.groupBy)
+        : null,
+    [filteredRows, viewState.groupBy],
   );
 
   const { items: pagedRows, page: safePage } = useMemo(
@@ -57,6 +79,13 @@ export function ClientsPageView({
 
   return (
     <div className="space-y-6">
+      <ClientsSavedViewsBar
+        orgViews={orgViews}
+        canManage={canManage}
+        viewState={viewState}
+        onApplyQuery={applyQuery}
+      />
+
       <ClientsToolbar
         state={viewState}
         totalCount={filteredRows.length}
@@ -92,6 +121,27 @@ export function ClientsPageView({
             </div>
           ) : null}
         </div>
+      ) : groupTree ? (
+        <ul className="space-y-2">
+          {groupTree.map((node) => (
+            <li key={node.key} className="rounded-lg border bg-card px-4 py-3">
+              <p className="text-sm font-medium">
+                {node.label}{" "}
+                <span className="text-muted-foreground">({node.count})</span>
+              </p>
+              {node.children ? (
+                <ul className="mt-2 space-y-1 border-l pl-3 text-xs text-muted-foreground">
+                  {node.children.map((child) => (
+                    <li key={child.key}>
+                      {child.label} — {child.count} client
+                      {child.count === 1 ? "" : "s"}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
           <ClientsTable

@@ -21,6 +21,7 @@ import { actionError, actionOk, type ActionResult } from "./form-result";
 function revalidateZonePaths() {
   revalidatePath("/settings");
   revalidatePath("/declarations");
+  revalidatePath("/cartes");
 }
 
 export async function createZoneAction(
@@ -56,8 +57,16 @@ export async function updateZoneAction(
     return actionError(first?.message ?? "Données invalides");
   }
 
-  const { zoneId, ...patch } = parsed.data;
-  const row = await updateZone(getDb(), toModuleContext(auth), zoneId, patch);
+  const { zoneId, defaultPayingAgencyId, ...rest } = parsed.data;
+  const row = await updateZone(getDb(), toModuleContext(auth), zoneId, {
+    ...rest,
+    ...(defaultPayingAgencyId !== undefined
+      ? {
+          defaultPayingAgencyId:
+            defaultPayingAgencyId === "" ? null : defaultPayingAgencyId,
+        }
+      : {}),
+  });
   if (!row) {
     return actionError("Zone introuvable.");
   }

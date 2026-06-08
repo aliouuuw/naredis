@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, ChevronRight } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
+import type { DeclarationLedgerTotals } from "@/lib/modules/declarations/declarations-query";
 import type { DeclarationListColumnId } from "@/lib/ui/list-table-columns";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -61,11 +62,13 @@ export function DeclarationsTable({
   onOpenRow,
   bare = false,
   visibleColumnIds,
+  ledgerTotals,
 }: {
   rows: DeclarationListItemSerialized[];
   onOpenRow: (id: string) => void;
   bare?: boolean;
   visibleColumnIds: DeclarationListColumnId[];
+  ledgerTotals?: DeclarationLedgerTotals | null;
 }) {
   function renderCell(
     columnId: DeclarationListColumnId,
@@ -264,6 +267,43 @@ export function DeclarationsTable({
             </tr>
           ))}
         </tbody>
+        {ledgerTotals && ledgerTotals.rowCount > 0 ? (
+          <tfoot>
+            <tr className="border-t bg-muted/50 font-medium">
+              {visibleColumnIds.map((id, index) => {
+                if (index === 0) {
+                  return (
+                    <td key={id} className="px-4 py-3 text-xs uppercase tracking-wide text-muted-foreground">
+                      Σ {ledgerTotals.rowCount} ligne{ledgerTotals.rowCount === 1 ? "" : "s"}
+                    </td>
+                  );
+                }
+                if (id === "amount") {
+                  return (
+                    <td key={id} className="px-4 py-3 text-right tabular-nums">
+                      {formatXof(ledgerTotals.clientAmountPaid)} XOF
+                    </td>
+                  );
+                }
+                if (id === "gainde") {
+                  return (
+                    <td key={id} className="px-4 py-3 text-right tabular-nums">
+                      {formatXof(ledgerTotals.gaindeDutyAmount)} XOF
+                    </td>
+                  );
+                }
+                if (id === "reste") {
+                  return (
+                    <td key={id} className="px-4 py-3 text-right tabular-nums">
+                      {formatXof(ledgerTotals.reste)} XOF
+                    </td>
+                  );
+                }
+                return <td key={id} className="px-4 py-3" />;
+              })}
+            </tr>
+          </tfoot>
+        ) : null}
       </table>
     </div>
   );

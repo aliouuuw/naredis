@@ -61,6 +61,7 @@ export function NewDeclarationForm({
   const [title, setTitle] = useState("");
   const [clientAmountPaid, setClientAmountPaid] = useState("");
   const [costPrice, setCostPrice] = useState("");
+  const [payingAgencyId, setPayingAgencyId] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -368,15 +369,20 @@ export function NewDeclarationForm({
           />
           <div className="flex flex-col gap-2 sm:col-span-2">
             <label htmlFor="payingAgencyId" className="text-sm font-medium">
-              Maison-mère (agence)
+              Carte GAINDE (maison-mère)
             </label>
             <FormSelect
               id="payingAgencyId"
               name="payingAgencyId"
               emptyOption="—"
-              defaultValue=""
+              value={payingAgencyId}
+              onValueChange={setPayingAgencyId}
               options={agencies.map((a) => ({ value: a.id, label: a.name }))}
             />
+            <p className="text-xs text-muted-foreground">
+              La liaison zone ↔ carte se fait à chaque déclaration ; les zones
+              apparaissent sur la carte dès qu&apos;une déclaration les associe.
+            </p>
           </div>
         </div>
       </section>

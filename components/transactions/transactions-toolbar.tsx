@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import type { TransactionTypeSerialized } from "@/lib/modules/ledger/serialize";
 import type { DossierAllocationOption } from "@/lib/modules/ledger/service";
 import {
@@ -25,11 +25,7 @@ import {
   viewHasCustomizations,
 } from "@/lib/modules/ledger/transactions-query";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { EntityViewToolbarShell } from "@/components/ui/entity-view-toolbar-shell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +34,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FormSelect } from "@/components/ui/form-select";
 import { PeriodDateRange } from "./period-date-range";
-import { cn } from "@/lib/utils";
 
 type CustomerOption = { id: string; name: string };
 
@@ -391,38 +386,54 @@ export function TransactionsToolbar({
   };
 
   return (
-    <section className="rounded-lg border bg-card">
-      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <div className="flex items-start gap-2 p-3">
-          {exportExcel || columnSettings ? (
-            <div className="order-last flex shrink-0 flex-wrap items-center gap-2 sm:order-none">
-              {exportExcel}
-              {columnSettings}
-            </div>
-          ) : null}
-          <CollapsibleTrigger
-            className={cn(
-              "group/trigger flex flex-1 items-start gap-2 rounded-md text-left outline-none",
-              "focus-visible:ring-3 focus-visible:ring-ring/50",
-            )}
+    <EntityViewToolbarShell
+      open={filtersOpen}
+      onOpenChange={setFiltersOpen}
+      summary={summary}
+      pending={pending}
+      headerActions={
+        <>
+          {exportExcel}
+          {columnSettings}
+        </>
+      }
+      footer={
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs">
+            <span className="font-medium text-muted-foreground">Tri</span>
+            <FormSelect
+              size="sm"
+              value={state.sort}
+              onValueChange={(v) => {
+                if (v) pushState({ ...state, sort: v as TransactionsSort });
+              }}
+              options={SORT_OPTIONS.map((s) => ({
+                value: s,
+                label: SORT_LABELS[s],
+              }))}
+              triggerClassName="w-[200px]"
+            />
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() =>
+              pushState({
+                rules: [],
+                groupBy: ["day"],
+                sort: "date-desc",
+                datePreset: "today",
+                ...agencyDateRangeForPreset("today", today),
+              })
+            }
           >
-            <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-data-panel-open/trigger:rotate-180" />
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-semibold">Filtres et vue</h2>
-                {pending ? (
-                  <span className="text-xs text-muted-foreground">
-                    Mise à jour…
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-xs text-muted-foreground">{summary}</p>
-            </div>
-          </CollapsibleTrigger>
+            Réinitialiser la vue
+          </Button>
         </div>
-
-        <CollapsibleContent className="border-t px-3 pb-3 pt-2">
-          <div className="space-y-5">
+      }
+    >
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
                 Période
@@ -716,43 +727,6 @@ export function TransactionsToolbar({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 border-t pt-3">
-              <label className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-muted-foreground">Tri</span>
-                <FormSelect
-                  size="sm"
-                  value={state.sort}
-                  onValueChange={(v) => {
-                    if (v) pushState({ ...state, sort: v as TransactionsSort });
-                  }}
-                  options={SORT_OPTIONS.map((s) => ({
-                    value: s,
-                    label: SORT_LABELS[s],
-                  }))}
-                  triggerClassName="w-[200px]"
-                />
-              </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() =>
-                  pushState({
-                    rules: [],
-                    groupBy: ["day"],
-                    sort: "date-desc",
-                    datePreset: "today",
-                    ...agencyDateRangeForPreset("today", today),
-                  })
-                }
-              >
-                Réinitialiser la vue
-              </Button>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </section>
+    </EntityViewToolbarShell>
   );
 }
