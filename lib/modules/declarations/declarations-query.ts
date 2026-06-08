@@ -545,6 +545,28 @@ export function viewHasCustomizations(state: DeclarationsViewState): boolean {
   );
 }
 
+export function filterDeclarationRows(
+  rows: DeclarationListItemSerialized[],
+  search: string,
+): DeclarationListItemSerialized[] {
+  const q = search.trim().toLowerCase();
+  if (!q) return rows;
+  return rows.filter((row) => {
+    const haystack = [
+      row.declarationNumber,
+      row.blReference ?? "",
+      row.dossierNumber,
+      row.customerName,
+      row.customerSlug,
+      row.zoneOrTerminal ?? "",
+      row.containers.join(" "),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+}
+
 export function sortDeclarationRows(
   rows: DeclarationListItemSerialized[],
   sort: DeclarationSort,

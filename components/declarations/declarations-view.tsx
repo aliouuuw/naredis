@@ -22,6 +22,7 @@ import type {
 import { NewCustomerDialog } from "@/components/customers/new-customer-dialog";
 import { DeclarationFicheSheet } from "@/components/declarations/declaration-fiche-sheet";
 import { DeclarationsTable } from "@/components/declarations/declarations-table";
+import { DeleteDeclarationDialog } from "@/components/declarations/delete-declaration-dialog";
 import { DeclarationsToolbar } from "@/components/declarations/declarations-toolbar";
 import { NewDeclarationDialog } from "@/components/declarations/new-declaration-dialog";
 import { DeclarationSavedViewsBar } from "@/components/declarations/declaration-saved-views-bar";
@@ -63,6 +64,7 @@ export function DeclarationsView({
   const [presetCustomerId, setPresetCustomerId] = useState<string | undefined>();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeclarationListItemSerialized | null>(null);
 
   const { page, setPage } = useTablePage();
   const tableColumns = useTableColumns(
@@ -228,6 +230,8 @@ export function DeclarationsView({
               tableColumns.visibleIds as DeclarationListColumnId[]
             }
             onOpenRow={(id) => openDeclaration(id)}
+            canDelete={canEdit}
+            onDelete={setDeleteTarget}
           />
           <TablePagination
             totalItems={sortedRows.length}
@@ -245,6 +249,17 @@ export function DeclarationsView({
         canEdit={canEdit}
         agencies={agencies}
       />
+
+      {deleteTarget ? (
+        <DeleteDeclarationDialog
+          declaration={deleteTarget}
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          onDeleted={() => router.refresh()}
+        />
+      ) : null}
 
       {canEdit ? (
         <>

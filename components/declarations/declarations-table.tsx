@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
 import { formatXof } from "@/lib/domain/balance";
 import { computeDeclarationReste } from "@/lib/domain/declaration-reste";
 import type { DeclarationLedgerTotals } from "@/lib/modules/declarations/declarations-query";
@@ -10,6 +10,12 @@ import type { DeclarationListColumnId } from "@/lib/ui/list-table-columns";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DeclarationListItemSerialized } from "@/lib/modules/declarations/serialize-list";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -63,12 +69,16 @@ export function DeclarationsTable({
   bare = false,
   visibleColumnIds,
   ledgerTotals,
+  canDelete = false,
+  onDelete,
 }: {
   rows: DeclarationListItemSerialized[];
   onOpenRow: (id: string) => void;
   bare?: boolean;
   visibleColumnIds: DeclarationListColumnId[];
   ledgerTotals?: DeclarationLedgerTotals | null;
+  canDelete?: boolean;
+  onDelete?: (row: DeclarationListItemSerialized) => void;
 }) {
   function renderCell(
     columnId: DeclarationListColumnId,
@@ -203,21 +213,50 @@ export function DeclarationsTable({
         );
       case "actions":
         return (
-          <td key={columnId} className="px-4 py-3 text-right">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenRow(row.id);
-              }}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "inline-flex gap-1",
-              )}
-            >
-              Ouvrir
-              <ChevronRight className="size-4" aria-hidden />
-            </button>
+          <td
+            key={columnId}
+            className="px-4 py-3 text-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenRow(row.id);
+                }}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "inline-flex gap-1",
+                )}
+              >
+                Ouvrir
+                <ChevronRight className="size-4" aria-hidden />
+              </button>
+              {canDelete ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "px-2",
+                    )}
+                    aria-label="Plus d'options"
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onSelect={() => onDelete?.(row)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
           </td>
         );
       default:

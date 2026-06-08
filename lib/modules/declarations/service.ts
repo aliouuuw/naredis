@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
 import type { DbLike } from "@/lib/db";
 import { getBonADelivrerMissingFields } from "@/lib/domain/declaration-completion";
 import {
@@ -7,6 +7,7 @@ import {
   declarationEditLog,
   declarations,
   dossiers,
+  ledgerEntries,
   organizationAgencies,
 } from "@/lib/db/schema";
 import { appendActivity } from "@/lib/modules/activity/append-activity";
@@ -686,4 +687,71 @@ export async function setBonADelivrer(
   value: boolean,
 ) {
   return updateDeclaration(db, ctx, declarationId, { bonADelivrer: value });
+}
+
+export class DeclarationHasLedgerEntriesError extends Error {
+  constructor() {
+    super(
+      "Cette déclaration ne peut pas être supprimée car elle a des écritures comptables associées.",
+    );
+    this.name = "DeclarationHasLedgerEntriesError";
+  }
+}
+
+export async function deleteDeclaration(
+  db: DbLike,
+  ctx: ModuleContext,
+  declarationId: string,
+) {
+  const [existing] = await db
+    .select({
+      id: declarations.id,
+      declarationNumber: declarations.declarationNumber,
+      customerId: dossiers.customerId,
+    })
+    .from(declarations)
+    .innerJoin(dossiers, eq(declarations.dossierId, dossiers.id))
+    .where(
+      and(
+        eq(declarations.id, declarationId),
+        eq(declarations.organizationId, ctx.organizationId),
+      ),
+    )
+    .limit(1);
+
+  if (!existing) return null;
+
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(ledgerEntries)
+    .where(
+      and(
+        eq(ledgerEntries.organizationId, ctx.organizationId),
+        eq(ledgerEntries.declarationId, declarationId),
+      ),
+    );
+
+  if (n > 0) {
+    throw new DeclarationHasLedgerEntriesError();
+  }
+
+  await db
+    .delete(declarations)
+    .where(
+      and(
+        eq(declarations.id, declarationId),
+        eq(declarations.organizationId, ctx.organizationId),
+      ),
+    );
+
+  await appendActivity(db, {
+    organizationId: ctx.organizationId,
+    entityType: "declaration",
+    entityId: declarationId,
+    action: "declaration.deleted",
+    payload: { declarationNumber: existing.declarationNumber },
+    actorId: ctx.userId,
+  });
+
+  return existing;
 }

@@ -14,6 +14,8 @@ import {
 import {
   BonADelivrerIncompleteError,
   createDeclaration,
+  DeclarationHasLedgerEntriesError,
+  deleteDeclaration,
   DuplicateBlError,
   DuplicateDeclarationNumberError,
   setBonADelivrer,
@@ -99,6 +101,33 @@ export async function updateDeclarationAction(
       return actionError(formatBonADelivrerError(err.missing));
     }
     if (err instanceof OrgScopeError) return actionError(err.message);
+    const message = err instanceof Error ? err.message : "Erreur inconnue";
+    return actionError(message);
+  }
+}
+
+export async function deleteDeclarationAction(
+  declarationId: string,
+): Promise<ActionResult<void>> {
+  const auth = await requireRole(["owner", "admin"]);
+
+  try {
+    const deleted = await deleteDeclaration(
+      getDb(),
+      toModuleContext(auth),
+      declarationId,
+    );
+    if (!deleted) {
+      return actionError("Déclaration introuvable.");
+    }
+    revalidatePath("/declarations");
+    revalidatePath("/clients");
+    revalidatePath(`/clients/${deleted.customerId}`);
+    return actionOk();
+  } catch (err) {
+    if (err instanceof DeclarationHasLedgerEntriesError) {
+      return actionError(err.message);
+    }
     const message = err instanceof Error ? err.message : "Erreur inconnue";
     return actionError(message);
   }
